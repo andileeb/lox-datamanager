@@ -11,6 +11,7 @@ import * as cache from './cache'
 import * as store from './store'
 import * as stats from './stats-service'
 import * as catalog from './catalog'
+import { unitsFor } from '../shared/catalog'
 import { CodedError, toApiError } from './stats-service'
 import { notifyRenderer } from './mcp'
 import type { ParsedStatFile } from './statfile'
@@ -240,7 +241,12 @@ export function buildServer(): McpServer {
         const e = cat[name.slice(0, 35)]
         return {
           description: e?.name ?? header,
-          ...(e && { room: e.room, category: e.category, type: e.type, units: e.units })
+          ...(e && {
+            room: e.room,
+            category: e.category,
+            type: e.type,
+            units: unitsFor(e, STAT_FILENAME_RE.exec(name)?.[2] ? Number(name[36]) : null)
+          })
         }
       }
       const cachedBy = new Map(cached.map((c) => [c.name, c]))

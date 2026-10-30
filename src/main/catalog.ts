@@ -7,7 +7,9 @@ import * as cache from './cache'
 import { parseStructure } from '../shared/catalog'
 import type { Catalog } from '../shared/types'
 
-const TIMEOUT_MS = 15000
+// socket idle time, not total — a big structure file still loads; a silent web port only
+// delays the header-name fallback by this much (per scheme tried)
+const TIMEOUT_MS = 5000
 /** the extracted catalog, saved next to the cached stats (not the full LoxAPP3.json — it holds more than we need) */
 const CATALOG_FILE = 'catalog.json'
 

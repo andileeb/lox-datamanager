@@ -19,6 +19,7 @@ import { useConnectionStore } from '../stores/connection'
 import { SUFFIX_KEYS } from '../stores/files'
 import { errorText } from '../i18n'
 import { formatDateTime, loxToDisplayPref } from '../prefs'
+import { unitsFor } from '../../../shared/catalog'
 import { useFilesStore } from '../stores/files'
 import type { Backup } from '../../../shared/types'
 import type { RecordsDiff } from '../../../shared/records'
@@ -72,6 +73,13 @@ const suffixText = computed(() => {
 })
 
 const isCurrentMonth = computed(() => isCurrentMonthName(props.filename))
+
+/** what Loxone Config says about this control: name, room, units */
+const entry = computed(() => useFilesStore().catalog[props.filename.slice(0, 35)])
+const units = computed(() => {
+  const m = /_([1-9])\.\d{6}$/.exec(props.filename)
+  return [...new Set(unitsFor(entry.value, m ? Number(m[1]) : null).filter((u) => u))].join(' / ')
+})
 
 const selectedIndices = computed(() => selection.value.map((s) => s.index).sort((a, b) => a - b))
 
@@ -249,14 +257,14 @@ watch(
         />
         <div>
           <h2>
-            {{
-              useFilesStore().catalog[filename.slice(0, 35)]?.name ||
-              editor.data?.nameFromHeader ||
-              filename
-            }}
+            {{ entry?.name || editor.data?.nameFromHeader || filename }}
             <Tag v-if="suffixText" :value="suffixText" severity="secondary" />
           </h2>
-          <span class="meta mono">{{ filename }}</span>
+          <span class="meta"
+            ><span class="mono">{{ filename }}</span
+            ><template v-if="entry?.room"> · {{ entry.room }}</template
+            ><template v-if="units"> · {{ units }}</template></span
+          >
         </div>
       </div>
       <div class="actions">

@@ -122,6 +122,12 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
 - After upload the Miniserver must be **restarted** + Loxone app cache cleared —
   the UI shows this checklist; keep it.
 - Current-month files are still being appended by the Miniserver → editor warns.
+- **LoxAPP3.json units** (measured on a real Gen 2): only classic controls still have
+  `statistic.outputs[].format`; Meter/EFM/SpotPriceOptimizer have `statisticV2` (no
+  formats) and keep them in `details` — Meter `_1` = power (`actualFormat`), `_2` =
+  meter reading(s), 1 or 2 values (`totalFormat`), `_3` = storage (`storageFormat`).
+  EFM suffix files don't follow that (two cumulative, one not) → no guessed units.
+  Stat file uuids are the controls' `uuidAction` (also EFM subControls).
 - Loxone's official MCP server (fw 17.1) reads history but cannot write; it's a
   potential read-only add-on, never a replacement for FTP.
 - **Auto-update**: only the *notification* exists (`updates.ts`), deliberately.

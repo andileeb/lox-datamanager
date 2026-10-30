@@ -144,8 +144,10 @@ export interface CatalogEntry {
   category: string | null
   /** Loxone control type, e.g. "Meter" */
   type: string | null
-  /** unit per statistic output, from its printf format ("%.1fkWh" → "kWh") */
+  /** unit per value of the classic (unsuffixed) file, from its printf format ("%.1f°C" → "°C") */
   units: (string | null)[]
+  /** Meter controls: unit of the _1 power / _2 meter reading / _3 storage files */
+  suffixUnits?: Record<number, string | null>
 }
 
 /** lowercase uuid → entry */
