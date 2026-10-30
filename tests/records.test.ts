@@ -4,8 +4,10 @@ import {
   dominantInterval,
   fillGaps,
   isCurrentMonth,
+  packRecords,
   statusOf,
-  summarizeRecords
+  summarizeRecords,
+  unpackRecords
 } from '../src/shared/records'
 import { compileFormula } from '../src/shared/formula'
 import { loxTs, makeRecords } from './build-statfile'
@@ -151,5 +153,17 @@ describe('isCurrentMonth', () => {
     expect(isCurrentMonth('uuid.202401', now)).toBe(true)
     expect(isCurrentMonth('uuid.202312', now)).toBe(false)
     expect(isCurrentMonth('uuid_1.202401', now)).toBe(true)
+  })
+})
+
+describe('packRecords / unpackRecords', () => {
+  it('round-trips records', () => {
+    const records = makeRecords(5, 3, '2024-01-01T00:00:00Z', 600)
+    const packed = packRecords(records, 3)
+    expect(packed.length).toBe(20)
+    expect(unpackRecords(packed, 3)).toEqual(records)
+  })
+  it('handles no records', () => {
+    expect(unpackRecords(packRecords([], 2), 2)).toEqual([])
   })
 })

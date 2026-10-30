@@ -84,6 +84,8 @@ const de: typeof en = {
     exportCsv: 'CSV exportieren',
     save: 'Speichern',
     upload: 'Auf Miniserver hochladen',
+    undo: 'Rückgängig (Cmd/Strg+Z)',
+    redo: 'Wiederholen (Umschalt+Cmd/Strg+Z)',
     insertAbove: 'Oberhalb einfügen',
     insertBelow: 'Unterhalb einfügen',
     delete: 'Löschen',

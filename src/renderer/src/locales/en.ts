@@ -82,6 +82,8 @@ export default {
     exportCsv: 'Export CSV',
     save: 'Save',
     upload: 'Upload to Miniserver',
+    undo: 'Undo (Cmd/Ctrl+Z)',
+    redo: 'Redo (Shift+Cmd/Ctrl+Z)',
     insertAbove: 'Insert above',
     insertBelow: 'Insert below',
     delete: 'Delete',

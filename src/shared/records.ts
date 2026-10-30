@@ -149,3 +149,23 @@ export function isCurrentMonth(name: string, now: Date = new Date()): boolean {
   const cur = `${now.getUTCFullYear()}${String(now.getUTCMonth() + 1).padStart(2, '0')}`
   return name.slice(-6) === cur
 }
+
+/** compact snapshot for undo: [ts, v1..vn] per record in one Float64Array (~8 B per number) */
+export function packRecords(records: StatRecord[], valueCount: number): Float64Array {
+  const stride = valueCount + 1
+  const out = new Float64Array(records.length * stride)
+  records.forEach((r, i) => {
+    out[i * stride] = r.ts
+    for (let v = 0; v < valueCount; v++) out[i * stride + 1 + v] = r.values[v]
+  })
+  return out
+}
+
+export function unpackRecords(packed: Float64Array, valueCount: number): StatRecord[] {
+  const stride = valueCount + 1
+  const records: StatRecord[] = []
+  for (let i = 0; i < packed.length; i += stride) {
+    records.push({ ts: packed[i], values: Array.from(packed.subarray(i + 1, i + stride)) })
+  }
+  return records
+}

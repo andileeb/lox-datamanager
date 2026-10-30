@@ -1,7 +1,16 @@
 import { defineStore } from 'pinia'
 import type { ApiError, StatFileData, StatRecord } from '../../../shared/types'
-import { applyToRecords, dominantInterval, fillGaps as fillGapsPure } from '../../../shared/records'
+import {
+  applyToRecords,
+  dominantInterval,
+  fillGaps as fillGapsPure,
+  packRecords,
+  unpackRecords
+} from '../../../shared/records'
 import { useFilesStore } from './files'
+
+/** undo steps kept per file */
+const HISTORY = 30
 
 let validateTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -21,7 +30,10 @@ export const useEditorStore = defineStore('editor', {
     /** bumped after in-place cell edits so the chart refreshes */
     chartVersion: 0,
     /** an MCP client saved this file behind the editor's back — offer a reload */
-    externallyChanged: false
+    externallyChanged: false,
+    /** packed record snapshots (Float64Array isn't made reactive → cheap) */
+    undoStack: [] as Float64Array[],
+    redoStack: [] as Float64Array[]
   }),
   actions: {
     async load(name: string) {
@@ -31,6 +43,8 @@ export const useEditorStore = defineStore('editor', {
       this.dirty = false
       this.selectedIndex = null
       this.externallyChanged = false
+      this.undoStack = []
+      this.redoStack = []
       const r = await window.api.stat.parse(name)
       this.loading = false
       if (r.ok) this.data = r.data
@@ -44,6 +58,33 @@ export const useEditorStore = defineStore('editor', {
       validateTimer = setTimeout(() => this.revalidate(), 400)
     },
 
+    /** call before every mutation so it can be undone */
+    snapshot() {
+      if (!this.data) return
+      this.undoStack.push(packRecords(this.data.records, this.data.valueCount))
+      if (this.undoStack.length > HISTORY) this.undoStack.shift()
+      this.redoStack = []
+    },
+
+    /** pop a snapshot from one stack, push the current state onto the other */
+    restore(from: Float64Array[], to: Float64Array[]): boolean {
+      const packed = from.pop()
+      if (!this.data || !packed) return false
+      to.push(packRecords(this.data.records, this.data.valueCount))
+      this.data.records = unpackRecords(packed, this.data.valueCount)
+      this.selectedIndex = null
+      this.touch()
+      return true
+    },
+
+    undo(): boolean {
+      return this.restore(this.undoStack, this.redoStack)
+    },
+
+    redo(): boolean {
+      return this.restore(this.redoStack, this.undoStack)
+    },
+
     async revalidate() {
       if (!this.data) return
       const r = await window.api.stat.validate(this.data.fileName, plain(this.data.records))
@@ -52,12 +93,14 @@ export const useEditorStore = defineStore('editor', {
 
     setValue(index: number, valueIdx: number, value: number) {
       if (!this.data) return
+      this.snapshot()
       this.data.records[index].values[valueIdx] = value
       this.touch()
     },
 
     setTimestamp(index: number, ts: number) {
       if (!this.data) return
+      this.snapshot()
       this.data.records[index].ts = ts
       this.touch()
     },
@@ -69,6 +112,7 @@ export const useEditorStore = defineStore('editor', {
 
     insertRow(index: number, where: 'above' | 'below') {
       if (!this.data) return
+      this.snapshot()
       const records = this.data.records
       const at = where === 'above' ? index : index + 1
       const prev = records[at - 1]
@@ -90,6 +134,7 @@ export const useEditorStore = defineStore('editor', {
 
     deleteRows(indices: number[]) {
       if (!this.data || !indices.length) return
+      this.snapshot()
       const drop = new Set(indices)
       this.data.records = this.data.records.filter((_, i) => !drop.has(i))
       this.selectedIndex = null
@@ -101,6 +146,7 @@ export const useEditorStore = defineStore('editor', {
       if (!this.data) return 0
       const { records, inserted } = fillGapsPure(this.data.records)
       if (inserted) {
+        this.snapshot()
         this.data.records = records
         this.touch()
       }
@@ -109,6 +155,7 @@ export const useEditorStore = defineStore('editor', {
 
     applyFormula(fn: (v: number) => number, valueIdx: number | 'all', indices: number[]) {
       if (!this.data) return
+      this.snapshot()
       applyToRecords(this.data.records, this.data.valueCount, fn, valueIdx, indices)
       this.touch()
     },

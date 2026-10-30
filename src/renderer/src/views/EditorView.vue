@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
@@ -147,7 +147,26 @@ async function exportCsv(): Promise<void> {
   if (r.ok) csvPath.value = r.data
 }
 
-onMounted(() => editor.load(props.filename))
+/** row indices change on undo/redo, so the selection would point at other rows */
+function history(redo: boolean): void {
+  if (redo ? editor.redo() : editor.undo()) selection.value = []
+}
+
+/** Cmd/Ctrl+Z, Shift+Cmd/Ctrl+Z, Ctrl+Y — inputs keep their own text undo */
+function onKeydown(e: KeyboardEvent): void {
+  if (!(e.metaKey || e.ctrlKey) || e.altKey) return
+  if ((e.target as HTMLElement).closest('input, textarea, [contenteditable]')) return
+  const key = e.key.toLowerCase()
+  if (key !== 'z' && key !== 'y') return
+  e.preventDefault()
+  history(key === 'y' || e.shiftKey)
+}
+
+onMounted(() => {
+  editor.load(props.filename)
+  window.addEventListener('keydown', onKeydown)
+})
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 watch(
   () => props.filename,
   (name) => editor.load(name)
@@ -249,6 +268,26 @@ watch(
       />
 
       <div class="edit-bar">
+        <Button
+          v-tooltip.bottom="t('editor.undo')"
+          icon="pi pi-undo"
+          size="small"
+          severity="secondary"
+          text
+          :aria-label="t('editor.undo')"
+          :disabled="!editor.undoStack.length"
+          @click="history(false)"
+        />
+        <Button
+          v-tooltip.bottom="t('editor.redo')"
+          icon="pi pi-undo mirror"
+          size="small"
+          severity="secondary"
+          text
+          :aria-label="t('editor.redo')"
+          :disabled="!editor.redoStack.length"
+          @click="history(true)"
+        />
         <Button
           :label="t('editor.insertAbove')"
           icon="pi pi-arrow-up"
@@ -412,6 +451,9 @@ watch(
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+.edit-bar :deep(.mirror) {
+  transform: scaleX(-1);
 }
 .edit-bar {
   display: flex;
