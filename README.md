@@ -30,8 +30,8 @@ your Miniserver connection in the app.
 
 Download the latest release from [GitHub Releases](../../releases):
 
-- **macOS**: `loxone-datamanager-<version>.dmg`
-- **Windows**: `loxone-datamanager-<version>-setup.exe`
+- **macOS** (13 Ventura or newer): `loxone-datamanager-<version>.dmg`
+- **Windows** (10 or newer, 64-bit): `loxone-datamanager-<version>-setup.exe`
 
 The builds are currently **unsigned**, so the OS will warn on first launch:
 

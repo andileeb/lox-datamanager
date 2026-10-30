@@ -18,8 +18,8 @@ function sha256(s: string): Buffer {
   return createHash('sha256').update(s).digest()
 }
 
-function authorized(req: IncomingMessage): boolean {
-  const token = store.getMcpToken()
+async function authorized(req: IncomingMessage): Promise<boolean> {
+  const token = await store.getMcpToken()
   if (!token) return false
   const header = req.headers.authorization
   if (!header?.startsWith('Bearer ')) return false
@@ -31,7 +31,7 @@ async function handleHttp(req: IncomingMessage, res: ServerResponse): Promise<vo
     res.writeHead(404).end()
     return
   }
-  if (!authorized(req)) {
+  if (!(await authorized(req))) {
     res.writeHead(401, { 'WWW-Authenticate': 'Bearer' }).end()
     return
   }
@@ -69,7 +69,7 @@ export async function start(): Promise<void> {
   lastError = null
   const { enabled, port } = store.getMcpConfig()
   if (!enabled) return
-  if (!store.getMcpToken()) store.regenerateMcpToken()
+  if (!(await store.getMcpToken())) await store.regenerateMcpToken()
   await new Promise<void>((resolve) => {
     const s = createServer((req, res) => {
       void handleHttp(req, res)

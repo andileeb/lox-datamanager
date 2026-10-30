@@ -122,9 +122,9 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
 
 ## Constraints & gotchas
 
-- **Licensing: MIT-only dependencies.** PrimeVue is pinned to the 4.x line and
-  primeicons to 7.x — v5/v8+ are under the commercial "PrimeUI" license
-  (license key + eligibility). Do NOT upgrade these majors. If PrimeVue 4
+- **Licensing: MIT-only dependencies.** PrimeVue is pinned to the 4.x line,
+  primeicons to 7.x and `@primeuix/themes` to 2.x — v5 / v8+ / v3+ are under the
+  commercial "PrimeUI" license (license key + eligibility). Do NOT upgrade these majors. If PrimeVue 4
   becomes unmaintained, migrate to an MIT alternative (e.g. Naive UI).
 - Renderer CSP forbids eval → bulk-edit formulas use the hand-rolled parser in
   `src/shared/formula.ts`. Don't replace it with `new Function`.

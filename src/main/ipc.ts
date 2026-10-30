@@ -40,10 +40,10 @@ function handleE(channel: string, fn: Handler): void {
 
 export function registerIpc(): void {
   handle('ftp:connect', (args: ConnectPayload) => ftp.connect(args))
-  handle('ftp:connectSaved', (id: string) => {
+  handle('ftp:connectSaved', async (id: string) => {
     const meta = store.getConnection(id)
     if (!meta) throw new CodedError('UNKNOWN', 'Saved connection not found')
-    const password = store.getPassword(id)
+    const password = await store.getPassword(id)
     if (password === null) {
       throw new CodedError('NO_PASSWORD', 'No stored password — enter it manually')
     }
@@ -97,8 +97,8 @@ export function registerIpc(): void {
   })
 
   handle('connections:list', () => store.listConnections())
-  handle('connections:save', (meta: ConnMeta, password: string) => {
-    store.saveConnection(meta, password)
+  handle('connections:save', async (meta: ConnMeta, password: string) => {
+    await store.saveConnection(meta, password)
     return null
   })
   handle('connections:remove', (id: string) => {
@@ -128,13 +128,13 @@ export function registerIpc(): void {
     return null
   })
 
-  const mcpState = (): McpState => {
+  const mcpState = async (): Promise<McpState> => {
     const { enabled, port } = store.getMcpConfig()
     const { running, error } = mcp.status()
     return {
       enabled,
       port,
-      token: store.getMcpToken(),
+      token: await store.getMcpToken(),
       running,
       url: `http://127.0.0.1:${port}/mcp`,
       error
@@ -146,8 +146,8 @@ export function registerIpc(): void {
     await mcp.start() // reads the stored config; stops when disabled
     return mcpState()
   })
-  handle('mcp:regenerateToken', () => {
-    store.regenerateMcpToken()
+  handle('mcp:regenerateToken', async () => {
+    await store.regenerateMcpToken()
     return mcpState()
   })
 
