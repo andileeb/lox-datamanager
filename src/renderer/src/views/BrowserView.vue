@@ -339,7 +339,7 @@ onBeforeUnmount(() => {
           />
         </template>
       </Column>
-      <Column header-style="width: 11rem">
+      <Column header-style="width: 11rem" frozen align-frozen="right">
         <template #body="{ data }">
           <div class="row-actions">
             <Button
@@ -458,6 +458,7 @@ onBeforeUnmount(() => {
 }
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 .month-select {

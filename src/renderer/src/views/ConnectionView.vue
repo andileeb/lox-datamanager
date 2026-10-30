@@ -269,8 +269,10 @@ onMounted(async () => {
 <style scoped>
 .connect {
   align-items: center;
-  justify-content: center;
   position: relative;
+  overflow-y: auto;
+  /* keep the form clear of the corner controls */
+  padding-top: 4rem;
 }
 .corner {
   position: absolute;
@@ -278,6 +280,8 @@ onMounted(async () => {
   right: 1rem;
 }
 .panel {
+  /* centered while it fits, scrolls from the top when it doesn't */
+  margin: auto 0;
   width: 100%;
   max-width: 30rem;
   display: flex;

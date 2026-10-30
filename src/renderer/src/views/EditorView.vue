@@ -428,6 +428,12 @@ watch(
   grid-template-columns: 1fr 18rem;
   gap: 1rem;
 }
+/* narrow windows: give the entry grid room for its value columns */
+@media (max-width: 1000px) {
+  .lower {
+    grid-template-columns: 1fr 12rem;
+  }
+}
 .grid {
   min-height: 0;
 }
