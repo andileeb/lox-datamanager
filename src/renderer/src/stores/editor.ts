@@ -15,7 +15,7 @@ const HISTORY = 30
 let validateTimer: ReturnType<typeof setTimeout> | null = null
 
 /** Vue reactive proxies can't cross the contextBridge — send plain clones */
-function plain(records: StatRecord[]): StatRecord[] {
+export function plain(records: StatRecord[]): StatRecord[] {
   return records.map((r) => ({ ts: r.ts, values: [...r.values] }))
 }
 

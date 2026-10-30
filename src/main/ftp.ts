@@ -1,4 +1,4 @@
-import { Client, FTPError } from 'basic-ftp'
+import { Client } from 'basic-ftp'
 import { rmSync, utimesSync } from 'fs'
 import { join } from 'path'
 import type { DownloadOutcome, RemoteFile, TlsMode, TransferProgress } from '../shared/types'
@@ -237,15 +237,23 @@ export function download(
 /** returns where a backup of the server's copy of name goes */
 export type BackupPath = (name: string) => string
 
+const existsOn = async (c: Client, name: string): Promise<boolean> =>
+  (await c.list('/stats')).some((f) => f.name === name)
+
+/** whether /stats/name exists — servers disagree on the "no such file" reply code */
+export function exists(name: string): Promise<boolean> {
+  return run((c) => existsOn(c, name))
+}
+
 /** saves the server's current copy before it is overwritten; a missing file needs no backup */
 async function backupRemote(c: Client, name: string, backupPath: BackupPath): Promise<void> {
+  if (!(await existsOn(c, name))) return
   const dest = backupPath(name)
   try {
     await c.downloadTo(dest, `/stats/${name}`)
   } catch (e) {
     rmSync(dest, { force: true })
-    // 550 = no such file; anything else aborts — never overwrite without a backup
-    if (!(e instanceof FTPError && e.code === 550)) throw e
+    throw e // never overwrite without a backup
   }
 }
 

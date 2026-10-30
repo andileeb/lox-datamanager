@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   applyToRecords,
+  diffRecords,
   dominantInterval,
   fillGaps,
   isCurrentMonth,
@@ -165,5 +166,25 @@ describe('packRecords / unpackRecords', () => {
   })
   it('handles no records', () => {
     expect(unpackRecords(packRecords([], 2), 2)).toEqual([])
+  })
+})
+
+describe('diffRecords', () => {
+  it('counts changed, inserted and deleted entries by timestamp', () => {
+    const before = [
+      { ts: 1, values: [1] },
+      { ts: 2, values: [2] },
+      { ts: 3, values: [NaN] },
+      { ts: 4, values: [4] }
+    ]
+    const after = [
+      { ts: 1, values: [1] },
+      { ts: 2, values: [20] },
+      { ts: 3, values: [NaN] },
+      { ts: 5, values: [5] },
+      { ts: 6, values: [6] }
+    ]
+    expect(diffRecords(before, after)).toEqual({ changed: 1, inserted: 2, deleted: 1 })
+    expect(diffRecords(before, before)).toEqual({ changed: 0, inserted: 0, deleted: 0 })
   })
 })

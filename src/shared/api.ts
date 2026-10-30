@@ -17,6 +17,7 @@ import type {
   TransferProgress,
   UpdateCheck
 } from './types'
+import type { RecordsDiff } from './records'
 
 export interface ConnectPayload {
   host: string
@@ -74,6 +75,8 @@ export interface Api {
     serialize(name: string, records: StatRecord[]): Promise<IpcResult<Problem[]>>
     /** opens a save dialog; resolves with the written path or null when cancelled */
     exportCsv(name: string): Promise<IpcResult<string | null>>
+    /** compares records with the Miniserver's copy; null = not on the Miniserver yet */
+    diffRemote(name: string, records: StatRecord[]): Promise<IpcResult<RecordsDiff | null>>
   }
   mcp: {
     get(): Promise<IpcResult<McpState>>

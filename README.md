@@ -36,7 +36,8 @@ your Miniserver connection in the app.
   interpolated entries, bulk-calculate (`v * 1000`, `(v - 32) / 1.8`, …)
 - **Round-trip safe**: files are re-serialized byte-identically (verified by tests) —
   only what you change changes
-- **Upload back** to the Miniserver, with a post-upload checklist (restart + app cache)
+- **Upload back** to the Miniserver: the confirm shows what changes (entries changed / added /
+  removed vs. the server copy), then a post-upload checklist (restart + app cache)
 - **Automatic backups**: the server copy is saved before every upload or delete and can
   be restored from the editor — see [Backups](docs/backups.md)
 - **Undo/redo** (30 steps) and the usual [keyboard shortcuts](docs/guide.md#keyboard-shortcuts)
