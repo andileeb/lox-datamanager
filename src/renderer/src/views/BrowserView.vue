@@ -345,16 +345,16 @@ onBeforeUnmount(() => {
           </span>
         </template>
       </Column>
-      <Column field="yyyymm" :header="t('browser.colMonth')" sortable>
+      <Column field="yyyymm" body-class="nowrap" :header="t('browser.colMonth')" sortable>
         <template #body="{ data }">{{ formatMonth(data.yyyymm) }}</template>
       </Column>
-      <Column field="size" :header="t('browser.colSize')" sortable>
+      <Column field="size" body-class="nowrap" :header="t('browser.colSize')" sortable>
         <template #body="{ data }">{{ formatSize(data.size) }}</template>
       </Column>
-      <Column field="modifiedAt" :header="t('browser.colModified')" sortable>
+      <Column field="modifiedAt" body-class="nowrap" :header="t('browser.colModified')" sortable>
         <template #body="{ data }">{{ formatDate(data.modifiedAt) }}</template>
       </Column>
-      <Column field="status" :header="t('browser.colStatus')" sortable>
+      <Column field="status" body-class="nowrap" :header="t('browser.colStatus')" sortable>
         <template #body="{ data }">
           <Tag
             :value="t(`status.${data.status}`)"
@@ -507,6 +507,10 @@ onBeforeUnmount(() => {
 }
 .row-actions {
   display: flex;
+}
+/* short values wrapping into two lines end up half under the frozen actions column */
+:deep(.nowrap) {
+  white-space: nowrap;
 }
 .desc {
   display: inline-flex;
