@@ -7,6 +7,11 @@ heavily inspired by [LoxStatEdit](https://github.com/mr-manuel/Loxone_LoxStatEdi
 > not affiliated with, endorsed by or in any way related to
 > [Loxone Electronics GmbH](https://www.loxone.com). "Loxone" and "Miniserver" are
 > trademarks of their respective owner.
+>
+> **Use at your own risk.** The software is provided "as is", without warranty of any
+> kind (see [LICENSE](LICENSE)). The author is not liable for lost or corrupted
+> statistics, Miniserver malfunctions, downtime or any other damage resulting from its
+> use. Keep your own backup of the SD card before editing.
 
 <a href="https://www.buymeacoffee.com/andileeb"><img src="https://cdn.buymeacoffee.com/buttons/v2/lato-yellow.png" alt="Buy me a coffee" height="40"></a>
 
@@ -32,6 +37,9 @@ your Miniserver connection in the app.
 - **Round-trip safe**: files are re-serialized byte-identically (verified by tests) —
   only what you change changes
 - **Upload back** to the Miniserver, with a post-upload checklist (restart + app cache)
+- **Automatic backups**: the server copy is saved before every upload or delete and can
+  be restored from the editor — see [Backups](docs/backups.md)
+- **Undo/redo** (30 steps) and the usual [keyboard shortcuts](docs/guide.md#keyboard-shortcuts)
 - **Work offline**: open downloaded stats, a backup folder or single files without
   connecting — see [Work offline](docs/offline.md)
 - **CSV export**, saved connections (password in the OS keychain), Gen 1 and Gen 2 support
@@ -65,7 +73,8 @@ values inline, fill gaps, or recalculate a whole column with a formula.
 </picture>
 
 **4. Upload** — save and upload the corrected file, then restart the Miniserver and
-clear the Loxone app's cache (the app reminds you).
+clear the Loxone app's cache (the app reminds you). The previous server copy is backed
+up automatically, so you can always [restore it](docs/backups.md).
 
 **Optional: let an AI help** — turn on the built-in MCP server in Settings and ask
 Claude (or any MCP client) to find and fix problems for you. See [MCP server](#mcp-server).
@@ -202,6 +211,7 @@ be regenerated anytime in Settings.
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Not affiliated with Loxone Electronics GmbH.
+MIT — see [LICENSE](LICENSE). Not affiliated with Loxone Electronics GmbH. Provided as is,
+without warranty; use at your own risk.
 
 Built with the help of [Claude Code](https://claude.com/claude-code).

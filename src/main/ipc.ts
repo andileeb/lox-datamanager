@@ -151,13 +151,25 @@ export function registerIpc(): void {
       const path = cache.cachePath(host, name)
       return { name, size: statSync(path).size, modifiedAt: null }
     })
-    return ftp.upload(files, dir, (p) => event.sender.send('transfer:progress', p))
+    return ftp.upload(
+      files,
+      dir,
+      (p) => event.sender.send('transfer:progress', p),
+      (name) => cache.newBackupPath(host, name)
+    )
   })
   handle('ftp:delete', (names: string[]) => {
     for (const name of names) {
       if (!/^[0-9a-f-]+(_[1-9])?\.\d{6}$/.test(name)) throw new CodedError('UNKNOWN', 'Bad name')
     }
-    return ftp.remove(names)
+    const host = ftp.activeHost()
+    return ftp.remove(names, (name) => cache.newBackupPath(host, name))
+  })
+  handle('backups:list', (name: string) => cache.listBackups(ftp.activeHost(), name))
+  handle('backups:restore', (name: string, id: string) => {
+    cache.restoreBackup(ftp.activeHost(), name, id)
+    stats.discard(name) // the editor reparses the restored bytes
+    return null
   })
 
   handle('cache:list', () => cache.listWork())

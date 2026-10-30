@@ -608,7 +608,8 @@ export function buildServer(): McpServer {
   tool(
     'upload_files',
     'Upload edited files from the local cache to the Miniserver, overwriting the remote copies. ' +
-      'There is no undo. The Miniserver only picks up the changes after the returned checklist is done.',
+      'The previous server copy is backed up first (restorable in the app editor). ' +
+      'The Miniserver only picks up the changes after the returned checklist is done.',
     { names: z.array(nameArg).min(1) },
     async ({ names }) => {
       const host = ftp.activeHost()
@@ -618,7 +619,12 @@ export function buildServer(): McpServer {
         size: statSync(cache.cachePath(host, name)).size,
         modifiedAt: null
       }))
-      const uploaded = await ftp.upload(files, dir, () => {})
+      const uploaded = await ftp.upload(
+        files,
+        dir,
+        () => {},
+        (n) => cache.newBackupPath(host, n)
+      )
       notifyRenderer({ kind: 'upload' })
       const warnings = (names as string[]).filter((n) => isCurrentMonth(n))
       return json({
@@ -632,10 +638,12 @@ export function buildServer(): McpServer {
 
   tool(
     'delete_remote_files',
-    'Permanently delete statistics files from the Miniserver. There is no undo; local cached copies are kept.',
+    'Delete statistics files from the Miniserver. The server copy is backed up first (restorable ' +
+      'in the app editor); local cached copies are kept.',
     { names: z.array(nameArg).min(1) },
     async ({ names }) => {
-      await ftp.remove(names as string[])
+      const host = ftp.activeHost()
+      await ftp.remove(names as string[], (n) => cache.newBackupPath(host, n))
       notifyRenderer({ kind: 'delete' })
       return json({ deleted: names })
     },

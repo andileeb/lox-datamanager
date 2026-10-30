@@ -25,6 +25,10 @@ const api: Api = {
     openCached: (name: string) => ipcRenderer.invoke('local:openCached', name),
     open: (kind: 'folder' | 'files') => ipcRenderer.invoke('local:open', kind)
   },
+  backups: {
+    list: (name: string) => ipcRenderer.invoke('backups:list', name),
+    restore: (name: string, id: string) => ipcRenderer.invoke('backups:restore', name, id)
+  },
   cache: {
     list: () => ipcRenderer.invoke('cache:list'),
     openFolder: () => ipcRenderer.invoke('cache:openFolder')

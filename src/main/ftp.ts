@@ -1,5 +1,5 @@
-import { Client } from 'basic-ftp'
-import { utimesSync } from 'fs'
+import { Client, FTPError } from 'basic-ftp'
+import { rmSync, utimesSync } from 'fs'
 import { join } from 'path'
 import type { DownloadOutcome, RemoteFile, TlsMode, TransferProgress } from '../shared/types'
 import { STAT_FILENAME_RE } from '../shared/types'
@@ -234,15 +234,32 @@ export function download(
   })
 }
 
+/** returns where a backup of the server's copy of name goes */
+export type BackupPath = (name: string) => string
+
+/** saves the server's current copy before it is overwritten; a missing file needs no backup */
+async function backupRemote(c: Client, name: string, backupPath: BackupPath): Promise<void> {
+  const dest = backupPath(name)
+  try {
+    await c.downloadTo(dest, `/stats/${name}`)
+  } catch (e) {
+    rmSync(dest, { force: true })
+    // 550 = no such file; anything else aborts — never overwrite without a backup
+    if (!(e instanceof FTPError && e.code === 550)) throw e
+  }
+}
+
 export function upload(
   files: TransferFile[],
   srcDir: string,
-  onProgress: (p: TransferProgress) => void
+  onProgress: (p: TransferProgress) => void,
+  backupPath: BackupPath
 ): Promise<string[]> {
   return run(async (c) => {
     const done: string[] = []
     for (let i = 0; i < files.length; i++) {
       const f = files[i]
+      await backupRemote(c, f.name, backupPath)
       c.trackProgress((info) =>
         onProgress({
           file: f.name,
@@ -263,9 +280,12 @@ export function upload(
   })
 }
 
-export function remove(names: string[]): Promise<null> {
+export function remove(names: string[], backupPath: BackupPath): Promise<null> {
   return run(async (c) => {
-    for (const name of names) await c.remove(`/stats/${name}`)
+    for (const name of names) {
+      await backupRemote(c, name, backupPath)
+      await c.remove(`/stats/${name}`)
+    }
     return null
   })
 }
