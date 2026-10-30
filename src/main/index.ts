@@ -9,7 +9,11 @@ import * as mcp from './mcp'
 // falls back to package.json "name" — the slug. app.name also derives userData, so
 // pin that to the directory already in use BEFORE renaming, or saved connections,
 // the MCP token and the stats cache silently move and look wiped.
-app.setPath('userData', join(app.getPath('appData'), 'loxone-datamanager'))
+// LDM_USER_DATA: throwaway profile for scripts/screenshots.ts and E2E runs.
+app.setPath(
+  'userData',
+  process.env['LDM_USER_DATA'] ?? join(app.getPath('appData'), 'loxone-datamanager')
+)
 app.setName('Loxone DataManager')
 
 function createWindow(): void {
