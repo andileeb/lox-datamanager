@@ -38,7 +38,7 @@ export const useFilesStore = defineStore('files', {
     /** file names already tried while auto-resolving stat names (avoid retry loops) */
     nameResolveAttempted: [] as string[],
     /** browser-list UI state, kept so returning from the editor restores the view */
-    listUi: { first: 0, rows: 50, filter: '', month: '', scrollTop: 0 }
+    listUi: { first: 0, rows: 50, filter: '', month: '', status: '', scrollTop: 0 }
   }),
   getters: {
     /** stat name per control uuid, learned from any cached month of that control */

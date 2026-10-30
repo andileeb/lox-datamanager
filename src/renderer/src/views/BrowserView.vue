@@ -37,6 +37,13 @@ const monthFilter = computed({
     files.listUi.first = 0
   }
 })
+const statusFilter = computed({
+  get: () => files.listUi.status,
+  set: (v: string | null) => {
+    files.listUi.status = v ?? ''
+    files.listUi.first = 0
+  }
+})
 const selection = ref<FileRow[]>([])
 const busyRow = ref<string | null>(null)
 const deleteTargets = ref<FileRow[]>([])
@@ -45,9 +52,11 @@ const showPostUpload = ref(false)
 const rows = computed(() => {
   const q = filter.value.trim().toLowerCase()
   const month = monthFilter.value
+  const status = statusFilter.value
   return files.rows.filter(
     (f) =>
       (!month || f.yyyymm === month) &&
+      (!status || f.status === status) &&
       (!q || f.name.toLowerCase().includes(q) || f.description?.toLowerCase().includes(q))
   )
 })
@@ -62,6 +71,16 @@ function formatMonthLong(yyyymm: string): string {
 const monthOptions = computed(() => {
   const months = [...new Set(files.rows.map((f) => f.yyyymm))].sort().reverse()
   return months.map((m) => ({ label: formatMonthLong(m), value: m }))
+})
+
+// all statuses always listed (a selected one may drop to 0 after a transfer)
+const statusOptions = computed(() => {
+  const counts = new Map<SyncStatus, number>()
+  for (const f of files.rows) counts.set(f.status, (counts.get(f.status) ?? 0) + 1)
+  return (Object.keys(STATUS_SEVERITY) as SyncStatus[]).map((s) => ({
+    label: `${t(`status.${s}`)} (${counts.get(s) ?? 0})`,
+    value: s
+  }))
 })
 
 const STATUS_SEVERITY: Record<SyncStatus, string> = {
@@ -210,6 +229,15 @@ onBeforeUnmount(() => {
           option-label="label"
           option-value="value"
           :placeholder="t('browser.allMonths')"
+          show-clear
+          class="month-select"
+        />
+        <Select
+          v-model="statusFilter"
+          :options="statusOptions"
+          option-label="label"
+          option-value="value"
+          :placeholder="t('browser.allStatuses')"
           show-clear
           class="month-select"
         />
