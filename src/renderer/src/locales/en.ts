@@ -81,6 +81,7 @@ export default {
     warnings: '1 warning | {n} warnings',
     exportCsv: 'Export CSV',
     save: 'Save',
+    saveTip: 'Save locally (Cmd/Ctrl+S)',
     upload: 'Upload to Miniserver',
     undo: 'Undo (Cmd/Ctrl+Z)',
     redo: 'Redo (Shift+Cmd/Ctrl+Z)',

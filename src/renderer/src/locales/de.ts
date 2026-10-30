@@ -83,6 +83,7 @@ const de: typeof en = {
     warnings: '1 Warnung | {n} Warnungen',
     exportCsv: 'CSV exportieren',
     save: 'Speichern',
+    saveTip: 'Lokal speichern (Cmd/Strg+S)',
     upload: 'Auf Miniserver hochladen',
     undo: 'Rückgängig (Cmd/Strg+Z)',
     redo: 'Wiederholen (Umschalt+Cmd/Strg+Z)',

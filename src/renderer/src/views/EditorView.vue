@@ -152,10 +152,33 @@ function history(redo: boolean): void {
   if (redo ? editor.redo() : editor.undo()) selection.value = []
 }
 
-/** Cmd/Ctrl+Z, Shift+Cmd/Ctrl+Z, Ctrl+Y — inputs keep their own text undo */
+/** editor shortcuts (listed in docs/guide.md) — inputs keep their own text undo / select all */
 function onKeydown(e: KeyboardEvent): void {
+  const inInput = !!(e.target as HTMLElement).closest('input, textarea, [contenteditable]')
+  const inDialog = !!document.querySelector('.p-dialog')
+  if (!(e.metaKey || e.ctrlKey) && !e.altKey && !inInput && !inDialog) {
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selection.value.length) {
+      e.preventDefault()
+      deleteSelected()
+    } else if (e.key === 'Escape') {
+      selection.value = []
+    }
+    return
+  }
   if (!(e.metaKey || e.ctrlKey) || e.altKey) return
-  if ((e.target as HTMLElement).closest('input, textarea, [contenteditable]')) return
+  if (e.key.toLowerCase() === 'a' && !inInput && !inDialog) {
+    e.preventDefault()
+    selection.value = [...rows.value]
+    return
+  }
+  if (e.key.toLowerCase() === 's') {
+    e.preventDefault()
+    // cells commit on change (= blur), so a value still being typed gets saved too
+    ;(document.activeElement as HTMLElement | null)?.blur()
+    if (editor.dirty && !editor.saving) void editor.save()
+    return
+  }
+  if (inInput) return
   const key = e.key.toLowerCase()
   if (key !== 'z' && key !== 'y') return
   e.preventDefault()
@@ -213,6 +236,7 @@ watch(
           @click="exportCsv"
         />
         <Button
+          v-tooltip.bottom="t('editor.saveTip')"
           :label="t('editor.save')"
           icon="pi pi-save"
           severity="secondary"

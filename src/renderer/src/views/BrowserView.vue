@@ -177,8 +177,26 @@ function scrollContainer(): HTMLElement | null {
   return document.querySelector('.table .p-datatable-table-container')
 }
 
+const filterInput = ref<{ $el: HTMLInputElement } | null>(null)
+
+/** Cmd/Ctrl+F filter, Cmd/Ctrl+R or F5 refresh, Esc clears the selection */
+function onKeydown(e: KeyboardEvent): void {
+  const mod = e.metaKey || e.ctrlKey
+  const key = e.key.toLowerCase()
+  if (mod && key === 'f') {
+    e.preventDefault()
+    filterInput.value?.$el.focus()
+    filterInput.value?.$el.select()
+  } else if (e.key === 'F5' || (mod && key === 'r')) {
+    if (!files.loading) files.refresh()
+  } else if (e.key === 'Escape' && !document.querySelector('.p-dialog')) {
+    selection.value = []
+  }
+}
+
 let unsubscribe: (() => void) | null = null
 onMounted(async () => {
+  window.addEventListener('keydown', onKeydown)
   unsubscribe = window.api.onTransferProgress((p) => {
     if (files.transfer) files.transfer = p
   })
@@ -188,6 +206,7 @@ onMounted(async () => {
   if (el) el.scrollTop = files.listUi.scrollTop
 })
 onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
   files.listUi.scrollTop = scrollContainer()?.scrollTop ?? 0
   unsubscribe?.()
 })
@@ -222,7 +241,11 @@ onBeforeUnmount(() => {
           :disabled="!!files.transfer"
           @click="uploadSelected"
         />
-        <InputText v-model="filter" :placeholder="t('browser.filterPlaceholder')" />
+        <InputText
+          ref="filterInput"
+          v-model="filter"
+          :placeholder="t('browser.filterPlaceholder')"
+        />
         <Select
           v-model="monthFilter"
           :options="monthOptions"
