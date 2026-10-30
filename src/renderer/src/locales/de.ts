@@ -23,6 +23,7 @@ const de: typeof en = {
   browser: {
     filterPlaceholder: 'Dateien filtern…',
     allMonths: 'Alle Monate',
+    allStatuses: 'Alle Status',
     downloadSelected: '{n} ausgewählte herunterladen',
     uploadSelected: '{n} ausgewählte hochladen',
     backup: 'Backup',

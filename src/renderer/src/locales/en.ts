@@ -21,6 +21,7 @@ export default {
   browser: {
     filterPlaceholder: 'Filter files…',
     allMonths: 'All months',
+    allStatuses: 'All statuses',
     downloadSelected: 'Download {n} selected',
     uploadSelected: 'Upload {n} selected',
     backup: 'Backup',
