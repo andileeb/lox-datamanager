@@ -36,15 +36,19 @@ export function listConnections(): ConnMeta[] {
   return load().connections
 }
 
-export function saveConnection(meta: ConnMeta, password: string): void {
+async function encrypt(plain: string): Promise<string | null> {
+  if (!(await safeStorage.isAsyncEncryptionAvailable())) return null
+  return (await safeStorage.encryptStringAsync(plain)).toString('base64')
+}
+
+export async function saveConnection(meta: ConnMeta, password: string): Promise<void> {
+  const enc = await encrypt(password)
   const s = load()
   const idx = s.connections.findIndex((c) => c.id === meta.id)
   if (idx >= 0) s.connections[idx] = meta
   else s.connections.push(meta)
   // No OS keychain available → store no secret at all; user re-enters the password.
-  if (safeStorage.isEncryptionAvailable()) {
-    s.secrets[meta.id] = safeStorage.encryptString(password).toString('base64')
-  }
+  if (enc) s.secrets[meta.id] = enc
   persist(s)
 }
 
@@ -63,17 +67,20 @@ export function getConnection(id: string): ConnMeta | null {
  * Ciphertext is only decryptable by the app that wrote it — a dev build and the
  * packaged app get different macOS keychain entries while sharing userData, so
  * decryption throws on the other one's data. Treat that as "no secret stored".
+ * Ciphertext written by the pre-Electron-46 sync API decrypts here too.
  */
-function decrypt(b64: string | null | undefined): string | null {
-  if (!b64 || !safeStorage.isEncryptionAvailable()) return null
+async function decrypt(b64: string | null | undefined): Promise<string | null> {
+  if (!b64 || !(await safeStorage.isAsyncEncryptionAvailable())) return null
   try {
-    return safeStorage.decryptString(Buffer.from(b64, 'base64'))
+    // ponytail: shouldReEncrypt (key rotation) ignored — if the old key ever stops
+    // working the user re-enters the password once; re-encrypt here if that gets annoying
+    return (await safeStorage.decryptStringAsync(Buffer.from(b64, 'base64'))).result
   } catch {
     return null
   }
 }
 
-export function getPassword(id: string): string | null {
+export async function getPassword(id: string): Promise<string | null> {
   return decrypt(load().secrets[id])
 }
 
@@ -90,20 +97,18 @@ export function setMcpConfig(enabled: boolean, port: number): void {
   persist(s)
 }
 
-export function getMcpToken(): string | null {
+export async function getMcpToken(): Promise<string | null> {
   const enc = load().mcp?.tokenEnc
   if (!enc) return null
   if (enc.startsWith('plain:')) return enc.slice(6)
   return decrypt(enc)
 }
 
-export function regenerateMcpToken(): string {
+export async function regenerateMcpToken(): Promise<string> {
   const token = randomBytes(32).toString('base64url')
-  const s = load()
   // ponytail: plaintext fallback — the token only gates a localhost port, same trust level as the stats cache itself
-  const tokenEnc = safeStorage.isEncryptionAvailable()
-    ? safeStorage.encryptString(token).toString('base64')
-    : `plain:${token}`
+  const tokenEnc = (await encrypt(token)) ?? `plain:${token}`
+  const s = load()
   s.mcp = { ...(s.mcp ?? MCP_DEFAULTS), tokenEnc }
   persist(s)
   return token

@@ -166,17 +166,19 @@ export function buildServer(): McpServer {
     'list_connections',
     'List Miniserver connections saved in the app (passwords are never returned).',
     {},
-    () =>
+    async () =>
       json(
-        store.listConnections().map((c) => ({
-          id: c.id,
-          name: c.name,
-          host: c.host,
-          port: c.port,
-          user: c.user,
-          tls: c.tls,
-          hasPassword: store.getPassword(c.id) !== null
-        }))
+        await Promise.all(
+          store.listConnections().map(async (c) => ({
+            id: c.id,
+            name: c.name,
+            host: c.host,
+            port: c.port,
+            user: c.user,
+            tls: c.tls,
+            hasPassword: (await store.getPassword(c.id)) !== null
+          }))
+        )
       ),
     { readOnlyHint: true }
   )
@@ -188,7 +190,7 @@ export function buildServer(): McpServer {
     async ({ id }) => {
       const meta = store.getConnection(id as string)
       if (!meta) throw new CodedError('UNKNOWN', 'Saved connection not found')
-      const password = store.getPassword(id as string)
+      const password = await store.getPassword(id as string)
       if (password === null) {
         throw new CodedError('NO_PASSWORD', 'No stored password for this connection')
       }

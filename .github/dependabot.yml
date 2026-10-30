@@ -10,11 +10,13 @@ updates:
       minor-and-patch:
         update-types: [minor, patch]
     ignore:
-      # v5+ / v8+ are under the commercial PrimeUI license — see CLAUDE.md
+      # primevue 5+ / primeicons 8+ / @primeuix 3+ are under the commercial PrimeUI license — see CLAUDE.md
       - dependency-name: primevue
         versions: ['>=5']
       - dependency-name: primeicons
         versions: ['>=8']
+      - dependency-name: '@primeuix/*'
+        versions: ['>=3']
 
   - package-ecosystem: github-actions
     directory: /
