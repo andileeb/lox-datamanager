@@ -1,4 +1,5 @@
 import type {
+  Backup,
   CachedFile,
   ConnMeta,
   DownloadOutcome,
@@ -55,6 +56,12 @@ export interface Api {
     openCached(name: string): Promise<IpcResult<LocalOpened>>
     /** shows an open dialog; resolves with null when cancelled */
     open(kind: 'folder' | 'files'): Promise<IpcResult<LocalOpened | null>>
+  }
+  /** server copies saved before each upload/delete (connected sessions only) */
+  backups: {
+    list(name: string): Promise<IpcResult<Backup[]>>
+    /** copies the backup over the cached file; upload it to put it back on the Miniserver */
+    restore(name: string, id: string): Promise<IpcResult<null>>
   }
   cache: {
     list(): Promise<IpcResult<CachedFile[]>>

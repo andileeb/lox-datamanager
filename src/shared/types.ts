@@ -44,6 +44,12 @@ export interface CachedFile {
   nameFromHeader: string | null
 }
 
+/** server copy saved before an upload/delete; id = file-name-safe ISO timestamp */
+export interface Backup {
+  id: string
+  size: number
+}
+
 export type SyncStatus = 'only-remote' | 'only-local' | 'same' | 'remote-newer' | 'local-newer'
 
 /** ts = seconds since 2009-01-01 UTC (Loxone epoch) */

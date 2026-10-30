@@ -57,7 +57,7 @@ export default {
     tipTheme: 'Switch between light and dark mode',
     deleteTitle: 'Delete from Miniserver?',
     deleteBody:
-      'This permanently deletes the file from the Miniserver (a local copy, if any, is kept):',
+      'This deletes the file from the Miniserver. The server copy is backed up first and a local copy, if any, is kept:',
     deleteConfirm: 'Delete',
     cancel: 'Cancel'
   },
@@ -103,7 +103,7 @@ export default {
     noGaps: 'No gaps found at the detected recording interval',
     uploadConfirmTitle: 'Upload to Miniserver?',
     uploadConfirmBody:
-      'This overwrites {file} on the Miniserver with your edited copy. There is no undo — consider keeping a downloaded backup.',
+      'This overwrites {file} on the Miniserver with your edited copy. The current server copy is backed up first — you can restore it later via “Backups”.',
     uploadConfirm: 'Upload',
     postUploadTitle: 'Uploaded — two steps left',
     postUploadIntro: 'The Miniserver only picks up edited statistics after:',
@@ -112,7 +112,16 @@ export default {
       '<b>Clear the Loxone app cache</b> (or remove and re-add the Miniserver in the app) so cached statistics are refreshed.',
     gotIt: 'Got it',
     mcpChanged: 'This file was changed by an MCP client — reload to see the new data.',
-    mcpReload: 'Reload'
+    mcpReload: 'Reload',
+    backups: 'Backups',
+    backupsTip: 'Server copies saved before each upload or delete',
+    backupsIntro:
+      'The Miniserver’s copy of this file is saved before every upload or delete (the newest 10 are kept). Restoring replaces your local copy — review it, then upload.',
+    backupsUnsaved: 'Your unsaved edits will be lost.',
+    backupsEmpty: 'No backups yet — one is made the first time you upload this file.',
+    backupRestore: 'Restore',
+    backupRestored:
+      'Restored the server copy from {date} locally — upload it to put it back on the Miniserver.'
   },
   formula: {
     title: 'Calculate values',

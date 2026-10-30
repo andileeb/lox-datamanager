@@ -1,17 +1,61 @@
 import { app } from 'electron'
-import { closeSync, existsSync, mkdirSync, openSync, readdirSync, readSync, statSync } from 'fs'
+import {
+  closeSync,
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  openSync,
+  readdirSync,
+  readSync,
+  rmSync,
+  statSync
+} from 'fs'
 import { join } from 'path'
 import * as ftp from './ftp'
-import type { CachedFile, LocalSource } from '../shared/types'
+import type { Backup, CachedFile, LocalSource } from '../shared/types'
 import { STAT_FILENAME_RE } from '../shared/types'
 
 const cacheRoot = (): string => join(app.getPath('userData'), 'stats-cache')
 
+const safeHost = (host: string): string => host.replace(/[^a-zA-Z0-9.-]/g, '_')
+
 export function cacheDir(host: string): string {
-  const safe = host.replace(/[^a-zA-Z0-9.-]/g, '_')
-  const dir = join(cacheRoot(), safe)
+  const dir = join(cacheRoot(), safeHost(host))
   mkdirSync(dir, { recursive: true })
   return dir
+}
+
+/** server copies saved right before an upload/delete overwrote them, newest kept per file */
+const BACKUPS_KEPT = 10
+
+function backupDir(host: string, name: string): string {
+  if (!STAT_FILENAME_RE.test(name)) throw new Error(`Invalid statistics file name: ${name}`)
+  return join(app.getPath('userData'), 'stats-backups', safeHost(host), name)
+}
+
+/** newest first; ids are ISO timestamps with ':' and '.' swapped for '-' (file-name safe) */
+export function listBackups(host: string, name: string): Backup[] {
+  const dir = backupDir(host, name)
+  if (!existsSync(dir)) return []
+  return readdirSync(dir)
+    .sort()
+    .reverse()
+    .map((id) => ({ id, size: statSync(join(dir, id)).size }))
+}
+
+/** a fresh path for the next backup of name; drops the oldest beyond BACKUPS_KEPT */
+export function newBackupPath(host: string, name: string): string {
+  const dir = backupDir(host, name)
+  mkdirSync(dir, { recursive: true })
+  for (const old of listBackups(host, name).slice(BACKUPS_KEPT - 1)) rmSync(join(dir, old.id))
+  return join(dir, new Date().toISOString().replace(/[:.]/g, '-'))
+}
+
+/** copies a backup over the cached file — the user reviews it, then uploads as usual */
+export function restoreBackup(host: string, name: string, id: string): void {
+  // id is renderer-supplied — only accept one that exists (path-traversal guard)
+  if (!listBackups(host, name).some((b) => b.id === id)) throw new Error(`No backup ${id}`)
+  copyFileSync(join(backupDir(host, name), id), cachePath(host, name))
 }
 
 /** name is renderer-supplied — the regex check doubles as path-traversal protection */
