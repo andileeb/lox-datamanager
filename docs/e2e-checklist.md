@@ -32,6 +32,8 @@ admin user. **Back up `/stats` first** (bulk download to the local folder).
 - [ ] Edit one value → Save → re-open file → edit persisted locally
 - [ ] Re-download the unedited original → byte-compare (`cmp`) with a pre-download copy → identical
 - [ ] Edit → upload → confirm + post-upload checklist appear
+- [ ] Backups → one entry; its file in `userData/stats-backups/<host>/<file>/` is byte-identical to the pre-upload server copy
+- [ ] Restore it → editor shows the old values → upload → re-download matches the original (`cmp`)
 - [ ] Restart Miniserver, clear app cache → edited value visible in the Loxone app
 - [ ] Re-download the uploaded file → parses clean, shows the edit, no problems
 - [ ] Insert row / delete rows / fill gaps / formula (`v * 2`) behave as expected and validation updates

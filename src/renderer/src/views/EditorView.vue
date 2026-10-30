@@ -18,7 +18,9 @@ import { useEditorStore } from '../stores/editor'
 import { useConnectionStore } from '../stores/connection'
 import { SUFFIX_KEYS } from '../stores/files'
 import { errorText } from '../i18n'
-import { loxToDisplayPref } from '../prefs'
+import { formatDateTime, loxToDisplayPref } from '../prefs'
+import { useFilesStore } from '../stores/files'
+import type { Backup } from '../../../shared/types'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{ filename: string }>()
@@ -35,6 +37,8 @@ const showFormula = ref(false)
 const showUploadConfirm = ref(false)
 const showPostUpload = ref(false)
 const fillResult = ref<number | null>(null)
+const backups = ref<Backup[] | null>(null) // non-null = dialog open
+const restoredFrom = ref<string | null>(null)
 
 interface Row {
   index: number
@@ -138,6 +142,30 @@ function applyFormula(
 async function upload(): Promise<void> {
   showUploadConfirm.value = false
   if (await editor.upload()) showPostUpload.value = true
+}
+
+/** backup ids are ISO timestamps with ':' and '.' replaced by '-' (cache.ts) */
+function backupDate(id: string): string {
+  const m = /^(\d{4}-\d\d-\d\d)T(\d\d)-(\d\d)-(\d\d)-(\d{3})Z$/.exec(id)
+  return m ? formatDateTime(new Date(`${m[1]}T${m[2]}:${m[3]}:${m[4]}.${m[5]}Z`)) : id
+}
+
+async function openBackups(): Promise<void> {
+  const r = await window.api.backups.list(props.filename)
+  if (r.ok) backups.value = r.data
+  else editor.error = r.error
+}
+
+async function restoreBackup(b: Backup): Promise<void> {
+  backups.value = null
+  const r = await window.api.backups.restore(props.filename, b.id)
+  if (!r.ok) {
+    editor.error = r.error
+    return
+  }
+  await editor.load(props.filename)
+  void useFilesStore().refreshCache()
+  restoredFrom.value = backupDate(b.id)
 }
 
 async function exportCsv(): Promise<void> {
@@ -246,6 +274,15 @@ watch(
         />
         <Button
           v-if="!conn.offline"
+          v-tooltip.bottom="t('editor.backupsTip')"
+          :label="t('editor.backups')"
+          icon="pi pi-history"
+          severity="secondary"
+          text
+          @click="openBackups"
+        />
+        <Button
+          v-if="!conn.offline"
           :label="t('editor.upload')"
           icon="pi pi-cloud-upload"
           :disabled="!editor.data"
@@ -278,6 +315,9 @@ watch(
     </Message>
     <Message v-if="csvPath" severity="success" closable @close="csvPath = null">
       {{ t('editor.exportedTo', { path: csvPath }) }}
+    </Message>
+    <Message v-if="restoredFrom" severity="success" closable @close="restoredFrom = null">
+      {{ t('editor.backupRestored', { date: restoredFrom }) }}
     </Message>
     <Message v-if="fillResult !== null" severity="info" closable @close="fillResult = null">
       {{ fillResult ? t('editor.gapsFilled', fillResult) : t('editor.noGaps') }}
@@ -450,10 +490,48 @@ watch(
         </template>
       </Dialog>
     </template>
+
+    <Dialog
+      :visible="backups !== null"
+      :header="t('editor.backups')"
+      modal
+      :style="{ width: '28rem' }"
+      @update:visible="backups = null"
+    >
+      <p>{{ t('editor.backupsIntro') }}</p>
+      <p v-if="editor.dirty" class="warn">{{ t('editor.backupsUnsaved') }}</p>
+      <p v-if="!backups?.length" class="muted">{{ t('editor.backupsEmpty') }}</p>
+      <ul v-else class="backup-list">
+        <li v-for="b in backups" :key="b.id">
+          <span>{{ backupDate(b.id) }}</span>
+          <Button
+            :label="t('editor.backupRestore')"
+            icon="pi pi-replay"
+            size="small"
+            severity="secondary"
+            text
+            @click="restoreBackup(b)"
+          />
+        </li>
+      </ul>
+    </Dialog>
   </main>
 </template>
 
 <style scoped>
+.backup-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+}
+.backup-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.warn {
+  color: var(--p-orange-500);
+}
 .toolbar {
   display: flex;
   justify-content: space-between;

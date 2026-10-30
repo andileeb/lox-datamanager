@@ -59,7 +59,7 @@ const de: typeof en = {
     tipTheme: 'Zwischen hellem und dunklem Modus wechseln',
     deleteTitle: 'Vom Miniserver löschen?',
     deleteBody:
-      'Die Datei wird dauerhaft vom Miniserver gelöscht (eine lokale Kopie bleibt erhalten):',
+      'Dies löscht die Datei am Miniserver. Die Server-Kopie wird vorher gesichert, eine lokale Kopie (falls vorhanden) bleibt erhalten:',
     deleteConfirm: 'Löschen',
     cancel: 'Abbrechen'
   },
@@ -105,7 +105,7 @@ const de: typeof en = {
     noGaps: 'Keine Lücken im erkannten Aufzeichnungsintervall gefunden',
     uploadConfirmTitle: 'Auf Miniserver hochladen?',
     uploadConfirmBody:
-      'Dies überschreibt {file} am Miniserver mit der bearbeiteten Kopie. Es gibt kein Rückgängig — am besten ein heruntergeladenes Backup behalten.',
+      'Dies überschreibt {file} am Miniserver mit der bearbeiteten Kopie. Die aktuelle Server-Kopie wird vorher gesichert — wiederherstellen jederzeit über „Backups“.',
     uploadConfirm: 'Hochladen',
     postUploadTitle: 'Hochgeladen — zwei Schritte fehlen noch',
     postUploadIntro: 'Der Miniserver übernimmt bearbeitete Statistiken erst nach:',
@@ -115,7 +115,16 @@ const de: typeof en = {
     gotIt: 'Verstanden',
     mcpChanged:
       'Diese Datei wurde von einem MCP-Client geändert — neu laden, um die neuen Daten zu sehen.',
-    mcpReload: 'Neu laden'
+    mcpReload: 'Neu laden',
+    backups: 'Backups',
+    backupsTip: 'Server-Kopien, gesichert vor jedem Hochladen oder Löschen',
+    backupsIntro:
+      'Die Kopie dieser Datei am Miniserver wird vor jedem Hochladen oder Löschen gesichert (die neuesten 10 bleiben). Wiederherstellen ersetzt die lokale Kopie — prüfen, dann hochladen.',
+    backupsUnsaved: 'Ungespeicherte Änderungen gehen verloren.',
+    backupsEmpty: 'Noch keine Backups — eines entsteht beim ersten Hochladen dieser Datei.',
+    backupRestore: 'Wiederherstellen',
+    backupRestored:
+      'Server-Kopie vom {date} lokal wiederhergestellt — hochladen, um sie zurück auf den Miniserver zu bringen.'
   },
   formula: {
     title: 'Werte berechnen',
