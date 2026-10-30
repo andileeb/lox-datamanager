@@ -44,7 +44,7 @@ const parsedFiles = new Map<string, ParsedStatFile>()
 const dirty = new Set<string>()
 
 export function loadParsed(name: string): ParsedStatFile {
-  const path = cache.cachePath(ftp.activeHost(), name)
+  const path = cache.workPath(name)
   let parsed: ParsedStatFile
   try {
     parsed = parseStatFile(readFileSync(path), name)
@@ -90,7 +90,7 @@ export function toStatFileData(p: ParsedStatFile): StatFileData {
 export function saveRecords(name: string, records: StatRecord[]): Problem[] {
   const parsed = getParsed(name)
   const buf = serializeStatFile(parsed, records)
-  writeFileSync(cache.cachePath(ftp.activeHost(), name), buf)
+  writeFileSync(cache.workPath(name), buf)
   parsed.records = records
   parsed.problems = validateRecords(records, name.slice(-6), parsed.valueCount)
   dirty.delete(name)

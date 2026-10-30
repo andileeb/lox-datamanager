@@ -1,5 +1,12 @@
 import { defineStore } from 'pinia'
-import type { ApiError, ConnMeta, TlsMode } from '../../../shared/types'
+import type {
+  ApiError,
+  ConnMeta,
+  IpcResult,
+  LocalOpened,
+  LocalSource,
+  TlsMode
+} from '../../../shared/types'
 import type { ConnectPayload } from '../../../shared/api'
 import { useFilesStore } from './files'
 
@@ -8,13 +15,36 @@ export const useConnectionStore = defineStore('connection', {
     status: 'disconnected' as 'disconnected' | 'connecting' | 'connected',
     tlsMode: null as TlsMode | null,
     activeLabel: '',
+    /** offline session: a cached host or local folder, no Miniserver */
+    offline: false,
     saved: [] as ConnMeta[],
+    cachedHosts: [] as LocalSource[],
     error: null as ApiError | null
   }),
   actions: {
     async loadSaved() {
       const r = await window.api.connections.list()
       if (r.ok) this.saved = r.data
+      const c = await window.api.local.cachedHosts()
+      if (c.ok) this.cachedHosts = c.data
+    },
+    /** resolves with the opened files (null = whole folder), or undefined on cancel/error */
+    async openLocal(
+      open: () => Promise<IpcResult<LocalOpened | null>>
+    ): Promise<string[] | null | undefined> {
+      this.error = null
+      const r = await open()
+      if (!r.ok) {
+        this.error = r.error
+        return undefined
+      }
+      if (!r.data) return undefined
+      useFilesStore().$reset()
+      this.status = 'connected'
+      this.offline = true
+      this.tlsMode = null
+      this.activeLabel = r.data.label
+      return r.data.files
     },
     async connect(args: ConnectPayload, saveAs?: string): Promise<boolean> {
       this.status = 'connecting'
@@ -26,6 +56,7 @@ export const useConnectionStore = defineStore('connection', {
         return false
       }
       this.status = 'connected'
+      this.offline = false
       this.tlsMode = r.data
       this.activeLabel = saveAs || args.host
       if (saveAs) {
@@ -53,6 +84,7 @@ export const useConnectionStore = defineStore('connection', {
         return false
       }
       this.status = 'connected'
+      this.offline = false
       this.tlsMode = r.data
       this.activeLabel = meta.name
       return true
@@ -64,6 +96,7 @@ export const useConnectionStore = defineStore('connection', {
     async disconnect() {
       await window.api.ftp.disconnect()
       this.status = 'disconnected'
+      this.offline = false
       this.tlsMode = null
       this.activeLabel = ''
       useFilesStore().$reset()

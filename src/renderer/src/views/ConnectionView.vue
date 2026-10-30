@@ -85,6 +85,22 @@ async function useSaved(meta: ConnMeta): Promise<void> {
   }
 }
 
+/** cache folders are named after the sanitized host (cache.ts) — show the saved name when known */
+function cachedLabel(name: string): string {
+  const meta = conn.saved.find((m) => m.host.replace(/[^a-zA-Z0-9.-]/g, '_') === name)
+  return meta ? `${meta.name} (${name})` : name
+}
+
+/** cachedHost given → open that cache folder, otherwise show a folder/file picker */
+async function openLocal(kind: 'folder' | 'files', cachedHost?: string): Promise<void> {
+  const files = await conn.openLocal(() =>
+    cachedHost ? window.api.local.openCached(cachedHost) : window.api.local.open(kind)
+  )
+  if (files === undefined) return
+  if (cachedHost) conn.activeLabel = cachedLabel(cachedHost)
+  router.push(files?.length === 1 ? `/editor/${files[0]}` : '/browser')
+}
+
 const update = ref<UpdateCheck | null>(null)
 
 onMounted(async () => {
@@ -201,6 +217,39 @@ onMounted(async () => {
         </div>
       </form>
 
+      <div class="saved offline">
+        <h2>{{ t('connect.offline') }}</h2>
+        <p class="hint">{{ t('connect.offlineHint') }}</p>
+        <Button
+          v-for="h in conn.cachedHosts"
+          :key="h.name"
+          class="saved-main"
+          severity="secondary"
+          :label="t('connect.cachedHost', { name: cachedLabel(h.name), n: h.count }, h.count)"
+          icon="pi pi-database"
+          :disabled="busy"
+          @click="openLocal('folder', h.name)"
+        />
+        <div class="saved-row">
+          <Button
+            class="saved-main"
+            severity="secondary"
+            :label="t('connect.openFolder')"
+            icon="pi pi-folder-open"
+            :disabled="busy"
+            @click="openLocal('folder')"
+          />
+          <Button
+            class="saved-main"
+            severity="secondary"
+            :label="t('connect.openFiles')"
+            icon="pi pi-file"
+            :disabled="busy"
+            @click="openLocal('files')"
+          />
+        </div>
+      </div>
+
       <Message v-if="conn.error" severity="error" :closable="false">
         {{ errorText(conn.error) }}
       </Message>
@@ -261,6 +310,10 @@ onMounted(async () => {
 .saved-main {
   flex: 1;
   justify-content: flex-start;
+}
+.hint {
+  color: var(--p-text-muted-color);
+  font-size: 0.875rem;
 }
 .form {
   display: flex;

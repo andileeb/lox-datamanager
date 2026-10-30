@@ -13,6 +13,12 @@ export default {
     tlsPlain: 'Plain FTP',
     saveConnection: 'Save connection',
     namePlaceholder: 'Name (optional)',
+    offline: 'Work offline',
+    offlineHint:
+      'View and edit statistics without connecting — downloaded files, a backup or an SD-card copy. Upload needs a connection.',
+    cachedHost: '{name} · 1 file | {name} · {n} files',
+    openFolder: 'Open folder…',
+    openFiles: 'Open files…',
     connect: 'Connect',
     cancel: 'Cancel connection attempt',
     ftpHint:
@@ -25,6 +31,8 @@ export default {
     uploadSelected: 'Upload {n} selected',
     backup: 'Backup',
     disconnect: 'Disconnect',
+    close: 'Close',
+    offline: 'Offline',
     colFile: 'File',
     colDescription: 'Description',
     colMonth: 'Month',
@@ -35,8 +43,10 @@ export default {
     unknownTooltip:
       "No stat name found in this control's file headers yet — its files may be empty or their download failed. Refreshing retries other months.",
     empty: 'No statistics files found in /stats.',
+    emptyLocal: 'No statistics files (<uuid>.YYYYMM) in this folder.',
     tipRefresh: 'Refresh file list',
     tipOpenFolder: 'Open local download folder',
+    tipOpenThisFolder: 'Show this folder in the file manager',
     tipBackup: 'Download all stats from the Miniserver into a zip file',
     tipDownload: 'Download to this computer',
     tipOpen: 'Open chart & editor',

@@ -1,7 +1,7 @@
 import { app, dialog, ipcMain, shell } from 'electron'
 import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
-import { join } from 'path'
+import { basename, dirname, join } from 'path'
 import { zipSync, type Zippable } from 'fflate'
 import * as ftp from './ftp'
 import * as store from './store'
@@ -11,7 +11,8 @@ import * as mcp from './mcp'
 import * as updates from './updates'
 import { CodedError, toApiError } from './stats-service'
 import { validateRecords } from './statfile'
-import type { ConnMeta, IpcResult, McpState, StatRecord } from '../shared/types'
+import type { ConnMeta, IpcResult, LocalOpened, McpState, StatRecord } from '../shared/types'
+import { STAT_FILENAME_RE } from '../shared/types'
 import type { ConnectPayload, TransferFilePayload } from '../shared/api'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,9 +39,26 @@ function handleE(channel: string, fn: Handler): void {
   })
 }
 
+/** leave any Miniserver/offline session before starting a new one */
+function resetSession(): void {
+  stats.clear()
+  ftp.disconnect()
+  cache.setLocalDir(null)
+}
+
+function openLocal(dir: string, label: string, files: string[] | null): LocalOpened {
+  resetSession()
+  cache.setLocalDir(dir)
+  return { label, files }
+}
+
 export function registerIpc(): void {
-  handle('ftp:connect', (args: ConnectPayload) => ftp.connect(args))
+  handle('ftp:connect', (args: ConnectPayload) => {
+    cache.setLocalDir(null)
+    return ftp.connect(args)
+  })
   handle('ftp:connectSaved', async (id: string) => {
+    cache.setLocalDir(null)
     const meta = store.getConnection(id)
     if (!meta) throw new CodedError('UNKNOWN', 'Saved connection not found')
     const password = await store.getPassword(id)
@@ -50,8 +68,28 @@ export function registerIpc(): void {
     return ftp.connect({ ...meta, password })
   })
   handle('ftp:disconnect', () => {
-    stats.clear()
-    return ftp.disconnect()
+    resetSession()
+    return null
+  })
+
+  handle('local:cachedHosts', () => cache.listCachedHosts())
+  handle('local:openCached', (name: string) => openLocal(cache.cachedHostDir(name), name, null))
+  handle('local:open', async (kind: 'folder' | 'files'): Promise<LocalOpened | null> => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: kind === 'folder' ? ['openDirectory'] : ['openFile', 'multiSelections']
+    })
+    if (canceled || !filePaths.length) return null
+    if (kind === 'folder') return openLocal(filePaths[0], basename(filePaths[0]), null)
+    const dir = dirname(filePaths[0])
+    const names = filePaths.map((p) => basename(p))
+    const bad = names.find((n) => !STAT_FILENAME_RE.test(n))
+    if (bad) {
+      throw new CodedError('IO_ERROR', `${bad} is not a Loxone statistics file (<uuid>.YYYYMM)`)
+    }
+    if (filePaths.some((p) => dirname(p) !== dir)) {
+      throw new CodedError('IO_ERROR', 'Pick files from one folder')
+    }
+    return openLocal(dir, basename(dir), names)
   })
   handle('ftp:listStats', () => ftp.listStats())
   handleE('ftp:download', (event, files: TransferFilePayload[]) =>
@@ -122,9 +160,9 @@ export function registerIpc(): void {
     return ftp.remove(names)
   })
 
-  handle('cache:list', () => cache.listCache(ftp.activeHost()))
+  handle('cache:list', () => cache.listDir(cache.workDir()))
   handle('cache:openFolder', () => {
-    shell.openPath(cache.cacheDir(ftp.activeHost()))
+    shell.openPath(cache.workDir())
     return null
   })
 

@@ -15,6 +15,12 @@ const de: typeof en = {
     tlsPlain: 'Unverschlüsseltes FTP',
     saveConnection: 'Verbindung speichern',
     namePlaceholder: 'Name (optional)',
+    offline: 'Offline arbeiten',
+    offlineHint:
+      'Statistiken ohne Verbindung ansehen und bearbeiten – heruntergeladene Dateien, ein Backup oder eine SD-Karten-Kopie. Hochladen braucht eine Verbindung.',
+    cachedHost: '{name} · 1 Datei | {name} · {n} Dateien',
+    openFolder: 'Ordner öffnen…',
+    openFiles: 'Dateien öffnen…',
     connect: 'Verbinden',
     cancel: 'Verbindungsversuch abbrechen',
     ftpHint:
@@ -27,6 +33,8 @@ const de: typeof en = {
     uploadSelected: '{n} ausgewählte hochladen',
     backup: 'Backup',
     disconnect: 'Trennen',
+    close: 'Schließen',
+    offline: 'Offline',
     colFile: 'Datei',
     colDescription: 'Beschreibung',
     colMonth: 'Monat',
@@ -37,8 +45,10 @@ const de: typeof en = {
     unknownTooltip:
       'In den Datei-Headern dieses Bausteins wurde noch kein Name gefunden — die Dateien sind evtl. leer oder der Download schlug fehl. Aktualisieren versucht andere Monate.',
     empty: 'Keine Statistikdateien in /stats gefunden.',
+    emptyLocal: 'Keine Statistikdateien (<uuid>.YYYYMM) in diesem Ordner.',
     tipRefresh: 'Dateiliste aktualisieren',
     tipOpenFolder: 'Lokalen Download-Ordner öffnen',
+    tipOpenThisFolder: 'Diesen Ordner im Dateimanager zeigen',
     tipBackup: 'Alle Statistiken vom Miniserver als Zip-Datei sichern',
     tipDownload: 'Auf diesen Computer herunterladen',
     tipOpen: 'Diagramm & Editor öffnen',

@@ -31,6 +31,9 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     (unit-testable). See "Binary format" below.
   - `cache.ts` — per-host download cache in `userData/stats-cache/<host>/`.
     `cachePath()` validates names against `STAT_FILENAME_RE` (path-traversal guard).
+    Offline sessions (cached host / any local folder, `local:*` IPC) set `localDir`;
+    everything session-related goes through `workDir()`/`workPath()` (= `localDir` or
+    the connected host's cache), so editor, save and MCP work the same offline.
   - `store.ts` — saved connections: plain JSON in userData + passwords encrypted
     with Electron `safeStorage` (no keychain → password simply not stored).
   - `stats-service.ts` — shared session logic for IPC **and** MCP so they can't

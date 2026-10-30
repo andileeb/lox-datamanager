@@ -23,6 +23,19 @@ export interface RemoteFile {
   modifiedAt: string | null
 }
 
+/** a cached host folder that can be opened offline */
+export interface LocalSource {
+  name: string
+  count: number
+}
+
+/** result of opening a cached host / local folder / local files */
+export interface LocalOpened {
+  label: string
+  /** the picked files when single files were opened, null for a whole folder */
+  files: string[] | null
+}
+
 export interface CachedFile {
   name: string
   size: number

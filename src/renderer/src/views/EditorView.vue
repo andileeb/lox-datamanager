@@ -15,6 +15,7 @@ import { displayToLox } from '../../../shared/time'
 import { LOXONE_EPOCH_OFFSET } from '../../../shared/types'
 import { isCurrentMonth as isCurrentMonthName } from '../../../shared/records'
 import { useEditorStore } from '../stores/editor'
+import { useConnectionStore } from '../stores/connection'
 import { SUFFIX_KEYS } from '../stores/files'
 import { errorText } from '../i18n'
 import { loxToDisplayPref } from '../prefs'
@@ -23,6 +24,7 @@ import { useI18n } from 'vue-i18n'
 const props = defineProps<{ filename: string }>()
 const router = useRouter()
 const editor = useEditorStore()
+const conn = useConnectionStore()
 const { t } = useI18n()
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -200,6 +202,7 @@ watch(
           @click="editor.save()"
         />
         <Button
+          v-if="!conn.offline"
           :label="t('editor.upload')"
           icon="pi pi-cloud-upload"
           :disabled="!editor.data"

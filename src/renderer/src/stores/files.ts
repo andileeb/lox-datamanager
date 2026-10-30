@@ -8,6 +8,7 @@ import type {
 } from '../../../shared/types'
 import { STAT_FILENAME_RE } from '../../../shared/types'
 import { statusOf } from '../../../shared/records'
+import { useConnectionStore } from './connection'
 
 export interface FileRow {
   name: string
@@ -87,10 +88,14 @@ export const useFilesStore = defineStore('files', {
     async refresh() {
       this.loading = true
       this.error = null
-      const [r, c] = await Promise.all([window.api.ftp.listStats(), window.api.cache.list()])
+      const offline = useConnectionStore().offline
+      const [r, c] = await Promise.all([
+        offline ? null : window.api.ftp.listStats(),
+        window.api.cache.list()
+      ])
       this.loading = false
-      if (r.ok) this.remote = r.data
-      else this.error = r.error
+      if (r?.ok) this.remote = r.data
+      else if (r) this.error = r.error
       if (c.ok) this.cached = c.data
       void this.resolveNames()
     },
