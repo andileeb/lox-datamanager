@@ -3,6 +3,11 @@
 A modern, cross-platform viewer and editor for **Loxone Miniserver statistics** —
 heavily inspired by [LoxStatEdit](https://github.com/mr-manuel/Loxone_LoxStatEdit).
 
+> **Unofficial project.** Loxone DataManager is an independent community tool and is
+> not affiliated with, endorsed by or in any way related to
+> [Loxone Electronics GmbH](https://www.loxone.com). "Loxone" and "Miniserver" are
+> trademarks of their respective owner.
+
 <a href="https://www.buymeacoffee.com/andileeb"><img src="https://cdn.buymeacoffee.com/buttons/v2/lato-yellow.png" alt="Buy me a coffee" height="40"></a>
 
 <picture>
@@ -27,6 +32,8 @@ your Miniserver connection in the app.
 - **Round-trip safe**: files are re-serialized byte-identically (verified by tests) —
   only what you change changes
 - **Upload back** to the Miniserver, with a post-upload checklist (restart + app cache)
+- **Work offline**: open downloaded stats, a backup folder or single files without
+  connecting — see [Work offline](docs/offline.md)
 - **CSV export**, saved connections (password in the OS keychain), Gen 1 and Gen 2 support
 - **MCP server**: let AI assistants (Claude Code, Claude Desktop, …) browse, analyze,
   and fix your statistics through the app — see [MCP server](#mcp-server)
@@ -69,6 +76,8 @@ Claude (or any MCP client) to find and fix problems for you. See [MCP server](#m
 </picture>
 
 <sub>All screenshots show generated demo data (`pnpm run screenshots`).</sub>
+
+More in the [guide](docs/guide.md).
 
 ## Installation
 

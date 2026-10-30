@@ -37,6 +37,13 @@ const monthFilter = computed({
     files.listUi.first = 0
   }
 })
+const statusFilter = computed({
+  get: () => files.listUi.status,
+  set: (v: string | null) => {
+    files.listUi.status = v ?? ''
+    files.listUi.first = 0
+  }
+})
 const selection = ref<FileRow[]>([])
 const busyRow = ref<string | null>(null)
 const deleteTargets = ref<FileRow[]>([])
@@ -45,9 +52,11 @@ const showPostUpload = ref(false)
 const rows = computed(() => {
   const q = filter.value.trim().toLowerCase()
   const month = monthFilter.value
+  const status = statusFilter.value
   return files.rows.filter(
     (f) =>
       (!month || f.yyyymm === month) &&
+      (!status || f.status === status) &&
       (!q || f.name.toLowerCase().includes(q) || f.description?.toLowerCase().includes(q))
   )
 })
@@ -62,6 +71,16 @@ function formatMonthLong(yyyymm: string): string {
 const monthOptions = computed(() => {
   const months = [...new Set(files.rows.map((f) => f.yyyymm))].sort().reverse()
   return months.map((m) => ({ label: formatMonthLong(m), value: m }))
+})
+
+// all statuses always listed (a selected one may drop to 0 after a transfer)
+const statusOptions = computed(() => {
+  const counts = new Map<SyncStatus, number>()
+  for (const f of files.rows) counts.set(f.status, (counts.get(f.status) ?? 0) + 1)
+  return (Object.keys(STATUS_SEVERITY) as SyncStatus[]).map((s) => ({
+    label: `${t(`status.${s}`)} (${counts.get(s) ?? 0})`,
+    value: s
+  }))
 })
 
 const STATUS_SEVERITY: Record<SyncStatus, string> = {
@@ -179,7 +198,9 @@ onBeforeUnmount(() => {
     <div class="toolbar">
       <div class="title">
         <h1>{{ conn.activeLabel }}</h1>
+        <Tag v-if="conn.offline" :value="t('browser.offline')" severity="secondary" />
         <Tag
+          v-else
           :value="conn.tlsMode === 'ftps' ? 'FTPS' : 'FTP'"
           :severity="conn.tlsMode === 'ftps' ? 'success' : 'warn'"
         />
@@ -187,14 +208,14 @@ onBeforeUnmount(() => {
       </div>
       <div class="actions">
         <Button
-          v-if="selection.length"
+          v-if="selection.length && !conn.offline"
           :label="t('browser.downloadSelected', { n: selection.length })"
           icon="pi pi-download"
           :disabled="!!files.transfer"
           @click="downloadSelected"
         />
         <Button
-          v-if="uploadableSelected.length"
+          v-if="uploadableSelected.length && !conn.offline"
           :label="t('browser.uploadSelected', { n: uploadableSelected.length })"
           icon="pi pi-cloud-upload"
           severity="warn"
@@ -211,6 +232,15 @@ onBeforeUnmount(() => {
           show-clear
           class="month-select"
         />
+        <Select
+          v-model="statusFilter"
+          :options="statusOptions"
+          option-label="label"
+          option-value="value"
+          :placeholder="t('browser.allStatuses')"
+          show-clear
+          class="month-select"
+        />
         <Button
           v-tooltip.bottom="t('browser.tipRefresh')"
           icon="pi pi-refresh"
@@ -220,13 +250,16 @@ onBeforeUnmount(() => {
           @click="files.refresh()"
         />
         <Button
-          v-tooltip.bottom="t('browser.tipOpenFolder')"
+          v-tooltip.bottom="
+            conn.offline ? t('browser.tipOpenThisFolder') : t('browser.tipOpenFolder')
+          "
           icon="pi pi-folder-open"
           severity="secondary"
           aria-label="Open local folder"
           @click="openCacheFolder"
         />
         <Button
+          v-if="!conn.offline"
           v-tooltip.bottom="t('browser.tipBackup')"
           icon="pi pi-file-export"
           :label="t('browser.backup')"
@@ -236,7 +269,7 @@ onBeforeUnmount(() => {
         />
         <Button
           icon="pi pi-sign-out"
-          :label="t('browser.disconnect')"
+          :label="conn.offline ? t('browser.close') : t('browser.disconnect')"
           severity="secondary"
           @click="disconnect"
         />
@@ -267,7 +300,7 @@ onBeforeUnmount(() => {
       scroll-height="flex"
       class="table"
     >
-      <Column selection-mode="multiple" header-style="width: 3rem" />
+      <Column v-if="!conn.offline" selection-mode="multiple" header-style="width: 3rem" />
       <Column field="name" :header="t('browser.colFile')" sortable>
         <template #body="{ data }">
           <span class="mono">{{ data.name }}</span>
@@ -306,10 +339,11 @@ onBeforeUnmount(() => {
           />
         </template>
       </Column>
-      <Column header-style="width: 11rem">
+      <Column header-style="width: 11rem" frozen align-frozen="right">
         <template #body="{ data }">
           <div class="row-actions">
             <Button
+              v-if="!conn.offline"
               v-tooltip.left="t('browser.tipDownload')"
               icon="pi pi-download"
               text
@@ -328,6 +362,7 @@ onBeforeUnmount(() => {
               @click="openEditor(data)"
             />
             <Button
+              v-if="!conn.offline"
               v-tooltip.left="t('browser.tipUpload')"
               icon="pi pi-cloud-upload"
               text
@@ -339,6 +374,7 @@ onBeforeUnmount(() => {
               @click="uploadOne(data)"
             />
             <Button
+              v-if="!conn.offline"
               v-tooltip.left="t('browser.tipDelete')"
               icon="pi pi-trash"
               text
@@ -351,7 +387,9 @@ onBeforeUnmount(() => {
         </template>
       </Column>
       <template #empty>
-        <span v-if="!files.loading">{{ t('browser.empty') }}</span>
+        <span v-if="!files.loading">{{
+          conn.offline ? t('browser.emptyLocal') : t('browser.empty')
+        }}</span>
       </template>
     </DataTable>
 
@@ -420,6 +458,7 @@ onBeforeUnmount(() => {
 }
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 .month-select {

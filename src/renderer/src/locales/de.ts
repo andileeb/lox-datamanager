@@ -15,6 +15,12 @@ const de: typeof en = {
     tlsPlain: 'Unverschlüsseltes FTP',
     saveConnection: 'Verbindung speichern',
     namePlaceholder: 'Name (optional)',
+    offline: 'Offline arbeiten',
+    offlineHint:
+      'Statistiken ohne Verbindung ansehen und bearbeiten – heruntergeladene Dateien, ein Backup oder eine SD-Karten-Kopie. Hochladen braucht eine Verbindung.',
+    cachedHost: '{name} · 1 Datei | {name} · {n} Dateien',
+    openFolder: 'Ordner öffnen…',
+    openFiles: 'Dateien öffnen…',
     connect: 'Verbinden',
     cancel: 'Verbindungsversuch abbrechen',
     ftpHint:
@@ -23,10 +29,13 @@ const de: typeof en = {
   browser: {
     filterPlaceholder: 'Dateien filtern…',
     allMonths: 'Alle Monate',
+    allStatuses: 'Alle Status',
     downloadSelected: '{n} ausgewählte herunterladen',
     uploadSelected: '{n} ausgewählte hochladen',
     backup: 'Backup',
     disconnect: 'Trennen',
+    close: 'Schließen',
+    offline: 'Offline',
     colFile: 'Datei',
     colDescription: 'Beschreibung',
     colMonth: 'Monat',
@@ -37,8 +46,10 @@ const de: typeof en = {
     unknownTooltip:
       'In den Datei-Headern dieses Bausteins wurde noch kein Name gefunden — die Dateien sind evtl. leer oder der Download schlug fehl. Aktualisieren versucht andere Monate.',
     empty: 'Keine Statistikdateien in /stats gefunden.',
+    emptyLocal: 'Keine Statistikdateien (<uuid>.YYYYMM) in diesem Ordner.',
     tipRefresh: 'Dateiliste aktualisieren',
     tipOpenFolder: 'Lokalen Download-Ordner öffnen',
+    tipOpenThisFolder: 'Diesen Ordner im Dateimanager zeigen',
     tipBackup: 'Alle Statistiken vom Miniserver als Zip-Datei sichern',
     tipDownload: 'Auf diesen Computer herunterladen',
     tipOpen: 'Diagramm & Editor öffnen',
@@ -69,7 +80,7 @@ const de: typeof en = {
     back: 'Zurück zur Dateiliste',
     meta: '{entries} Einträge · {values} Wert(e)',
     errors: '{n} Fehler',
-    warnings: '{n} Warnungen',
+    warnings: '1 Warnung | {n} Warnungen',
     exportCsv: 'CSV exportieren',
     save: 'Speichern',
     upload: 'Auf Miniserver hochladen',
@@ -86,7 +97,8 @@ const de: typeof en = {
     currentMonthWarning:
       'Dies ist die Datei des <b>aktuellen Monats</b> — der Miniserver schreibt noch hinein. Das Hochladen einer bearbeiteten Kopie kann zwischenzeitlich aufgezeichnete Einträge verlieren.',
     exportedTo: 'Exportiert nach {path}',
-    gapsFilled: '{n} interpolierte Einträge in Lücken eingefügt',
+    gapsFilled:
+      '1 interpolierter Eintrag in Lücke eingefügt | {n} interpolierte Einträge in Lücken eingefügt',
     noGaps: 'Keine Lücken im erkannten Aufzeichnungsintervall gefunden',
     uploadConfirmTitle: 'Auf Miniserver hochladen?',
     uploadConfirmBody:

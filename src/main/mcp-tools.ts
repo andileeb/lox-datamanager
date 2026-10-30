@@ -152,10 +152,12 @@ export function buildServer(): McpServer {
       } catch {
         host = null
       }
+      const localFolder = cache.localSource()
       return json({
         connected: host !== null,
         host,
-        cacheDir: host ? cache.cacheDir(host) : null,
+        localFolder,
+        cacheDir: localFolder ?? (host ? cache.cacheDir(host) : null),
         openFiles: stats.openFiles()
       })
     },
@@ -194,6 +196,7 @@ export function buildServer(): McpServer {
       if (password === null) {
         throw new CodedError('NO_PASSWORD', 'No stored password for this connection')
       }
+      cache.setLocalDir(null)
       const tlsMode = await ftp.connect({ ...meta, password })
       notifyRenderer({ kind: 'connect' })
       return json({ connected: true, host: meta.host, tlsMode })
@@ -203,6 +206,7 @@ export function buildServer(): McpServer {
   tool('disconnect', 'Disconnect from the Miniserver and drop unsaved edits.', {}, () => {
     stats.clear()
     ftp.disconnect()
+    cache.setLocalDir(null)
     notifyRenderer({ kind: 'disconnect' })
     return json({ connected: false })
   })
@@ -211,7 +215,8 @@ export function buildServer(): McpServer {
 
   tool(
     'list_stat_files',
-    'List statistics files on the Miniserver with local-cache sync status. ' +
+    'List statistics files on the Miniserver with local-cache sync status ' +
+      '(in an offline / local-folder session: the local files only). ' +
       'Optionally filter by month (YYYYMM) or a name/description substring.',
     {
       month: z
@@ -221,9 +226,9 @@ export function buildServer(): McpServer {
       filter: z.string().optional()
     },
     async ({ month, filter }) => {
-      const host = ftp.activeHost()
-      const remote = await ftp.listStats()
-      const cached = cache.listCache(host)
+      // offline / local-folder session: only the local files, no Miniserver to compare with
+      const remote = cache.localSource() ? [] : await ftp.listStats()
+      const cached = cache.listWork()
       const cachedBy = new Map(cached.map((c) => [c.name, c]))
       const remoteNames = new Set(remote.map((r) => r.name))
       const rows = remote.map((r) => ({

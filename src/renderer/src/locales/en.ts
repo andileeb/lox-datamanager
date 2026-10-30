@@ -13,6 +13,12 @@ export default {
     tlsPlain: 'Plain FTP',
     saveConnection: 'Save connection',
     namePlaceholder: 'Name (optional)',
+    offline: 'Work offline',
+    offlineHint:
+      'View and edit statistics without connecting — downloaded files, a backup or an SD-card copy. Upload needs a connection.',
+    cachedHost: '{name} · 1 file | {name} · {n} files',
+    openFolder: 'Open folder…',
+    openFiles: 'Open files…',
     connect: 'Connect',
     cancel: 'Cancel connection attempt',
     ftpHint:
@@ -21,10 +27,13 @@ export default {
   browser: {
     filterPlaceholder: 'Filter files…',
     allMonths: 'All months',
+    allStatuses: 'All statuses',
     downloadSelected: 'Download {n} selected',
     uploadSelected: 'Upload {n} selected',
     backup: 'Backup',
     disconnect: 'Disconnect',
+    close: 'Close',
+    offline: 'Offline',
     colFile: 'File',
     colDescription: 'Description',
     colMonth: 'Month',
@@ -35,8 +44,10 @@ export default {
     unknownTooltip:
       "No stat name found in this control's file headers yet — its files may be empty or their download failed. Refreshing retries other months.",
     empty: 'No statistics files found in /stats.',
+    emptyLocal: 'No statistics files (<uuid>.YYYYMM) in this folder.',
     tipRefresh: 'Refresh file list',
     tipOpenFolder: 'Open local download folder',
+    tipOpenThisFolder: 'Show this folder in the file manager',
     tipBackup: 'Download all stats from the Miniserver into a zip file',
     tipDownload: 'Download to this computer',
     tipOpen: 'Open chart & editor',
@@ -66,8 +77,8 @@ export default {
   editor: {
     back: 'Back to file list',
     meta: '{entries} entries · {values} value(s)',
-    errors: '{n} errors',
-    warnings: '{n} warnings',
+    errors: '1 error | {n} errors',
+    warnings: '1 warning | {n} warnings',
     exportCsv: 'Export CSV',
     save: 'Save',
     upload: 'Upload to Miniserver',
@@ -84,7 +95,8 @@ export default {
     currentMonthWarning:
       "This is the <b>current month's</b> file — the Miniserver is still appending to it. Uploading an edited copy can lose the entries recorded in the meantime.",
     exportedTo: 'Exported to {path}',
-    gapsFilled: 'Inserted {n} interpolated entries into gaps',
+    gapsFilled:
+      'Inserted 1 interpolated entry into a gap | Inserted {n} interpolated entries into gaps',
     noGaps: 'No gaps found at the detected recording interval',
     uploadConfirmTitle: 'Upload to Miniserver?',
     uploadConfirmBody:

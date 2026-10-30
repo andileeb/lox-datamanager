@@ -86,6 +86,9 @@ function autoAxisSize(
   return Math.ceil(Math.max(size, 40))
 }
 
+/** 320px on normal windows, shrinks on short ones so the entry grid stays usable */
+const chartHeight = (): number => Math.round(Math.min(320, Math.max(160, innerHeight * 0.32)))
+
 function makePlot(): void {
   if (!wrap.value) return
   plot?.destroy()
@@ -93,7 +96,7 @@ function makePlot(): void {
   const gridColor = cssVar('--p-content-border-color', '#8883')
   const opts: uPlot.Options = {
     width: wrap.value.clientWidth,
-    height: 320,
+    height: chartHeight(),
     tzDate: (ts) => uPlot.tzDate(new Date(ts * 1000), 'Etc/UTC'),
     series: [
       {},
@@ -135,12 +138,13 @@ function makePlot(): void {
 }
 
 const resizeObserver = new ResizeObserver(() => {
-  if (plot && wrap.value) plot.setSize({ width: wrap.value.clientWidth, height: 320 })
+  if (plot && wrap.value) plot.setSize({ width: wrap.value.clientWidth, height: chartHeight() })
 })
 
 onMounted(() => {
   makePlot()
   if (wrap.value) resizeObserver.observe(wrap.value)
+  resizeObserver.observe(document.documentElement) // window height changes too
 })
 onBeforeUnmount(() => {
   resizeObserver.disconnect()

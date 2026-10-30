@@ -3,6 +3,8 @@ import type {
   ConnMeta,
   DownloadOutcome,
   IpcResult,
+  LocalOpened,
+  LocalSource,
   McpActivity,
   McpState,
   Problem,
@@ -46,6 +48,13 @@ export interface Api {
     list(): Promise<IpcResult<ConnMeta[]>>
     save(meta: ConnMeta, password: string): Promise<IpcResult<null>>
     remove(id: string): Promise<IpcResult<null>>
+  }
+  /** offline sessions: no Miniserver, files are read from and saved to a local folder */
+  local: {
+    cachedHosts(): Promise<IpcResult<LocalSource[]>>
+    openCached(name: string): Promise<IpcResult<LocalOpened>>
+    /** shows an open dialog; resolves with null when cancelled */
+    open(kind: 'folder' | 'files'): Promise<IpcResult<LocalOpened | null>>
   }
   cache: {
     list(): Promise<IpcResult<CachedFile[]>>

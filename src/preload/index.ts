@@ -20,6 +20,11 @@ const api: Api = {
       ipcRenderer.invoke('connections:save', meta, password),
     remove: (id: string) => ipcRenderer.invoke('connections:remove', id)
   },
+  local: {
+    cachedHosts: () => ipcRenderer.invoke('local:cachedHosts'),
+    openCached: (name: string) => ipcRenderer.invoke('local:openCached', name),
+    open: (kind: 'folder' | 'files') => ipcRenderer.invoke('local:open', kind)
+  },
   cache: {
     list: () => ipcRenderer.invoke('cache:list'),
     openFolder: () => ipcRenderer.invoke('cache:openFolder')

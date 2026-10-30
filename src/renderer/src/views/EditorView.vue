@@ -15,6 +15,7 @@ import { displayToLox } from '../../../shared/time'
 import { LOXONE_EPOCH_OFFSET } from '../../../shared/types'
 import { isCurrentMonth as isCurrentMonthName } from '../../../shared/records'
 import { useEditorStore } from '../stores/editor'
+import { useConnectionStore } from '../stores/connection'
 import { SUFFIX_KEYS } from '../stores/files'
 import { errorText } from '../i18n'
 import { loxToDisplayPref } from '../prefs'
@@ -23,6 +24,7 @@ import { useI18n } from 'vue-i18n'
 const props = defineProps<{ filename: string }>()
 const router = useRouter()
 const editor = useEditorStore()
+const conn = useConnectionStore()
 const { t } = useI18n()
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -173,8 +175,8 @@ watch(
         </div>
       </div>
       <div class="actions">
-        <Tag v-if="errorCount" severity="danger" :value="t('editor.errors', { n: errorCount })" />
-        <Tag v-if="warnCount" severity="warn" :value="t('editor.warnings', { n: warnCount })" />
+        <Tag v-if="errorCount" severity="danger" :value="t('editor.errors', errorCount)" />
+        <Tag v-if="warnCount" severity="warn" :value="t('editor.warnings', warnCount)" />
         <span v-if="editor.data" class="meta">
           {{
             t('editor.meta', {
@@ -200,6 +202,7 @@ watch(
           @click="editor.save()"
         />
         <Button
+          v-if="!conn.offline"
           :label="t('editor.upload')"
           icon="pi pi-cloud-upload"
           :disabled="!editor.data"
@@ -234,7 +237,7 @@ watch(
       {{ t('editor.exportedTo', { path: csvPath }) }}
     </Message>
     <Message v-if="fillResult !== null" severity="info" closable @close="fillResult = null">
-      {{ fillResult ? t('editor.gapsFilled', { n: fillResult }) : t('editor.noGaps') }}
+      {{ fillResult ? t('editor.gapsFilled', fillResult) : t('editor.noGaps') }}
     </Message>
 
     <template v-if="editor.data">
@@ -424,6 +427,12 @@ watch(
   display: grid;
   grid-template-columns: 1fr 18rem;
   gap: 1rem;
+}
+/* narrow windows: give the entry grid room for its value columns */
+@media (max-width: 1000px) {
+  .lower {
+    grid-template-columns: 1fr 12rem;
+  }
 }
 .grid {
   min-height: 0;
