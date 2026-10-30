@@ -3,6 +3,11 @@
 A modern, cross-platform viewer and editor for **Loxone Miniserver statistics** —
 heavily inspired by [LoxStatEdit](https://github.com/mr-manuel/Loxone_LoxStatEdit).
 
+> **Unofficial project.** Loxone DataManager is an independent community tool and is
+> not affiliated with, endorsed by or in any way related to
+> [Loxone Electronics GmbH](https://www.loxone.com). "Loxone" and "Miniserver" are
+> trademarks of their respective owner.
+
 <a href="https://www.buymeacoffee.com/andileeb"><img src="https://cdn.buymeacoffee.com/buttons/v2/lato-yellow.png" alt="Buy me a coffee" height="40"></a>
 
 <picture>
