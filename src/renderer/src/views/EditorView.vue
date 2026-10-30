@@ -173,8 +173,8 @@ watch(
         </div>
       </div>
       <div class="actions">
-        <Tag v-if="errorCount" severity="danger" :value="t('editor.errors', { n: errorCount })" />
-        <Tag v-if="warnCount" severity="warn" :value="t('editor.warnings', { n: warnCount })" />
+        <Tag v-if="errorCount" severity="danger" :value="t('editor.errors', errorCount)" />
+        <Tag v-if="warnCount" severity="warn" :value="t('editor.warnings', warnCount)" />
         <span v-if="editor.data" class="meta">
           {{
             t('editor.meta', {
@@ -234,7 +234,7 @@ watch(
       {{ t('editor.exportedTo', { path: csvPath }) }}
     </Message>
     <Message v-if="fillResult !== null" severity="info" closable @close="fillResult = null">
-      {{ fillResult ? t('editor.gapsFilled', { n: fillResult }) : t('editor.noGaps') }}
+      {{ fillResult ? t('editor.gapsFilled', fillResult) : t('editor.noGaps') }}
     </Message>
 
     <template v-if="editor.data">
