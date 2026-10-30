@@ -1,4 +1,4 @@
-# CLAUDE.md — Loxone DataManager
+# CLAUDE.md — Lox DataManager
 
 Electron desktop app (100% TypeScript) to view and **edit** Loxone Miniserver
 statistics: browse `/stats` via FTP/FTPS, chart/edit the binary monthly files,

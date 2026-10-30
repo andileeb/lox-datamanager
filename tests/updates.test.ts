@@ -40,7 +40,7 @@ describe('check', () => {
     vi.stubGlobal('fetch', () => Promise.resolve(new Response('{}', { status: 404 })))
     const r = await check('0.1.0')
     expect(r).toMatchObject({ current: '0.1.0', latest: null, updateAvailable: false })
-    expect(r.url).toBe('https://github.com/andileeb/loxone-datamanager/releases/latest')
+    expect(r.url).toBe('https://github.com/andileeb/lox-datamanager/releases/latest')
   })
 
   it('strips the leading v from the tag', async () => {

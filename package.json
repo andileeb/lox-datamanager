@@ -1,5 +1,5 @@
 {
-  "name": "loxone-datamanager",
+  "name": "lox-datamanager",
   "version": "0.3.0",
   "description": "Viewer and editor for Loxone Miniserver statistics",
   "main": "./out/main/index.js",
@@ -16,10 +16,10 @@
       "dtrace-provider"
     ]
   },
-  "homepage": "https://github.com/andileeb/loxone-datamanager",
+  "homepage": "https://github.com/andileeb/lox-datamanager",
   "repository": {
     "type": "git",
-    "url": "https://github.com/andileeb/loxone-datamanager.git"
+    "url": "https://github.com/andileeb/lox-datamanager.git"
   },
   "scripts": {
     "format": "prettier --write .",

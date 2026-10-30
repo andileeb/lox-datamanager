@@ -117,7 +117,7 @@ function selectIndices(
 const nameArg = z.string().regex(STAT_FILENAME_RE, 'stat file name like <uuid>.YYYYMM')
 
 export function buildServer(): McpServer {
-  const server = new McpServer({ name: 'loxone-datamanager', version: app.getVersion() })
+  const server = new McpServer({ name: 'lox-datamanager', version: app.getVersion() })
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function tool<Shape extends Record<string, any>>(
