@@ -24,8 +24,8 @@ copy as well, so a restore can be undone the same way.
   the upload or delete is stopped — the app never overwrites without a backup.
 - Backups are stored per Miniserver in the app's data folder, under
   `stats-backups/<host>/<file>/`:
-  - macOS: `~/Library/Application Support/Loxone DataManager/`
-  - Windows: `%APPDATA%\Loxone DataManager\`
+  - macOS: `~/Library/Application Support/loxone-datamanager/`
+  - Windows: `%APPDATA%\loxone-datamanager\`
 - The Backups button needs a connection; it's hidden while working
   [offline](offline.md).
 - For a full snapshot of the SD card use **Backup** in the file list, which
