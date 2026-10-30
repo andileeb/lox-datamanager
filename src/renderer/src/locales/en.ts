@@ -1,6 +1,6 @@
 export default {
   connect: {
-    title: 'Loxone DataManager',
+    title: 'Lox DataManager',
     subtitle: 'Connect to your Miniserver to view and edit statistics',
     savedConnections: 'Saved connections',
     host: 'Host',

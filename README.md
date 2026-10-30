@@ -1,9 +1,9 @@
-# Loxone DataManager
+# Lox DataManager
 
 A modern, cross-platform viewer and editor for **Loxone Miniserver statistics** —
 heavily inspired by [LoxStatEdit](https://github.com/mr-manuel/Loxone_LoxStatEdit).
 
-> **Unofficial project.** Loxone DataManager is an independent community tool and is
+> **Unofficial project.** Lox DataManager is an independent community tool and is
 > not affiliated with, endorsed by or in any way related to
 > [Loxone Electronics GmbH](https://www.loxone.com). "Loxone" and "Miniserver" are
 > trademarks of their respective owner.
@@ -83,14 +83,19 @@ More in the [guide](docs/guide.md).
 
 Download the latest release from [GitHub Releases](../../releases):
 
-- **macOS** (13 Ventura or newer): `loxone-datamanager-<version>.dmg`
-- **Windows** (10 or newer, 64-bit): `loxone-datamanager-<version>-setup.exe`
+> **Renamed:** up to v0.3 the app was called *Loxone DataManager*. On macOS the new
+> version installs as `Lox DataManager.app` next to the old one — delete
+> `Loxone DataManager.app` afterwards. Saved connections, downloaded stats and backups
+> carry over (you may have to re-enter a saved password once).
+
+- **macOS** (13 Ventura or newer): `lox-datamanager-<version>.dmg`
+- **Windows** (10 or newer, 64-bit): `lox-datamanager-<version>-setup.exe`
 
 The builds are currently **unsigned**, so the OS will warn on first launch:
 
 - **macOS**: Gatekeeper blocks the app. Either right-click → Open (older macOS), or on
   macOS 15+ go to **System Settings → Privacy & Security → "Open Anyway"**. Alternatively:
-  `xattr -dr com.apple.quarantine "/Applications/Loxone DataManager.app"`
+  `xattr -dr com.apple.quarantine "/Applications/Lox DataManager.app"`
 - **Windows**: SmartScreen shows "Windows protected your PC" → **More info → Run anyway**.
 
 ## Enable FTP on your Miniserver (firmware 16.1+)
@@ -187,7 +192,7 @@ server is read-only; this one can write, because it uses the app's FTP path).
 2. Copy the shown command, e.g. for Claude Code:
 
    ```sh
-   claude mcp add --transport http loxone-datamanager http://127.0.0.1:12009/mcp \
+   claude mcp add --transport http lox-datamanager http://127.0.0.1:12009/mcp \
      --header "Authorization: Bearer <token>"
    ```
 

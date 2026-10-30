@@ -2,7 +2,7 @@ import type en from './en'
 
 const de: typeof en = {
   connect: {
-    title: 'Loxone DataManager',
+    title: 'Lox DataManager',
     subtitle: 'Mit dem Miniserver verbinden, um Statistiken anzusehen und zu bearbeiten',
     savedConnections: 'Gespeicherte Verbindungen',
     host: 'Host',

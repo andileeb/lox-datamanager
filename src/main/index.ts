@@ -9,12 +9,13 @@ import * as mcp from './mcp'
 // falls back to package.json "name" — the slug. app.name also derives userData, so
 // pin that to the directory already in use BEFORE renaming, or saved connections,
 // the MCP token and the stats cache silently move and look wiped.
+// The folder keeps the pre-rename slug (app was "Loxone DataManager" up to v0.3) on purpose.
 // LDM_USER_DATA: throwaway profile for scripts/screenshots.ts and E2E runs.
 app.setPath(
   'userData',
   process.env['LDM_USER_DATA'] ?? join(app.getPath('appData'), 'loxone-datamanager')
 )
-app.setName('Loxone DataManager')
+app.setName('Lox DataManager')
 
 function createWindow(): void {
   // Create the browser window.
@@ -56,6 +57,7 @@ function createWindow(): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   // Set app user model id for windows
+  // pre-rename id kept on purpose: Windows taskbar pins/notifications stay attached
   electronApp.setAppUserModelId('io.github.andileeb.loxone-datamanager')
 
   // Default open or close DevTools by F12 in development

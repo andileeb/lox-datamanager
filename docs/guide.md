@@ -1,4 +1,4 @@
-# Loxone DataManager guide
+# Lox DataManager guide
 
 Feature pages beyond the [README](../README.md) overview.
 

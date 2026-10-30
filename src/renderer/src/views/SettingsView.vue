@@ -98,7 +98,7 @@ async function regenerateToken(): Promise<void> {
 
 const mcpSnippet = computed(() =>
   mcp.value
-    ? `claude mcp add --transport http loxone-datamanager ${mcp.value.url} --header "Authorization: Bearer ${mcp.value.token ?? '<token>'}"`
+    ? `claude mcp add --transport http lox-datamanager ${mcp.value.url} --header "Authorization: Bearer ${mcp.value.token ?? '<token>'}"`
     : ''
 )
 

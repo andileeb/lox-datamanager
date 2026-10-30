@@ -5,7 +5,7 @@
 // unit-testable, like statfile.ts.
 import type { UpdateCheck } from '../shared/types'
 
-const REPO = 'andileeb/loxone-datamanager'
+const REPO = 'andileeb/lox-datamanager'
 const API = `https://api.github.com/repos/${REPO}/releases/latest`
 const RELEASES_PAGE = `https://github.com/${REPO}/releases/latest`
 
@@ -42,7 +42,7 @@ export async function check(currentVersion: string): Promise<UpdateCheck> {
     const res = await fetch(API, {
       // GitHub 403s requests without a User-Agent, and rate-limits to 60/h per IP —
       // one check per launch stays well inside that, a 403 just reads as "unknown"
-      headers: { accept: 'application/vnd.github+json', 'user-agent': 'loxone-datamanager' },
+      headers: { accept: 'application/vnd.github+json', 'user-agent': 'lox-datamanager' },
       signal: AbortSignal.timeout(5000)
     })
     if (!res.ok) return miss

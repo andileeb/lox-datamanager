@@ -1,5 +1,6 @@
+# pre-rename id kept on purpose: installs over v0.1–0.3 in place (Windows uninstall entry, macOS prefs)
 appId: io.github.andileeb.loxone-datamanager
-productName: Loxone DataManager
+productName: Lox DataManager
 directories:
   buildResources: build
 files:
@@ -12,7 +13,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: loxone-datamanager
+  executableName: lox-datamanager
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

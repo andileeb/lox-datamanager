@@ -254,7 +254,7 @@ async function capture(dark: boolean): Promise<void> {
 // A running real app holds the MCP port → "EADDRINUSE" would end up in the settings shot
 await new Promise<void>((resolve, reject) => {
   const probe = createServer()
-    .once('error', () => reject(new Error('Port 12009 is busy — quit Loxone DataManager first')))
+    .once('error', () => reject(new Error('Port 12009 is busy — quit Lox DataManager first')))
     .listen(12009, '127.0.0.1', () => probe.close(() => resolve()))
 })
 
