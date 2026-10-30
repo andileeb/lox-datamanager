@@ -169,3 +169,26 @@ export function unpackRecords(packed: Float64Array, valueCount: number): StatRec
   }
   return records
 }
+
+export interface RecordsDiff {
+  changed: number
+  inserted: number
+  deleted: number
+}
+
+/** what an upload changes on the server: entries matched by timestamp */
+export function diffRecords(before: StatRecord[], after: StatRecord[]): RecordsDiff {
+  // ponytail: duplicate timestamps collapse to the last entry; match by position if that ever matters
+  const old = new Map(before.map((r) => [r.ts, r.values]))
+  const diff: RecordsDiff = { changed: 0, inserted: 0, deleted: 0 }
+  const seen = new Set<number>()
+  for (const r of after) {
+    seen.add(r.ts)
+    const v = old.get(r.ts)
+    if (!v) diff.inserted++
+    else if (v.length !== r.values.length || v.some((x, i) => !Object.is(x, r.values[i])))
+      diff.changed++
+  }
+  for (const ts of old.keys()) if (!seen.has(ts)) diff.deleted++
+  return diff
+}

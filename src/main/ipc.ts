@@ -10,7 +10,8 @@ import * as stats from './stats-service'
 import * as mcp from './mcp'
 import * as updates from './updates'
 import { CodedError, toApiError } from './stats-service'
-import { validateRecords } from './statfile'
+import { parseStatFile, validateRecords } from './statfile'
+import { diffRecords } from '../shared/records'
 import type { ConnMeta, IpcResult, LocalOpened, McpState, StatRecord } from '../shared/types'
 import { STAT_FILENAME_RE } from '../shared/types'
 import type { ConnectPayload, TransferFilePayload } from '../shared/api'
@@ -211,6 +212,19 @@ export function registerIpc(): void {
   handle('stat:serialize', (name: string, records: StatRecord[]) =>
     stats.saveRecords(name, records)
   )
+  // null = not on the Miniserver yet (the upload creates it)
+  handle('stat:diffRemote', async (name: string, records: StatRecord[]) => {
+    cache.cachePath(ftp.activeHost(), name) // validates the renderer-supplied name
+    if (!(await ftp.exists(name))) return null
+    const tmp = mkdtempSync(join(tmpdir(), 'ldm-diff-'))
+    try {
+      const { failed } = await ftp.download([{ name, size: 0, modifiedAt: null }], tmp, () => {})
+      if (failed.length) throw new Error(failed[0].message)
+      return diffRecords(parseStatFile(readFileSync(join(tmp, name)), name).records, records)
+    } finally {
+      rmSync(tmp, { recursive: true, force: true })
+    }
+  })
   handle('stat:exportCsv', async (name: string) => {
     const parsed = stats.getParsed(name)
     const { canceled, filePath } = await dialog.showSaveDialog({

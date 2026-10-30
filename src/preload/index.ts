@@ -39,7 +39,9 @@ const api: Api = {
       ipcRenderer.invoke('stat:validate', name, records),
     serialize: (name: string, records: StatRecord[]) =>
       ipcRenderer.invoke('stat:serialize', name, records),
-    exportCsv: (name: string) => ipcRenderer.invoke('stat:exportCsv', name)
+    exportCsv: (name: string) => ipcRenderer.invoke('stat:exportCsv', name),
+    diffRemote: (name: string, records: StatRecord[]) =>
+      ipcRenderer.invoke('stat:diffRemote', name, records)
   },
   mcp: {
     get: () => ipcRenderer.invoke('mcp:get'),

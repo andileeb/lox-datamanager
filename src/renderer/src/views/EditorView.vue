@@ -14,13 +14,14 @@ import FormulaDialog from '../components/FormulaDialog.vue'
 import { displayToLox } from '../../../shared/time'
 import { LOXONE_EPOCH_OFFSET } from '../../../shared/types'
 import { isCurrentMonth as isCurrentMonthName } from '../../../shared/records'
-import { useEditorStore } from '../stores/editor'
+import { plain, useEditorStore } from '../stores/editor'
 import { useConnectionStore } from '../stores/connection'
 import { SUFFIX_KEYS } from '../stores/files'
 import { errorText } from '../i18n'
 import { formatDateTime, loxToDisplayPref } from '../prefs'
 import { useFilesStore } from '../stores/files'
 import type { Backup } from '../../../shared/types'
+import type { RecordsDiff } from '../../../shared/records'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{ filename: string }>()
@@ -36,6 +37,8 @@ const selection = ref<{ index: number }[]>([])
 const showFormula = ref(false)
 const showUploadConfirm = ref(false)
 const showPostUpload = ref(false)
+/** upload confirm: what changes on the server — undefined = still comparing */
+const uploadDiff = ref<RecordsDiff | null | 'failed' | undefined>(undefined)
 const fillResult = ref<number | null>(null)
 const backups = ref<Backup[] | null>(null) // non-null = dialog open
 const restoredFrom = ref<string | null>(null)
@@ -137,6 +140,14 @@ function applyFormula(
     indices = selectedIndices.value
   }
   editor.applyFormula(fn, valueIdx, indices)
+}
+
+async function confirmUpload(): Promise<void> {
+  if (!editor.data) return
+  uploadDiff.value = undefined
+  showUploadConfirm.value = true
+  const r = await window.api.stat.diffRemote(props.filename, plain(editor.data.records))
+  uploadDiff.value = r.ok ? r.data : 'failed'
 }
 
 async function upload(): Promise<void> {
@@ -287,7 +298,7 @@ watch(
           icon="pi pi-cloud-upload"
           :disabled="!editor.data"
           :loading="editor.saving"
-          @click="showUploadConfirm = true"
+          @click="confirmUpload"
         />
       </div>
     </div>
@@ -461,6 +472,23 @@ watch(
         :style="{ width: '28rem' }"
       >
         <p>{{ t('editor.uploadConfirmBody', { file: filename }) }}</p>
+        <p class="diff">
+          <i v-if="uploadDiff === undefined" class="pi pi-spin pi-spinner"></i>
+          <template v-if="uploadDiff === undefined">{{ t('editor.diffLoading') }}</template>
+          <template v-else-if="uploadDiff === 'failed'">{{ t('editor.diffFailed') }}</template>
+          <template v-else-if="uploadDiff === null">{{ t('editor.diffNew') }}</template>
+          <template v-else-if="!uploadDiff.changed && !uploadDiff.inserted && !uploadDiff.deleted">
+            {{ t('editor.diffNone') }}
+          </template>
+          <template v-else>
+            {{ t('editor.diffIntro') }}
+            <span v-if="uploadDiff.changed">{{ t('editor.diffChanged', uploadDiff.changed) }}</span>
+            <span v-if="uploadDiff.inserted">{{
+              t('editor.diffInserted', uploadDiff.inserted)
+            }}</span>
+            <span v-if="uploadDiff.deleted">{{ t('editor.diffDeleted', uploadDiff.deleted) }}</span>
+          </template>
+        </p>
         <template #footer>
           <Button
             :label="t('formula.cancel')"
@@ -531,6 +559,16 @@ watch(
 }
 .warn {
   color: var(--p-orange-500);
+}
+.diff {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+}
+.diff span {
+  font-weight: 600;
 }
 .toolbar {
   display: flex;

@@ -5,6 +5,10 @@ Miniserver's current copy on your computer. That covers uploads and deletes from
 the file list, the editor and the [MCP server](../README.md#mcp-server). If an
 upload goes wrong, you can put the previous version back.
 
+Before each upload from the editor, the confirm dialog compares your copy with
+the Miniserver's and shows how many entries change, get added or get removed —
+or that the file is identical or not on the Miniserver yet.
+
 ## Restore a previous version
 
 1. Connect to the Miniserver and open the file in the editor.

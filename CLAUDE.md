@@ -35,7 +35,8 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     everything session-related goes through `workDir()`/`workPath()` (= `localDir` or
     the connected host's cache), so editor, save and MCP work the same offline.
     `stats-backups/<host>/<file>/<iso-ts>`: `ftp.upload`/`ftp.remove` download the
-    server copy there first (newest 10 kept; any failure but 550 aborts the write);
+    server copy there first if LIST shows it (newest 10 kept; a failed backup aborts the write —
+    reply codes for "no such file" differ per server, so existence comes from LIST);
     restore copies one over the cache file, the user then uploads as usual.
   - `store.ts` — saved connections: plain JSON in userData + passwords encrypted
     with Electron `safeStorage` (no keychain → password simply not stored).
