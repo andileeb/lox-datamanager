@@ -55,6 +55,7 @@ const example = computed(() => {
 const mcp = ref<McpState | null>(null)
 const copied = ref<'token' | 'snippet' | null>(null)
 
+const appVersion: string = import.meta.env.APP_VERSION
 const update = ref<UpdateCheck | null>(null)
 const checking = ref(false)
 
@@ -168,7 +169,7 @@ async function copyText(text: string, which: 'token' | 'snippet'): Promise<void>
       <p class="example">{{ t('settings.example', { example }) }}</p>
       <p class="hint">{{ t('settings.shortcutHint') }}</p>
 
-      <p>{{ t('update.version') }} {{ update?.current ?? '' }}</p>
+      <p>{{ t('update.version') }} {{ appVersion }}</p>
       <div class="update">
         <Button
           :label="checking ? t('update.checking') : t('update.check')"
