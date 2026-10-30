@@ -228,7 +228,7 @@ export function buildServer(): McpServer {
     async ({ month, filter }) => {
       // offline / local-folder session: only the local files, no Miniserver to compare with
       const remote = cache.localSource() ? [] : await ftp.listStats()
-      const cached = cache.listDir(cache.workDir())
+      const cached = cache.listWork()
       const cachedBy = new Map(cached.map((c) => [c.name, c]))
       const remoteNames = new Set(remote.map((r) => r.name))
       const rows = remote.map((r) => ({

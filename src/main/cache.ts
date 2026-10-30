@@ -22,9 +22,12 @@ export function cachePath(host: string, name: string): string {
 
 /** offline session: a cached host's folder or any local folder, no Miniserver involved */
 let localDir: string | null = null
+/** single files picked with "Open files…" — the session shows only these */
+let localFiles: Set<string> | null = null
 
-export function setLocalDir(dir: string | null): void {
+export function setLocalDir(dir: string | null, files: string[] | null = null): void {
   localDir = dir
+  localFiles = dir && files ? new Set(files) : null
 }
 
 export function localSource(): string | null {
@@ -38,7 +41,14 @@ export function workDir(): string {
 
 export function workPath(name: string): string {
   if (!STAT_FILENAME_RE.test(name)) throw new Error(`Invalid statistics file name: ${name}`)
+  if (localFiles && !localFiles.has(name)) throw new Error(`${name} was not opened`)
   return join(workDir(), name)
+}
+
+/** the session's files: the work dir, narrowed to the picked files if any */
+export function listWork(): CachedFile[] {
+  const files = listDir(workDir())
+  return localFiles ? files.filter((f) => localFiles!.has(f.name)) : files
 }
 
 /** cached hosts with at least one stat file — offers "work offline" without connecting */
