@@ -48,7 +48,7 @@ function resetSession(): void {
 
 function openLocal(dir: string, label: string, files: string[] | null): LocalOpened {
   resetSession()
-  cache.setLocalDir(dir)
+  cache.setLocalDir(dir, files)
   return { label, files }
 }
 
@@ -160,7 +160,7 @@ export function registerIpc(): void {
     return ftp.remove(names)
   })
 
-  handle('cache:list', () => cache.listDir(cache.workDir()))
+  handle('cache:list', () => cache.listWork())
   handle('cache:openFolder', () => {
     shell.openPath(cache.workDir())
     return null

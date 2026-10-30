@@ -29,7 +29,7 @@ originals.
 ## Open single files
 
 **Open files…** picks one or more stat files from one folder. A single file opens
-straight in the editor. With several files the browser shows their folder.
+straight in the editor. With several files the browser lists just those files.
 
 ## Getting changes back onto the Miniserver
 
