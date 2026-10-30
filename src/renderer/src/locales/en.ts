@@ -77,8 +77,8 @@ export default {
   editor: {
     back: 'Back to file list',
     meta: '{entries} entries · {values} value(s)',
-    errors: '{n} errors',
-    warnings: '{n} warnings',
+    errors: '1 error | {n} errors',
+    warnings: '1 warning | {n} warnings',
     exportCsv: 'Export CSV',
     save: 'Save',
     upload: 'Upload to Miniserver',
@@ -95,7 +95,8 @@ export default {
     currentMonthWarning:
       "This is the <b>current month's</b> file — the Miniserver is still appending to it. Uploading an edited copy can lose the entries recorded in the meantime.",
     exportedTo: 'Exported to {path}',
-    gapsFilled: 'Inserted {n} interpolated entries into gaps',
+    gapsFilled:
+      'Inserted 1 interpolated entry into a gap | Inserted {n} interpolated entries into gaps',
     noGaps: 'No gaps found at the detected recording interval',
     uploadConfirmTitle: 'Upload to Miniserver?',
     uploadConfirmBody:

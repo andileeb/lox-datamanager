@@ -80,7 +80,7 @@ const de: typeof en = {
     back: 'Zurück zur Dateiliste',
     meta: '{entries} Einträge · {values} Wert(e)',
     errors: '{n} Fehler',
-    warnings: '{n} Warnungen',
+    warnings: '1 Warnung | {n} Warnungen',
     exportCsv: 'CSV exportieren',
     save: 'Speichern',
     upload: 'Auf Miniserver hochladen',
@@ -97,7 +97,8 @@ const de: typeof en = {
     currentMonthWarning:
       'Dies ist die Datei des <b>aktuellen Monats</b> — der Miniserver schreibt noch hinein. Das Hochladen einer bearbeiteten Kopie kann zwischenzeitlich aufgezeichnete Einträge verlieren.',
     exportedTo: 'Exportiert nach {path}',
-    gapsFilled: '{n} interpolierte Einträge in Lücken eingefügt',
+    gapsFilled:
+      '1 interpolierter Eintrag in Lücke eingefügt | {n} interpolierte Einträge in Lücken eingefügt',
     noGaps: 'Keine Lücken im erkannten Aufzeichnungsintervall gefunden',
     uploadConfirmTitle: 'Auf Miniserver hochladen?',
     uploadConfirmBody:
