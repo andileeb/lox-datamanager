@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: npm # Dependabot handles pnpm lockfiles via the npm ecosystem
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # One PR for all non-breaking bumps; majors still get their own PR each
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # v5+ / v8+ are under the commercial PrimeUI license — see CLAUDE.md
+      - dependency-name: primevue
+        versions: ['>=5']
+      - dependency-name: primeicons
+        versions: ['>=8']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ['*']
