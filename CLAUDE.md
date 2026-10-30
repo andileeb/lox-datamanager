@@ -38,6 +38,13 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     server copy there first if LIST shows it (newest 10 kept; a failed backup aborts the write —
     reply codes for "no such file" differ per server, so existence comes from LIST);
     restore copies one over the cache file, the user then uploads as usual.
+  - `catalog.ts` — uuid → name/room/category/unit from the Miniserver's
+    `/data/LoxAPP3.json` (HTTP basic auth with the FTP credentials; FTPS sessions try
+    https only, plain ones http then https; self-signed certs accepted). Fetched once per
+    host per launch, only the extracted map is saved as `catalog.json` in the host's cache
+    dir; offline/local sessions read `catalog.json` or a raw `LoxAPP3.json` from the folder.
+    Parsing is pure in `shared/catalog.ts`. A failed fetch is silent — names fall back to
+    the stat file headers. `LDM_WEB_PORT` overrides the web port (test harness only).
   - `store.ts` — saved connections: plain JSON in userData + passwords encrypted
     with Electron `safeStorage` (no keychain → password simply not stored).
   - `stats-service.ts` — shared session logic for IPC **and** MCP so they can't

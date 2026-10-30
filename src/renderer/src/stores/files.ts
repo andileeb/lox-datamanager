@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import type {
   ApiError,
   CachedFile,
+  Catalog,
   RemoteFile,
   SyncStatus,
   TransferProgress
@@ -16,6 +17,7 @@ export interface FileRow {
   size: number
   modifiedAt: string | null
   description: string | null
+  room: string | null
   suffix: number | null
   status: SyncStatus
   remote: RemoteFile | null
@@ -32,6 +34,7 @@ export const useFilesStore = defineStore('files', {
   state: () => ({
     remote: [] as RemoteFile[],
     cached: [] as CachedFile[],
+    catalog: {} as Catalog,
     loading: false,
     error: null as ApiError | null,
     transfer: null as TransferProgress | null,
@@ -41,9 +44,11 @@ export const useFilesStore = defineStore('files', {
     listUi: { first: 0, rows: 50, filter: '', month: '', status: '', scrollTop: 0 }
   }),
   getters: {
-    /** stat name per control uuid, learned from any cached month of that control */
+    /** name per control uuid: the Miniserver's catalog, else any cached month's file header */
     nameByUuid(state): Map<string, string> {
-      const map = new Map<string, string>()
+      const map = new Map<string, string>(
+        Object.entries(state.catalog).map(([uuid, e]) => [uuid, e.name])
+      )
       for (const c of state.cached) {
         const m = STAT_FILENAME_RE.exec(c.name)
         if (m && c.nameFromHeader && !map.has(m[1])) map.set(m[1], c.nameFromHeader)
@@ -61,7 +66,9 @@ export const useFilesStore = defineStore('files', {
           yyyymm: r.yyyymm,
           size: r.size,
           modifiedAt: r.modifiedAt,
-          description: c?.nameFromHeader ?? names.get(r.uuid) ?? null,
+          description:
+            state.catalog[r.uuid]?.name ?? c?.nameFromHeader ?? names.get(r.uuid) ?? null,
+          room: state.catalog[r.uuid]?.room ?? null,
           suffix: r.suffix,
           status: statusOf(r, c),
           remote: r
@@ -75,7 +82,9 @@ export const useFilesStore = defineStore('files', {
           yyyymm: c.name.slice(-6),
           size: c.size,
           modifiedAt: c.modifiedAt,
-          description: c.nameFromHeader ?? (m ? (names.get(m[1]) ?? null) : null),
+          description:
+            (m && state.catalog[m[1]]?.name) || c.nameFromHeader || (m && names.get(m[1])) || null,
+          room: (m && state.catalog[m[1]]?.room) || null,
           suffix: m?.[2] ? Number(m[2]) : null,
           status: 'only-local',
           remote: null
@@ -97,6 +106,9 @@ export const useFilesStore = defineStore('files', {
       if (r?.ok) this.remote = r.data
       else if (r) this.error = r.error
       if (c.ok) this.cached = c.data
+      // names from the catalog spare resolveNames the header downloads
+      const cat = await window.api.catalog.get()
+      if (cat.ok) this.catalog = cat.data
       void this.resolveNames()
     },
     async refreshCache() {
@@ -140,6 +152,7 @@ export const useFilesStore = defineStore('files', {
           size: r.size,
           modifiedAt: r.modifiedAt,
           description: null,
+          room: null,
           suffix: r.suffix,
           status: 'only-remote' as const,
           remote: r

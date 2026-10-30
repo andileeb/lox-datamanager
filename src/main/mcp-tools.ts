@@ -10,6 +10,7 @@ import * as ftp from './ftp'
 import * as cache from './cache'
 import * as store from './store'
 import * as stats from './stats-service'
+import * as catalog from './catalog'
 import { CodedError, toApiError } from './stats-service'
 import { notifyRenderer } from './mcp'
 import type { ParsedStatFile } from './statfile'
@@ -24,7 +25,7 @@ import {
   summarizeRecords
 } from '../shared/records'
 import { displayToLox, loxToDisplay } from '../shared/time'
-import { STAT_FILENAME_RE, type Problem, type StatRecord } from '../shared/types'
+import { STAT_FILENAME_RE, type CatalogEntry, type Problem, type StatRecord } from '../shared/types'
 
 interface ToolResult {
   content: { type: 'text'; text: string }[]
@@ -217,7 +218,8 @@ export function buildServer(): McpServer {
     'list_stat_files',
     'List statistics files on the Miniserver with local-cache sync status ' +
       '(in an offline / local-folder session: the local files only). ' +
-      'Optionally filter by month (YYYYMM) or a name/description substring.',
+      'Names, rooms, categories and units come from the Miniserver structure file when available. ' +
+      'Optionally filter by month (YYYYMM) or a name/description/room substring.',
     {
       month: z
         .string()
@@ -229,11 +231,23 @@ export function buildServer(): McpServer {
       // offline / local-folder session: only the local files, no Miniserver to compare with
       const remote = cache.localSource() ? [] : await ftp.listStats()
       const cached = cache.listWork()
+      const cat = await catalog.sessionCatalog()
+      // catalog name/room/category/units for a file, when the Miniserver's structure file had it
+      const about = (
+        name: string,
+        header: string | null
+      ): { description: string | null } & Partial<Omit<CatalogEntry, 'name'>> => {
+        const e = cat[name.slice(0, 35)]
+        return {
+          description: e?.name ?? header,
+          ...(e && { room: e.room, category: e.category, type: e.type, units: e.units })
+        }
+      }
       const cachedBy = new Map(cached.map((c) => [c.name, c]))
       const remoteNames = new Set(remote.map((r) => r.name))
       const rows = remote.map((r) => ({
         name: r.name,
-        description: cachedBy.get(r.name)?.nameFromHeader ?? null,
+        ...about(r.name, cachedBy.get(r.name)?.nameFromHeader ?? null),
         yyyymm: r.yyyymm,
         size: r.size,
         modifiedAt: r.modifiedAt,
@@ -243,7 +257,7 @@ export function buildServer(): McpServer {
         if (remoteNames.has(c.name)) continue
         rows.push({
           name: c.name,
-          description: c.nameFromHeader,
+          ...about(c.name, c.nameFromHeader),
           yyyymm: c.name.slice(-6),
           size: c.size,
           modifiedAt: c.modifiedAt,
@@ -254,7 +268,10 @@ export function buildServer(): McpServer {
       const filtered = rows.filter(
         (r) =>
           (!month || r.yyyymm === month) &&
-          (!f || r.name.includes(f) || r.description?.toLowerCase().includes(f))
+          (!f ||
+            r.name.includes(f) ||
+            r.description?.toLowerCase().includes(f) ||
+            r.room?.toLowerCase().includes(f))
       )
       return json({ count: filtered.length, files: filtered })
     },

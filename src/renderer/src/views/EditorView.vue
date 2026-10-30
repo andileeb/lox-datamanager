@@ -249,7 +249,11 @@ watch(
         />
         <div>
           <h2>
-            {{ editor.data?.nameFromHeader || filename }}
+            {{
+              useFilesStore().catalog[filename.slice(0, 35)]?.name ||
+              editor.data?.nameFromHeader ||
+              filename
+            }}
             <Tag v-if="suffixText" :value="suffixText" severity="secondary" />
           </h2>
           <span class="meta mono">{{ filename }}</span>

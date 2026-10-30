@@ -1,6 +1,7 @@
 import type {
   Backup,
   CachedFile,
+  Catalog,
   ConnMeta,
   DownloadOutcome,
   IpcResult,
@@ -63,6 +64,10 @@ export interface Api {
     list(name: string): Promise<IpcResult<Backup[]>>
     /** copies the backup over the cached file; upload it to put it back on the Miniserver */
     restore(name: string, id: string): Promise<IpcResult<null>>
+  }
+  /** uuid → name/room/category/unit from the Miniserver's LoxAPP3.json; {} when unavailable */
+  catalog: {
+    get(): Promise<IpcResult<Catalog>>
   }
   cache: {
     list(): Promise<IpcResult<CachedFile[]>>
