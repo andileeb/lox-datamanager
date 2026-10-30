@@ -151,4 +151,8 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
   stat files (connect → browse → download → edit → save → upload → verify bytes
   on the server → delete). Rebuild (`pnpm run build`) before driving — the app
   loads from `out/`.
+- Screenshots: `pnpm run build && pnpm run screenshots` (`scripts/screenshots.mts`)
+  drives the built app against a local ftp-srv with generated demo stat files and a
+  throwaway profile (`LDM_USER_DATA` env overrides userData). **Never** real data,
+  hosts, tokens or the real profile in docs images; quit the real app first (port 12009).
 - Before a release run `docs/e2e-checklist.md` against a real Gen 2 Miniserver.

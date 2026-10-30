@@ -11,6 +11,9 @@
       "electron",
       "electron-winstaller",
       "esbuild"
+    ],
+    "ignoredBuiltDependencies": [
+      "dtrace-provider"
     ]
   },
   "homepage": "https://github.com/andileeb/loxone-datamanager",
@@ -32,7 +35,8 @@
     "build:unpack": "pnpm run build && electron-builder --dir",
     "build:win": "pnpm run build && electron-builder --win",
     "build:mac": "pnpm run build && electron-builder --mac",
-    "build:linux": "pnpm run build && electron-builder --linux"
+    "build:linux": "pnpm run build && electron-builder --linux",
+    "screenshots": "node scripts/screenshots.mts"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
@@ -60,6 +64,8 @@
     "electron-vite": "^5.0.0",
     "eslint": "^9.39.5",
     "eslint-plugin-vue": "^10.12.0",
+    "ftp-srv": "^4.6.3",
+    "playwright-core": "^1.64.1",
     "prettier": "^3.9.10",
     "typescript": "^5.9.3",
     "vite": "^7.3.7",

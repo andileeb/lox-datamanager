@@ -5,6 +5,11 @@ heavily inspired by [LoxStatEdit](https://github.com/mr-manuel/Loxone_LoxStatEdi
 
 <a href="https://www.buymeacoffee.com/andileeb"><img src="https://cdn.buymeacoffee.com/buttons/v2/lato-yellow.png" alt="Buy me a coffee" height="40"></a>
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/editor-dark.png">
+  <img src="docs/images/editor-light.png" alt="Editor with chart, entry grid and problems panel">
+</picture>
+
 Browse the statistics stored on your Miniserver's SD card, chart them, fix broken
 entries (spikes, gaps, wrong meter readings), and upload the corrected files back —
 all from an installable desktop app for macOS and Windows. No config files: enter
@@ -25,6 +30,45 @@ your Miniserver connection in the app.
 - **CSV export**, saved connections (password in the OS keychain), Gen 1 and Gen 2 support
 - **MCP server**: let AI assistants (Claude Code, Claude Desktop, …) browse, analyze,
   and fix your statistics through the app — see [MCP server](#mcp-server)
+
+## How it works
+
+**1. Connect** — enter your Miniserver's address and an admin user. Auto-detect picks
+FTPS when the Miniserver offers it; saved connections keep the password in the OS keychain.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/connect-dark.png">
+  <img src="docs/images/connect-light.png" alt="Connection screen" width="640">
+</picture>
+
+**2. Browse** — every statistics file on the SD card, with its name, month and whether
+your local copy is downloaded, changed locally or newer on the Miniserver.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/browser-dark.png">
+  <img src="docs/images/browser-light.png" alt="File browser with sync status">
+</picture>
+
+**3. Fix** — open a month to chart it and spot spikes, gaps and broken entries. Edit
+values inline, fill gaps, or recalculate a whole column with a formula.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/formula-dark.png">
+  <img src="docs/images/formula-light.png" alt="Formula dialog converting values">
+</picture>
+
+**4. Upload** — save and upload the corrected file, then restart the Miniserver and
+clear the Loxone app's cache (the app reminds you).
+
+**Optional: let an AI help** — turn on the built-in MCP server in Settings and ask
+Claude (or any MCP client) to find and fix problems for you. See [MCP server](#mcp-server).
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/settings-dark.png">
+  <img src="docs/images/settings-light.png" alt="Settings with the MCP server enabled" width="640">
+</picture>
+
+<sub>All screenshots show generated demo data (`pnpm run screenshots`).</sub>
 
 ## Installation
 
@@ -102,6 +146,7 @@ pnpm run dev        # Electron + Vue with HMR
 pnpm test           # parser round-trip + validation + formula tests
 pnpm run build      # typecheck + production build
 pnpm run build:mac  # package .dmg (or build:win / build:linux)
+pnpm run screenshots  # regenerate docs/images from demo data (after build)
 ```
 
 Stack: Electron (main process: [basic-ftp](https://github.com/patrickjuchli/basic-ftp),
