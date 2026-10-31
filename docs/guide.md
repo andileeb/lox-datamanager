@@ -2,6 +2,8 @@
 
 Feature pages beyond the [README](../README.md) overview.
 
+- [Names, rooms & units](names-and-rooms.md) — how files get their Loxone Config
+  names, rooms and units, also offline and in MCP
 - [Work offline & open local files](offline.md) — downloaded stats, backups and
   SD-card copies without connecting to a Miniserver
 - [Automatic backups & restore](backups.md) — the server copy is saved before every

@@ -30,7 +30,8 @@ your Miniserver connection in the app.
 - **Browse** `/stats` on the Miniserver via FTP/FTPS: file list with stat name, month,
   size, modification date, and local sync status. Names and rooms come from your
   Loxone Config (the Miniserver's structure file, read-only), so files show up as
-  "Kitchen consumption · Kitchen" instead of a UUID
+  "Kitchen consumption · Kitchen" instead of a UUID — see
+  [Names, rooms & units](docs/names-and-rooms.md)
 - **Chart + grid viewer** for the binary stat files (handles 40k+ entries per month
   smoothly), with validation ("Problems") like LoxStatEdit: wrong UUIDs, unordered
   timestamps, out-of-month entries, NaN values
