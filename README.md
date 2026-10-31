@@ -35,6 +35,8 @@ your Miniserver connection in the app.
 - **Chart + grid viewer** for the binary stat files (handles 40k+ entries per month
   smoothly), with validation ("Problems") like LoxStatEdit: wrong UUIDs, unordered
   timestamps, out-of-month entries, NaN values
+- **All months** of a control in one chart (e.g. a meter over a whole year), with
+  min/max/average per month — see [All months](docs/all-months.md)
 - **Edit**: change timestamps and values inline, insert/delete entries, fill gaps with
   interpolated entries, bulk-calculate (`v * 1000`, `(v - 32) / 1.8`, …)
 - **Round-trip safe**: files are re-serialized byte-identically (verified by tests) —

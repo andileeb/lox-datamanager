@@ -78,7 +78,8 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
   record logic here, not in a Pinia action).
 - `src/renderer/src/` — Vue 3 + Pinia + PrimeVue 4 + uPlot + vue-i18n. Views:
   Connection → Browser (file list w/ sync status) → Editor (chart + virtualized
-  grid + problems panel), plus Settings (Cmd/Ctrl+, or gear icon). Router guard:
+  grid + problems panel) and Months (`/months/<uuid[_n]>`, read-only stitched chart of
+  all months of one control + per-month summary; clicks open the editor with `?row=`), plus Settings (Cmd/Ctrl+, or gear icon). Router guard:
   everything except `/connect` and `/settings` needs a connection.
 - **i18n**: en + de catalogs in `renderer/src/locales/` (`de.ts` is typed
   `typeof en` so missing keys fail typecheck). ALL user-facing strings go

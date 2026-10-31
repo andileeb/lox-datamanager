@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
@@ -27,6 +27,7 @@ import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{ filename: string }>()
 const router = useRouter()
+const route = useRoute()
 const editor = useEditorStore()
 const conn = useConnectionStore()
 const { t } = useI18n()
@@ -232,14 +233,29 @@ function onKeydown(e: KeyboardEvent): void {
   history(key === 'y' || e.shiftKey)
 }
 
+/** back to where the editor was opened from (file list or all-months view) */
+function back(): void {
+  if (window.history.state?.back) router.back()
+  else router.push('/browser')
+}
+
+/** ?row=n (from the all-months chart) scrolls to that entry once loaded */
+async function load(name: string): Promise<void> {
+  await editor.load(name)
+  const row = Number(route.query.row)
+  if (!Number.isInteger(row) || !editor.data || row >= editor.data.records.length) return
+  await nextTick()
+  gotoRow(row)
+}
+
 onMounted(() => {
-  editor.load(props.filename)
+  void load(props.filename)
   window.addEventListener('keydown', onKeydown)
 })
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 watch(
   () => props.filename,
-  (name) => editor.load(name)
+  (name) => load(name)
 )
 </script>
 
@@ -253,7 +269,7 @@ watch(
           text
           severity="secondary"
           aria-label="Back"
-          @click="router.push('/browser')"
+          @click="back"
         />
         <div>
           <h2>
@@ -268,6 +284,14 @@ watch(
         </div>
       </div>
       <div class="actions">
+        <Button
+          v-tooltip.bottom="t('months.tip')"
+          :label="t('months.button')"
+          icon="pi pi-calendar"
+          severity="secondary"
+          text
+          @click="router.push(`/months/${filename.slice(0, -7)}`)"
+        />
         <Tag v-if="errorCount" severity="danger" :value="t('editor.errors', errorCount)" />
         <Tag v-if="warnCount" severity="warn" :value="t('editor.warnings', warnCount)" />
         <span v-if="editor.data" class="meta">
