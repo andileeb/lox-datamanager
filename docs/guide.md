@@ -2,6 +2,8 @@
 
 Feature pages beyond the [README](../README.md) overview.
 
+- [All months of a control](all-months.md) — every month of one control in one chart,
+  with a summary per month
 - [Names, rooms & units](names-and-rooms.md) — how files get their Loxone Config
   names, rooms and units, also offline and in MCP
 - [Work offline & open local files](offline.md) — downloaded stats, backups and

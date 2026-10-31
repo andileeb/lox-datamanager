@@ -152,6 +152,24 @@ export default {
     'invalid-value': 'Entry contains NaN/Infinity or a wrong number of values',
     'bad-header': 'Invalid file header'
   },
+  months: {
+    tip: 'All months of this control in one chart',
+    button: 'All months',
+    meta: '1 month · {entries} entries | {n} months · {entries} entries',
+    downloading: 'Downloading the missing months…',
+    failed:
+      '1 month could not be loaded and is missing from the chart | {n} months could not be loaded and are missing from the chart',
+    notDownloaded:
+      '1 month is not downloaded and is missing from the chart | {n} months are not downloaded and are missing from the chart',
+    skipped:
+      '1 month has a different number of values and is left out of the chart | {n} months have a different number of values and are left out of the chart',
+    notInChart: 'not in chart',
+    notInChartTip: 'This month stores a different number of values than the newest one',
+    hint: 'Read-only overview. Click the chart or a month to open it in the editor.',
+    colEntries: 'Entries',
+    colValue: 'Value {n} (min – max · average)',
+    empty: 'No months downloaded for this control.'
+  },
   chart: {
     resetZoom: 'Reset zoom',
     resetZoomTip: 'Double-clicking the chart also resets the zoom',
