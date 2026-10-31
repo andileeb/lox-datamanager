@@ -15,6 +15,8 @@ admin user. **Back up `/stats` first** (bulk download to the local folder).
 
 - [ ] File list matches an external FTP client (names, sizes, count)
 - [ ] Download a file → status becomes **Downloaded**, description column shows the stat name
+- [ ] Right after connecting (nothing downloaded) the description column shows the Loxone Config names + rooms (LoxAPP3.json via HTTP basic auth — check it with FTPS *and* plain FTP; `catalog.json` appears in the host's cache folder)
+- [ ] Disconnect → work offline with that host → names + rooms still shown
 - [ ] Bulk-select 10+ files → download with progress bar
 - [ ] "Open local folder" shows the downloaded files
 - [ ] Backup → save zip → file count matches /stats, one file byte-identical to a cached download, mtimes preserved; cancel the dialog → nothing downloads

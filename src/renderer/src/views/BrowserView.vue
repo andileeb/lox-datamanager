@@ -57,7 +57,10 @@ const rows = computed(() => {
     (f) =>
       (!month || f.yyyymm === month) &&
       (!status || f.status === status) &&
-      (!q || f.name.toLowerCase().includes(q) || f.description?.toLowerCase().includes(q))
+      (!q ||
+        f.name.toLowerCase().includes(q) ||
+        f.description?.toLowerCase().includes(q) ||
+        f.room?.toLowerCase().includes(q))
   )
 })
 
@@ -343,6 +346,7 @@ onBeforeUnmount(() => {
               class="suffix-tag"
             />
           </span>
+          <div v-if="data.room" class="room">{{ data.room }}</div>
         </template>
       </Column>
       <Column field="yyyymm" body-class="nowrap" :header="t('browser.colMonth')" sortable>
@@ -516,6 +520,10 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+}
+.room {
+  color: var(--p-text-muted-color);
+  font-size: 0.8rem;
 }
 .suffix-tag {
   font-size: 0.7rem;

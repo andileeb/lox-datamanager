@@ -29,6 +29,9 @@ const api: Api = {
     list: (name: string) => ipcRenderer.invoke('backups:list', name),
     restore: (name: string, id: string) => ipcRenderer.invoke('backups:restore', name, id)
   },
+  catalog: {
+    get: () => ipcRenderer.invoke('catalog:get')
+  },
   cache: {
     list: () => ipcRenderer.invoke('cache:list'),
     openFolder: () => ipcRenderer.invoke('cache:openFolder')

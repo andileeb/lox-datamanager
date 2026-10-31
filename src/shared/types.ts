@@ -136,3 +136,19 @@ export const LOXONE_EPOCH_OFFSET = 1230768000 // 2009-01-01T00:00:00Z in unix se
 
 export const STAT_FILENAME_RE =
   /^([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{16})(?:_([1-9]))?\.([12][0-9]{3})([01][0-9])$/
+
+/** what the Miniserver's structure file (LoxAPP3.json) says about a control uuid */
+export interface CatalogEntry {
+  name: string
+  room: string | null
+  category: string | null
+  /** Loxone control type, e.g. "Meter" */
+  type: string | null
+  /** unit per value of the classic (unsuffixed) file, from its printf format ("%.1f°C" → "°C") */
+  units: (string | null)[]
+  /** Meter controls: unit of the _1 power / _2 meter reading / _3 storage files */
+  suffixUnits?: Record<number, string | null>
+}
+
+/** lowercase uuid → entry */
+export type Catalog = Record<string, CatalogEntry>

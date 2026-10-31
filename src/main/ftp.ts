@@ -11,6 +11,8 @@ interface Session {
   client: Client
   args: ConnectPayload
   tlsMode: TlsMode
+  /** args.host after the cloud-DNS lookup */
+  host: string
 }
 
 let session: Session | null = null
@@ -86,7 +88,7 @@ async function open(args: ConnectPayload): Promise<Session> {
         secureOptions: { rejectUnauthorized: false }
       })
       pending = null
-      return { client, args, tlsMode: mode }
+      return { client, args, tlsMode: mode, host }
     } catch (e) {
       client.close()
       if (pending !== client) throw e // cancelled from outside — don't try the next mode
@@ -188,6 +190,13 @@ export function listStats(): Promise<RemoteFile[]> {
 export function activeHost(): string {
   if (!session) throw new NotConnectedError()
   return session.args.host
+}
+
+/** where the Miniserver's web server is reached with the FTP credentials (catalog fetch) */
+export function webTarget(): { host: string; user: string; password: string; tls: boolean } {
+  if (!session) throw new NotConnectedError()
+  const { args, host, tlsMode } = session
+  return { host, user: args.user, password: args.password, tls: tlsMode === 'ftps' }
 }
 
 export interface TransferFile {

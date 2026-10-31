@@ -38,6 +38,13 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     server copy there first if LIST shows it (newest 10 kept; a failed backup aborts the write —
     reply codes for "no such file" differ per server, so existence comes from LIST);
     restore copies one over the cache file, the user then uploads as usual.
+  - `catalog.ts` — uuid → name/room/category/unit from the Miniserver's
+    `/data/LoxAPP3.json` (HTTP basic auth with the FTP credentials; FTPS sessions try
+    https only, plain ones http then https; self-signed certs accepted). Fetched once per
+    host per launch, only the extracted map is saved as `catalog.json` in the host's cache
+    dir; offline/local sessions read `catalog.json` or a raw `LoxAPP3.json` from the folder.
+    Parsing is pure in `shared/catalog.ts`. A failed fetch is silent — names fall back to
+    the stat file headers. `LDM_WEB_PORT` overrides the web port (test harness only).
   - `store.ts` — saved connections: plain JSON in userData + passwords encrypted
     with Electron `safeStorage` (no keychain → password simply not stored).
   - `stats-service.ts` — shared session logic for IPC **and** MCP so they can't
@@ -115,6 +122,12 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
 - After upload the Miniserver must be **restarted** + Loxone app cache cleared —
   the UI shows this checklist; keep it.
 - Current-month files are still being appended by the Miniserver → editor warns.
+- **LoxAPP3.json units** (measured on a real Gen 2): only classic controls still have
+  `statistic.outputs[].format`; Meter/EFM/SpotPriceOptimizer have `statisticV2` (no
+  formats) and keep them in `details` — Meter `_1` = power (`actualFormat`), `_2` =
+  meter reading(s), 1 or 2 values (`totalFormat`), `_3` = storage (`storageFormat`).
+  EFM suffix files don't follow that (two cumulative, one not) → no guessed units.
+  Stat file uuids are the controls' `uuidAction` (also EFM subControls).
 - Loxone's official MCP server (fw 17.1) reads history but cannot write; it's a
   potential read-only add-on, never a replacement for FTP.
 - **Auto-update**: only the *notification* exists (`updates.ts`), deliberately.
