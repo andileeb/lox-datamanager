@@ -69,6 +69,10 @@ export interface Api {
   catalog: {
     get(): Promise<IpcResult<Catalog>>
   }
+  miniserver: {
+    /** restarts the connected Miniserver over its web server (admin user needed) */
+    reboot(): Promise<IpcResult<null>>
+  }
   cache: {
     list(): Promise<IpcResult<CachedFile[]>>
     openFolder(): Promise<IpcResult<null>>

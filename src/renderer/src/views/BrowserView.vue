@@ -12,6 +12,7 @@ import ProgressBar from 'primevue/progressbar'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import AppControls from '../components/AppControls.vue'
+import PostUploadDialog from '../components/PostUploadDialog.vue'
 import { useConnectionStore } from '../stores/connection'
 import { SUFFIX_KEYS, useFilesStore, type FileRow } from '../stores/files'
 import type { SyncStatus } from '../../../shared/types'
@@ -455,23 +456,7 @@ onBeforeUnmount(() => {
       </template>
     </Dialog>
 
-    <Dialog
-      v-model:visible="showPostUpload"
-      :header="t('editor.postUploadTitle')"
-      modal
-      :style="{ width: '28rem' }"
-    >
-      <p>{{ t('editor.postUploadIntro') }}</p>
-      <ol class="checklist">
-        <!-- eslint-disable-next-line vue/no-v-html -->
-        <li v-html="t('editor.postUploadStep1')"></li>
-        <!-- eslint-disable-next-line vue/no-v-html -->
-        <li v-html="t('editor.postUploadStep2')"></li>
-      </ol>
-      <template #footer>
-        <Button :label="t('editor.gotIt')" @click="showPostUpload = false" />
-      </template>
-    </Dialog>
+    <PostUploadDialog v-model:visible="showPostUpload" />
   </main>
 </template>
 
@@ -538,11 +523,5 @@ onBeforeUnmount(() => {
 }
 .delete-list {
   margin: 0.5rem 0 0 1.25rem;
-}
-.checklist {
-  margin: 0.5rem 0 0 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
 }
 </style>

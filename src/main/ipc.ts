@@ -10,6 +10,7 @@ import * as stats from './stats-service'
 import * as mcp from './mcp'
 import * as updates from './updates'
 import * as catalog from './catalog'
+import * as web from './web'
 import { CodedError, toApiError } from './stats-service'
 import { parseStatFile, validateRecords } from './statfile'
 import { diffRecords } from '../shared/records'
@@ -175,6 +176,10 @@ export function registerIpc(): void {
   })
 
   handle('catalog:get', () => catalog.sessionCatalog())
+  handle('miniserver:reboot', async () => {
+    await web.reboot()
+    return null
+  })
   handle('cache:list', () => cache.listWork())
   handle('cache:openFolder', () => {
     shell.openPath(cache.workDir())

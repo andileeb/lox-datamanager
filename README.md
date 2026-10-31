@@ -42,7 +42,8 @@ your Miniserver connection in the app.
 - **Round-trip safe**: files are re-serialized byte-identically (verified by tests) —
   only what you change changes
 - **Upload back** to the Miniserver: the confirm shows what changes (entries changed / added /
-  removed vs. the server copy), then a post-upload checklist (restart + app cache)
+  removed vs. the server copy), then a post-upload checklist (restart + app cache) — the Miniserver can be
+  restarted right from it (needs a user with admin rights)
 - **Automatic backups**: the server copy is saved before every upload or delete and can
   be restored from the editor — see [Backups](docs/backups.md)
 - **Undo/redo** (30 steps) and the usual [keyboard shortcuts](docs/guide.md#keyboard-shortcuts)
@@ -78,8 +79,8 @@ values inline, fill gaps, or recalculate a whole column with a formula.
   <img src="docs/images/formula-light.png" alt="Formula dialog converting values">
 </picture>
 
-**4. Upload** — save and upload the corrected file, then restart the Miniserver and
-clear the Loxone app's cache (the app reminds you). The previous server copy is backed
+**4. Upload** — save and upload the corrected file, then restart the Miniserver (one
+click in the app, with an admin user) and clear the Loxone app's cache (the app reminds you). The previous server copy is backed
 up automatically, so you can always [restore it](docs/backups.md).
 
 **Optional: let an AI help** — turn on the built-in MCP server in Settings and ask

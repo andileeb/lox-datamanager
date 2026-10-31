@@ -98,6 +98,7 @@ export interface ApiError {
     | 'FTP_TIMEOUT'
     | 'FTP_NOT_CONNECTED'
     | 'NO_PASSWORD'
+    | 'NO_PERMISSION'
     | 'PARSE_ERROR'
     | 'IO_ERROR'
     | 'UNKNOWN'
