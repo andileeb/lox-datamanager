@@ -36,7 +36,8 @@
     "build:win": "pnpm run build && electron-builder --win",
     "build:mac": "pnpm run build && electron-builder --mac",
     "build:linux": "pnpm run build && electron-builder --linux",
-    "screenshots": "node scripts/screenshots.mts"
+    "screenshots": "node scripts/screenshots.mts",
+    "showcase": "node scripts/screenshots.mts --showcase"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",

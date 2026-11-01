@@ -177,6 +177,8 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
   loads from `out/`.
 - Screenshots: `pnpm run build && pnpm run screenshots` (`scripts/screenshots.mts`)
   drives the built app against a local ftp-srv with generated demo stat files and a
-  throwaway profile (`LDM_USER_DATA` env overrides userData). **Never** real data,
+  throwaway profile (`LDM_USER_DATA` env overrides userData) + a fake LoxAPP3.json over https
+  (`LDM_WEB_PORT`). `pnpm run showcase` records the README tour GIFs the same way (CDP
+  screencast → ffmpeg; Playwright's `recordVideo` hangs Electron pages). **Never** real data,
   hosts, tokens or the real profile in docs images; quit the real app first (port 12009).
 - Before a release run `docs/e2e-checklist.md` against a real Gen 2 Miniserver.

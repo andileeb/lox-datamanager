@@ -16,9 +16,12 @@ heavily inspired by [LoxStatEdit](https://github.com/mr-manuel/Loxone_LoxStatEdi
 <a href="https://www.buymeacoffee.com/andileeb"><img src="https://cdn.buymeacoffee.com/buttons/v2/lato-yellow.png" alt="Buy me a coffee" height="40"></a>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/editor-dark.png">
-  <img src="docs/images/editor-light.png" alt="Editor with chart, entry grid and problems panel">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/showcase-dark.gif">
+  <img src="docs/images/showcase-light.gif" alt="25-second tour: open a month, fix a broken entry and a spike, fill gaps, upload with diff and restart checklist, then all months of the control in one chart">
 </picture>
+
+<sub>25-second tour: open a month → fix a broken entry and a spike → fill gaps → upload →
+all months in one chart.</sub>
 
 Browse the statistics stored on your Miniserver's SD card, chart them, fix broken
 entries (spikes, gaps, wrong meter readings), and upload the corrected files back —
@@ -91,7 +94,7 @@ Claude (or any MCP client) to find and fix problems for you. See [MCP server](#m
   <img src="docs/images/settings-light.png" alt="Settings with the MCP server enabled" width="640">
 </picture>
 
-<sub>All screenshots show generated demo data (`pnpm run screenshots`).</sub>
+<sub>All screenshots and the tour show generated demo data (`pnpm run screenshots`, `pnpm run showcase`).</sub>
 
 More in the [guide](docs/guide.md).
 
@@ -177,6 +180,7 @@ pnpm test           # parser round-trip + validation + formula tests
 pnpm run build      # typecheck + production build
 pnpm run build:mac  # package .dmg (or build:win / build:linux)
 pnpm run screenshots  # regenerate docs/images from demo data (after build)
+pnpm run showcase     # re-record the README tour GIFs (after build, needs ffmpeg)
 ```
 
 Stack: Electron (main process: [basic-ftp](https://github.com/patrickjuchli/basic-ftp),
