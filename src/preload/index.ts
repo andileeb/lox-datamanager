@@ -32,6 +32,9 @@ const api: Api = {
   catalog: {
     get: () => ipcRenderer.invoke('catalog:get')
   },
+  miniserver: {
+    reboot: () => ipcRenderer.invoke('miniserver:reboot')
+  },
   cache: {
     list: () => ipcRenderer.invoke('cache:list'),
     openFolder: () => ipcRenderer.invoke('cache:openFolder')

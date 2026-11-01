@@ -174,6 +174,13 @@ const de: typeof en = {
     colValue: 'Wert {n} (min – max · Durchschnitt)',
     empty: 'Für diesen Baustein sind keine Monate heruntergeladen.'
   },
+  restart: {
+    now: 'Jetzt neu starten',
+    confirm:
+      'Miniserver jetzt neu starten? Er ist etwa 1–2 Minuten offline — Licht, Heizung und andere Automatiken pausieren, bis er wieder läuft.',
+    confirmButton: 'Miniserver neu starten',
+    done: 'Neustart ausgelöst. Der Miniserver ist in etwa 1–2 Minuten wieder da – danach die Dateiliste aktualisieren.'
+  },
   chart: {
     resetZoom: 'Zoom zurücksetzen',
     resetZoomTip: 'Doppelklick auf das Diagramm setzt den Zoom ebenfalls zurück',
@@ -222,7 +229,9 @@ const de: typeof en = {
     FTP_AUTH_FAILED: 'Anmeldung fehlgeschlagen — Benutzer und Passwort prüfen',
     FTP_TIMEOUT: 'Zeitüberschreitung bei der Verbindung zum Miniserver',
     FTP_NOT_CONNECTED: 'Nicht mit einem Miniserver verbunden',
-    NO_PASSWORD: 'Kein gespeichertes Passwort — bitte manuell eingeben'
+    NO_PASSWORD: 'Kein gespeichertes Passwort — bitte manuell eingeben',
+    NO_PERMISSION:
+      'Der Miniserver hat abgelehnt — Neustarten braucht einen Benutzer mit Admin-Rechten. Bitte über Loxone Config neu starten.'
   }
 }
 

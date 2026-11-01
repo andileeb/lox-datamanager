@@ -11,6 +11,7 @@ import Tag from 'primevue/tag'
 import StatChart from '../components/StatChart.vue'
 import ProblemsPanel from '../components/ProblemsPanel.vue'
 import FormulaDialog from '../components/FormulaDialog.vue'
+import PostUploadDialog from '../components/PostUploadDialog.vue'
 import { displayToLox } from '../../../shared/time'
 import { LOXONE_EPOCH_OFFSET } from '../../../shared/types'
 import { isCurrentMonth as isCurrentMonthName } from '../../../shared/records'
@@ -536,23 +537,7 @@ watch(
         </template>
       </Dialog>
 
-      <Dialog
-        v-model:visible="showPostUpload"
-        :header="t('editor.postUploadTitle')"
-        modal
-        :style="{ width: '28rem' }"
-      >
-        <p>{{ t('editor.postUploadIntro') }}</p>
-        <ol class="checklist">
-          <!-- eslint-disable-next-line vue/no-v-html -->
-          <li v-html="t('editor.postUploadStep1')"></li>
-          <!-- eslint-disable-next-line vue/no-v-html -->
-          <li v-html="t('editor.postUploadStep2')"></li>
-        </ol>
-        <template #footer>
-          <Button :label="t('editor.gotIt')" @click="showPostUpload = false" />
-        </template>
-      </Dialog>
+      <PostUploadDialog v-model:visible="showPostUpload" />
     </template>
 
     <Dialog
@@ -679,12 +664,6 @@ watch(
 .cell-input:focus {
   background: var(--p-content-background);
   outline: 1px solid var(--p-primary-color);
-}
-.checklist {
-  margin: 0.5rem 0 0 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
 }
 :deep(.problem-row) {
   background: color-mix(in srgb, var(--p-red-500) 12%, transparent) !important;

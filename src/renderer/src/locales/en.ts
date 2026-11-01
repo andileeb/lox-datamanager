@@ -170,6 +170,13 @@ export default {
     colValue: 'Value {n} (min – max · average)',
     empty: 'No months downloaded for this control.'
   },
+  restart: {
+    now: 'Restart now',
+    confirm:
+      'Restart the Miniserver now? It is offline for about 1–2 minutes — lights, heating and other automations pause until it is back.',
+    confirmButton: 'Restart Miniserver',
+    done: 'Restart started. The Miniserver is back in about 1–2 minutes; refresh the file list then.'
+  },
   chart: {
     resetZoom: 'Reset zoom',
     resetZoomTip: 'Double-clicking the chart also resets the zoom',
@@ -217,6 +224,8 @@ export default {
     FTP_AUTH_FAILED: 'Login failed — check user and password',
     FTP_TIMEOUT: 'The connection to the Miniserver timed out',
     FTP_NOT_CONNECTED: 'Not connected to a Miniserver',
-    NO_PASSWORD: 'No stored password — enter it manually'
+    NO_PASSWORD: 'No stored password — enter it manually',
+    NO_PERMISSION:
+      'The Miniserver refused — restarting needs a user with admin rights. Restart it from Loxone Config instead.'
   }
 }
