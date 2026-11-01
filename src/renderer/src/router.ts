@@ -9,7 +9,8 @@ const router = createRouter({
     { path: '/connect', component: ConnectionView },
     { path: '/settings', component: () => import('./views/SettingsView.vue') },
     { path: '/browser', component: () => import('./views/BrowserView.vue') },
-    { path: '/editor/:filename', component: () => import('./views/EditorView.vue'), props: true }
+    { path: '/editor/:filename', component: () => import('./views/EditorView.vue'), props: true },
+    { path: '/months/:base', component: () => import('./views/MonthsView.vue'), props: true }
   ]
 })
 

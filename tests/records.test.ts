@@ -3,8 +3,12 @@ import {
   applyToRecords,
   diffRecords,
   dominantInterval,
+  fileOffsets,
   fillGaps,
   isCurrentMonth,
+  locateIndex,
+  type MonthFileLike,
+  orderMonths,
   packRecords,
   statusOf,
   summarizeRecords,
@@ -108,6 +112,18 @@ describe('summarizeRecords', () => {
     ])
   })
 
+  it('ignores broken (NaN) values in min/max/avg', () => {
+    const s = summarizeRecords(
+      [
+        { ts: 0, values: [10] },
+        { ts: 60, values: [NaN] },
+        { ts: 120, values: [30] }
+      ],
+      1
+    )
+    expect(s.columns).toEqual([{ min: 10, max: 30, avg: 20 }])
+  })
+
   it('handles empty record lists', () => {
     const s = summarizeRecords([], 2)
     expect(s.count).toBe(0)
@@ -186,5 +202,52 @@ describe('diffRecords', () => {
     ]
     expect(diffRecords(before, after)).toEqual({ changed: 1, inserted: 2, deleted: 1 })
     expect(diffRecords(before, before)).toEqual({ changed: 0, inserted: 0, deleted: 0 })
+  })
+})
+
+describe('orderMonths', () => {
+  const month = (yyyymm: string, valueCount = 1): MonthFileLike => ({
+    fileName: `uuid.${yyyymm}`,
+    valueCount,
+    records: []
+  })
+
+  it('sorts months ascending regardless of input order', () => {
+    const { kept, skipped } = orderMonths([month('202403'), month('202401'), month('202402')])
+    expect(kept.map((f) => f.fileName)).toEqual(['uuid.202401', 'uuid.202402', 'uuid.202403'])
+    expect(skipped).toEqual([])
+  })
+
+  it('skips months whose valueCount differs from the newest month', () => {
+    const { kept, skipped } = orderMonths([month('202401', 2), month('202402'), month('202403')])
+    expect(kept.map((f) => f.fileName)).toEqual(['uuid.202402', 'uuid.202403'])
+    expect(skipped.map((f) => f.fileName)).toEqual(['uuid.202401'])
+  })
+
+  it('handles empty input', () => {
+    expect(orderMonths([])).toEqual({ kept: [], skipped: [] })
+  })
+})
+
+describe('fileOffsets / locateIndex', () => {
+  const files = (...counts: number[]): MonthFileLike[] =>
+    counts.map((n, i) => ({
+      fileName: `uuid.20240${i + 1}`,
+      valueCount: 1,
+      records: Array.from({ length: n }, (_, k) => ({ ts: k, values: [k] }))
+    }))
+
+  it('computes prefix sums', () => {
+    expect(fileOffsets(files(3, 0, 2))).toEqual([0, 3, 3])
+    expect(fileOffsets([])).toEqual([])
+  })
+
+  it('locates boundary indices, skipping empty files', () => {
+    const offsets = fileOffsets(files(3, 0, 2))
+    expect(locateIndex(offsets, 0)).toEqual({ file: 0, local: 0 })
+    expect(locateIndex(offsets, 2)).toEqual({ file: 0, local: 2 })
+    // index 3 belongs to file 2 — file 1 is empty
+    expect(locateIndex(offsets, 3)).toEqual({ file: 2, local: 0 })
+    expect(locateIndex(offsets, 4)).toEqual({ file: 2, local: 1 })
   })
 })

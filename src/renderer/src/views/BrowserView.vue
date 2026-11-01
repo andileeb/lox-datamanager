@@ -366,7 +366,7 @@ onBeforeUnmount(() => {
           />
         </template>
       </Column>
-      <Column header-style="width: 11rem" frozen align-frozen="right">
+      <Column header-style="width: 13rem" frozen align-frozen="right">
         <template #body="{ data }">
           <div class="row-actions">
             <Button
@@ -387,6 +387,14 @@ onBeforeUnmount(() => {
               aria-label="Open"
               :disabled="!!files.transfer"
               @click="openEditor(data)"
+            />
+            <Button
+              v-tooltip.left="t('months.tip')"
+              icon="pi pi-calendar"
+              text
+              aria-label="All months"
+              :disabled="!!files.transfer"
+              @click="router.push(`/months/${data.name.slice(0, -7)}`)"
             />
             <Button
               v-if="!conn.offline"

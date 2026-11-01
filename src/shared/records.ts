@@ -104,15 +104,16 @@ export function summarizeRecords(records: StatRecord[], valueCount: number): Rec
     let min = Infinity
     let max = -Infinity
     let sum = 0
+    let n = 0
     for (const r of records) {
       const v = r.values[c]
+      if (!Number.isFinite(v)) continue // broken entries (NaN) are reported as problems
       if (v < min) min = v
       if (v > max) max = v
       sum += v
+      n++
     }
-    columns.push(
-      records.length ? { min, max, avg: sum / records.length } : { min: 0, max: 0, avg: 0 }
-    )
+    columns.push(n ? { min, max, avg: sum / n } : { min: 0, max: 0, avg: 0 })
   }
   const gaps: Gap[] = []
   for (let i = 1; i < records.length; i++) {
@@ -129,6 +130,41 @@ export function summarizeRecords(records: StatRecord[], valueCount: number): Rec
     columns,
     gaps
   }
+}
+
+/** the slice of a parsed stat file the multi-month view needs */
+export interface MonthFileLike {
+  fileName: string
+  valueCount: number
+  records: StatRecord[]
+}
+
+/** sort months ascending by yyyymm; the newest month's valueCount wins, mismatching months are skipped */
+export function orderMonths<T extends MonthFileLike>(files: T[]): { kept: T[]; skipped: T[] } {
+  const sorted = [...files].sort((a, b) => a.fileName.slice(-6).localeCompare(b.fileName.slice(-6)))
+  const want = sorted.length ? sorted[sorted.length - 1].valueCount : 0
+  return {
+    kept: sorted.filter((f) => f.valueCount === want),
+    skipped: sorted.filter((f) => f.valueCount !== want)
+  }
+}
+
+/** prefix sums of record counts: offsets[i] = stitched index of file i's first record */
+export function fileOffsets(files: MonthFileLike[]): number[] {
+  const offsets: number[] = []
+  let sum = 0
+  for (const f of files) {
+    offsets.push(sum)
+    sum += f.records.length
+  }
+  return offsets
+}
+
+/** stitched index → source file + local index (offsets from fileOffsets) */
+export function locateIndex(offsets: number[], index: number): { file: number; local: number } {
+  let file = 0
+  for (let i = 1; i < offsets.length; i++) if (offsets[i] <= index) file = i
+  return { file, local: index - (offsets[file] ?? 0) }
 }
 
 /** sync status of a stat file across remote listing and local cache */

@@ -156,6 +156,24 @@ const de: typeof en = {
     'invalid-value': 'Eintrag enthält NaN/Unendlich oder eine falsche Anzahl an Werten',
     'bad-header': 'Ungültiger Datei-Header'
   },
+  months: {
+    tip: 'Alle Monate dieses Bausteins in einem Diagramm',
+    button: 'Alle Monate',
+    meta: '1 Monat · {entries} Einträge | {n} Monate · {entries} Einträge',
+    downloading: 'Fehlende Monate werden heruntergeladen…',
+    failed:
+      '1 Monat konnte nicht geladen werden und fehlt im Diagramm | {n} Monate konnten nicht geladen werden und fehlen im Diagramm',
+    notDownloaded:
+      '1 Monat ist nicht heruntergeladen und fehlt im Diagramm | {n} Monate sind nicht heruntergeladen und fehlen im Diagramm',
+    skipped:
+      '1 Monat hat eine andere Anzahl Werte und fehlt im Diagramm | {n} Monate haben eine andere Anzahl Werte und fehlen im Diagramm',
+    notInChart: 'nicht im Diagramm',
+    notInChartTip: 'Dieser Monat speichert eine andere Anzahl Werte als der neueste',
+    hint: 'Nur Ansicht. Klick ins Diagramm oder auf einen Monat öffnet ihn im Editor.',
+    colEntries: 'Einträge',
+    colValue: 'Wert {n} (min – max · Durchschnitt)',
+    empty: 'Für diesen Baustein sind keine Monate heruntergeladen.'
+  },
   chart: {
     resetZoom: 'Zoom zurücksetzen',
     resetZoomTip: 'Doppelklick auf das Diagramm setzt den Zoom ebenfalls zurück',
