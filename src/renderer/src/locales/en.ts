@@ -181,6 +181,7 @@ export default {
   chart: {
     resetZoom: 'Reset zoom',
     resetZoomTip: 'Double-clicking the chart also resets the zoom',
+    time: 'Time',
     value: 'Value {n}'
   },
   settings: {

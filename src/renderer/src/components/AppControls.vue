@@ -37,7 +37,7 @@ const localeOptions = [
       :icon="isDark ? 'pi pi-sun' : 'pi pi-moon'"
       text
       severity="secondary"
-      aria-label="Theme"
+      :aria-label="t('browser.tipTheme')"
       @click="toggleDark"
     />
     <Button
@@ -45,7 +45,7 @@ const localeOptions = [
       icon="pi pi-cog"
       text
       severity="secondary"
-      aria-label="Settings"
+      :aria-label="t('settings.title')"
       @click="router.push('/settings')"
     />
   </div>

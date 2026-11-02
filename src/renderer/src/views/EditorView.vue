@@ -78,10 +78,17 @@ const isCurrentMonth = computed(() => isCurrentMonthName(props.filename))
 
 /** what Loxone Config says about this control: name, room, units */
 const entry = computed(() => useFilesStore().catalog[props.filename.slice(0, 35)])
-const units = computed(() => {
+const unitList = computed(() => {
   const m = /_([1-9])\.\d{6}$/.exec(props.filename)
-  return [...new Set(unitsFor(entry.value, m ? Number(m[1]) : null).filter((u) => u))].join(' / ')
+  return unitsFor(entry.value, m ? Number(m[1]) : null)
 })
+const units = computed(() => [...new Set(unitList.value.filter((u) => u))].join(' / '))
+const valueHeader = (v: number): string =>
+  t('editor.value', { n: v }) + (unitList.value[v - 1] ? ` (${unitList.value[v - 1]})` : '')
+// ponytail: 12 significant digits hide float noise (0.30000000000000004); the stored value is
+// untouched unless the cell is edited
+const cellValue = (x: number): string =>
+  Number.isFinite(x) ? String(Number(x.toPrecision(12))) : String(x)
 
 const selectedIndices = computed(() => selection.value.map((s) => s.index).sort((a, b) => a - b))
 
@@ -103,7 +110,7 @@ function commitValue(row: Row, valueIdx: number, event: Event): void {
   if (Number.isFinite(num)) {
     editor.setValue(row.index, valueIdx, num)
   } else {
-    input.value = String(row.values[valueIdx])
+    input.value = cellValue(row.values[valueIdx])
   }
 }
 
@@ -375,6 +382,7 @@ watch(
       <StatChart
         :records="editor.data.records"
         :value-count="editor.data.valueCount"
+        :units="unitList"
         :version="editor.chartVersion"
         @select="gotoRow"
       />
@@ -473,14 +481,10 @@ watch(
               />
             </template>
           </Column>
-          <Column
-            v-for="v in editor.data.valueCount"
-            :key="v"
-            :header="t('editor.value', { n: v })"
-          >
+          <Column v-for="v in editor.data.valueCount" :key="v" :header="valueHeader(v)">
             <template #body="{ data }">
               <InputText
-                :model-value="String(data.values[v - 1])"
+                :model-value="cellValue(data.values[v - 1])"
                 class="cell-input mono"
                 @change="commitValue(data, v - 1, $event)"
                 @keyup.enter="($event.target as HTMLInputElement).blur()"

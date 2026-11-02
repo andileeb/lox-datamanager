@@ -13,6 +13,8 @@ const { t, locale } = useI18n()
 const props = defineProps<{
   records: StatRecord[]
   valueCount: number
+  /** unit per value from Loxone Config, shown in the legend */
+  units?: (string | null)[]
   /** bump to force a data refresh after in-place edits */
   version?: number
 }>()
@@ -87,7 +89,7 @@ function autoAxisSize(
 }
 
 /** 320px on normal windows, shrinks on short ones so the entry grid stays usable */
-const chartHeight = (): number => Math.round(Math.min(320, Math.max(160, innerHeight * 0.32)))
+const chartHeight = (): number => Math.round(Math.min(320, Math.max(120, innerHeight * 0.28)))
 
 function makePlot(): void {
   if (!wrap.value) return
@@ -99,9 +101,9 @@ function makePlot(): void {
     height: chartHeight(),
     tzDate: (ts) => uPlot.tzDate(new Date(ts * 1000), 'Etc/UTC'),
     series: [
-      {},
+      { label: t('chart.time') },
       ...Array.from({ length: props.valueCount }, (_, i) => ({
-        label: t('chart.value', { n: i + 1 }),
+        label: t('chart.value', { n: i + 1 }) + (props.units?.[i] ? ` (${props.units[i]})` : ''),
         stroke: seriesColor(i),
         width: 2,
         points: { show: false }
@@ -159,8 +161,8 @@ watch(
   }
 )
 
-// theme or language changed → colors and series labels must be rebuilt
-watch([isDark, locale], () => makePlot())
+// theme, language or units changed → colors and series labels must be rebuilt
+watch([isDark, locale, () => props.units?.join()], () => makePlot())
 </script>
 
 <template>

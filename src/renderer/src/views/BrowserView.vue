@@ -273,7 +273,7 @@ onBeforeUnmount(() => {
           icon="pi pi-refresh"
           severity="secondary"
           :loading="files.loading"
-          aria-label="Refresh"
+          :aria-label="t('browser.tipRefresh')"
           @click="files.refresh()"
         />
         <Button
@@ -282,7 +282,7 @@ onBeforeUnmount(() => {
           "
           icon="pi pi-folder-open"
           severity="secondary"
-          aria-label="Open local folder"
+          :aria-label="conn.offline ? t('browser.tipOpenThisFolder') : t('browser.tipOpenFolder')"
           @click="openCacheFolder"
         />
         <Button
@@ -328,7 +328,13 @@ onBeforeUnmount(() => {
       class="table"
     >
       <Column v-if="!conn.offline" selection-mode="multiple" header-style="width: 3rem" />
-      <Column field="name" :header="t('browser.colFile')" sortable>
+      <Column
+        field="name"
+        header-class="opt-file"
+        body-class="opt-file"
+        :header="t('browser.colFile')"
+        sortable
+      >
         <template #body="{ data }">
           <span class="mono">{{ data.name }}</span>
         </template>
@@ -348,15 +354,28 @@ onBeforeUnmount(() => {
             />
           </span>
           <div v-if="data.room" class="room">{{ data.room }}</div>
+          <div class="mono file-sub">{{ data.name }}</div>
         </template>
       </Column>
       <Column field="yyyymm" body-class="nowrap" :header="t('browser.colMonth')" sortable>
         <template #body="{ data }">{{ formatMonth(data.yyyymm) }}</template>
       </Column>
-      <Column field="size" body-class="nowrap" :header="t('browser.colSize')" sortable>
+      <Column
+        field="size"
+        header-class="opt"
+        body-class="nowrap opt"
+        :header="t('browser.colSize')"
+        sortable
+      >
         <template #body="{ data }">{{ formatSize(data.size) }}</template>
       </Column>
-      <Column field="modifiedAt" body-class="nowrap" :header="t('browser.colModified')" sortable>
+      <Column
+        field="modifiedAt"
+        header-class="opt"
+        body-class="nowrap opt"
+        :header="t('browser.colModified')"
+        sortable
+      >
         <template #body="{ data }">{{ formatDate(data.modifiedAt) }}</template>
       </Column>
       <Column field="status" body-class="nowrap" :header="t('browser.colStatus')" sortable>
@@ -376,7 +395,7 @@ onBeforeUnmount(() => {
               icon="pi pi-download"
               text
               severity="secondary"
-              aria-label="Download"
+              :aria-label="t('browser.tipDownload')"
               :disabled="!data.remote || !!files.transfer"
               :loading="busyRow === data.name"
               @click="downloadOne(data)"
@@ -385,7 +404,7 @@ onBeforeUnmount(() => {
               v-tooltip.left="t('browser.tipOpen')"
               icon="pi pi-chart-line"
               text
-              aria-label="Open"
+              :aria-label="t('browser.tipOpen')"
               :disabled="!!files.transfer"
               @click="openEditor(data)"
             />
@@ -393,7 +412,7 @@ onBeforeUnmount(() => {
               v-tooltip.left="t('months.tip')"
               icon="pi pi-calendar"
               text
-              aria-label="All months"
+              :aria-label="t('months.tip')"
               :disabled="!!files.transfer"
               @click="router.push(`/months/${data.name.slice(0, -7)}`)"
             />
@@ -403,7 +422,7 @@ onBeforeUnmount(() => {
               icon="pi pi-cloud-upload"
               text
               severity="warn"
-              aria-label="Upload"
+              :aria-label="t('browser.tipUpload')"
               :disabled="
                 (data.status !== 'local-newer' && data.status !== 'only-local') || !!files.transfer
               "
@@ -415,7 +434,7 @@ onBeforeUnmount(() => {
               icon="pi pi-trash"
               text
               severity="danger"
-              aria-label="Delete"
+              :aria-label="t('browser.tipDelete')"
               :disabled="!data.remote || !!files.transfer"
               @click="deleteTargets = [data]"
             />
@@ -523,5 +542,26 @@ onBeforeUnmount(() => {
 }
 .delete-list {
   margin: 0.5rem 0 0 1.25rem;
+}
+/* narrower windows: the file name moves under the description, then size and date give
+   way, so the status stays visible next to the row actions */
+.file-sub {
+  display: none;
+}
+@media (max-width: 1200px) {
+  :deep(.opt-file) {
+    display: none;
+  }
+  .file-sub {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--p-text-muted-color);
+    word-break: break-all;
+  }
+}
+@media (max-width: 1000px) {
+  :deep(.opt) {
+    display: none;
+  }
 }
 </style>
