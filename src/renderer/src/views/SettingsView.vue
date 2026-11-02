@@ -96,11 +96,43 @@ async function regenerateToken(): Promise<void> {
   if (r.ok) mcp.value = r.data
 }
 
-const mcpSnippet = computed(() =>
-  mcp.value
-    ? `claude mcp add --transport http lox-datamanager ${mcp.value.url} --header "Authorization: Bearer ${mcp.value.token ?? '<token>'}"`
-    : ''
-)
+type McpClient = 'claudeCode' | 'claudeDesktop' | 'cursor' | 'vscode'
+const mcpClients: { value: McpClient; label: string }[] = [
+  { value: 'claudeCode', label: 'Claude Code' },
+  { value: 'claudeDesktop', label: 'Claude Desktop' },
+  { value: 'cursor', label: 'Cursor' },
+  { value: 'vscode', label: 'VS Code' }
+]
+const mcpClient = ref<McpClient>('claudeCode')
+
+const mcpSnippet = computed(() => {
+  if (!mcp.value) return ''
+  const { url } = mcp.value
+  const auth = `Bearer ${mcp.value.token ?? '<token>'}`
+  const name = 'lox-datamanager'
+  const json = (o: unknown): string => JSON.stringify(o, null, 2)
+  switch (mcpClient.value) {
+    case 'claudeCode':
+      return `claude mcp add --transport http ${name} ${url} --header "Authorization: ${auth}"`
+    case 'claudeDesktop':
+      // Claude Desktop's config file only starts local (stdio) servers → mcp-remote bridges to HTTP;
+      // the header goes through env because spaces in args break on Windows
+      return json({
+        mcpServers: {
+          [name]: {
+            command: 'npx',
+            args: ['-y', 'mcp-remote', url, '--header', 'Authorization:${AUTH_HEADER}'],
+            env: { AUTH_HEADER: auth }
+          }
+        }
+      })
+    case 'cursor':
+      return json({ mcpServers: { [name]: { url, headers: { Authorization: auth } } } })
+    case 'vscode':
+      return json({ servers: { [name]: { type: 'http', url, headers: { Authorization: auth } } } })
+  }
+  return ''
+})
 
 async function copyText(text: string, which: 'token' | 'snippet'): Promise<void> {
   await navigator.clipboard.writeText(text)
@@ -236,7 +268,16 @@ async function copyText(text: string, which: 'token' | 'snippet'): Promise<void>
           </div>
         </div>
         <template v-if="mcp.enabled && mcp.token">
-          <p class="hint">{{ t('settings.mcpSnippetLabel') }}</p>
+          <div class="row">
+            <label>{{ t('settings.mcpClient') }}</label>
+            <Select
+              v-model="mcpClient"
+              :options="mcpClients"
+              option-label="label"
+              option-value="value"
+            />
+          </div>
+          <p class="hint">{{ t(`settings.mcpWhere.${mcpClient}`) }}</p>
           <div class="mcp-snippet">
             <pre>{{ mcpSnippet }}</pre>
             <Button

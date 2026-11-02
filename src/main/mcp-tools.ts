@@ -21,12 +21,21 @@ import {
   applyToRecords,
   dominantInterval,
   fillGaps,
+  findSpikes,
   isCurrentMonth,
+  orderMonths,
   statusOf,
   summarizeRecords
 } from '../shared/records'
 import { displayToLox, loxToDisplay } from '../shared/time'
-import { STAT_FILENAME_RE, type CatalogEntry, type Problem, type StatRecord } from '../shared/types'
+import {
+  STAT_FILENAME_RE,
+  type CatalogEntry,
+  type Problem,
+  type StatRecord,
+  type SyncStatus
+} from '../shared/types'
+import { aggregate, isCounter, round, usageProfile, type Period } from '../shared/insights'
 
 interface ToolResult {
   content: { type: 'text'; text: string }[]
@@ -115,6 +124,129 @@ function selectIndices(
   }
   return out
 }
+
+type FileRow = { name: string; description: string | null } & Partial<
+  Omit<CatalogEntry, 'name'>
+> & {
+    yyyymm: string
+    size: number
+    modifiedAt: string | null
+    status: SyncStatus
+  }
+
+/**
+ * Every stat file of the session: the Miniserver listing merged with the local cache (offline /
+ * local-folder session: the local files only), described from the catalog when available.
+ */
+async function fileRows(): Promise<FileRow[]> {
+  const remote = cache.localSource() ? [] : await ftp.listStats()
+  const cached = cache.listWork()
+  const cat = await catalog.sessionCatalog()
+  const about = (
+    name: string,
+    header: string | null
+  ): { description: string | null } & Partial<Omit<CatalogEntry, 'name'>> => {
+    const e = cat[name.slice(0, 35)]
+    return {
+      description: e?.name ?? header,
+      ...(e && {
+        room: e.room,
+        category: e.category,
+        type: e.type,
+        units: unitsFor(e, STAT_FILENAME_RE.exec(name)?.[2] ? Number(name[36]) : null)
+      })
+    }
+  }
+  const cachedBy = new Map(cached.map((c) => [c.name, c]))
+  const remoteNames = new Set(remote.map((r) => r.name))
+  const rows: FileRow[] = remote.map((r) => ({
+    name: r.name,
+    ...about(r.name, cachedBy.get(r.name)?.nameFromHeader ?? null),
+    yyyymm: r.yyyymm,
+    size: r.size,
+    modifiedAt: r.modifiedAt,
+    status: statusOf(r, cachedBy.get(r.name))
+  }))
+  for (const c of cached) {
+    if (remoteNames.has(c.name)) continue
+    rows.push({
+      name: c.name,
+      ...about(c.name, c.nameFromHeader),
+      yyyymm: c.name.slice(-6),
+      size: c.size,
+      modifiedAt: c.modifiedAt,
+      status: 'only-local'
+    })
+  }
+  return rows
+}
+
+/** control id = file name without the month: "<uuid>" or "<uuid>_<n>" */
+const controlOf = (name: string): string => name.slice(0, -7)
+
+const controlArg = z
+  .string()
+  .regex(
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{16}(_[1-9])?$/,
+    'control id like <uuid> or <uuid>_2'
+  )
+const monthArg = z
+  .string()
+  .regex(/^\d{6}$/, 'YYYYMM')
+  .optional()
+
+/**
+ * Months of one control within [from, to] (YYYYMM; default: the newest 12), downloaded in one
+ * batch when missing, stitched in time order. Months with a different value count are skipped.
+ */
+async function loadControl(
+  rows: FileRow[],
+  control: string,
+  from?: string,
+  to?: string,
+  defaultMonths = 12
+): Promise<{
+  row: FileRow
+  records: StatRecord[]
+  months: string[]
+  skipped: string[]
+  spikesIgnored: number
+  stale: string[]
+}> {
+  let mine = rows
+    .filter((r) => controlOf(r.name) === control)
+    .sort((a, b) => a.yyyymm.localeCompare(b.yyyymm))
+  if (!mine.length) throw new CodedError('IO_ERROR', `No statistics files for control ${control}`)
+  if (from || to) mine = mine.filter((r) => (!from || r.yyyymm >= from) && (!to || r.yyyymm <= to))
+  else mine = mine.slice(-defaultMonths)
+  if (!mine.length) throw new CodedError('IO_ERROR', `No months of ${control} in that range`)
+  // never overwrite local copies (they may hold unuploaded edits) — newer server copies are reported
+  const missing = mine.filter((r) => r.status === 'only-remote')
+  if (missing.length) {
+    const outcome = await ftp.download(missing, cache.cacheDir(ftp.activeHost()), () => {})
+    if (outcome.done.length) notifyRenderer({ kind: 'download' })
+    for (const f of outcome.failed) mine = mine.filter((r) => r.name !== f.name)
+  }
+  const { kept, skipped } = orderMonths(
+    mine.map((r) => {
+      const p = stats.getParsed(r.name)
+      return { fileName: p.fileName, valueCount: p.valueCount, records: p.records }
+    })
+  )
+  // glitches would dominate peaks and meter deltas — drop what the spike rule flags
+  const all = kept.flatMap((f) => f.records)
+  const spikes = new Set(findSpikes(all, kept[0]?.valueCount ?? 0).map(([i]) => i))
+  return {
+    row: mine[mine.length - 1],
+    records: spikes.size ? all.filter((_, i) => !spikes.has(i)) : all,
+    spikesIgnored: spikes.size,
+    stale: mine.filter((r) => r.status === 'remote-newer').map((r) => r.yyyymm),
+    months: kept.map((f) => f.fileName.slice(-6)),
+    skipped: skipped.map((f) => f.fileName.slice(-6))
+  }
+}
+
+const isEnergyUnit = (u: string | null | undefined): boolean => !!u && /^(k|M)?Wh?$/.test(u)
 
 const nameArg = z.string().regex(STAT_FILENAME_RE, 'stat file name like <uuid>.YYYYMM')
 
@@ -229,47 +361,7 @@ export function buildServer(): McpServer {
       filter: z.string().optional()
     },
     async ({ month, filter }) => {
-      // offline / local-folder session: only the local files, no Miniserver to compare with
-      const remote = cache.localSource() ? [] : await ftp.listStats()
-      const cached = cache.listWork()
-      const cat = await catalog.sessionCatalog()
-      // catalog name/room/category/units for a file, when the Miniserver's structure file had it
-      const about = (
-        name: string,
-        header: string | null
-      ): { description: string | null } & Partial<Omit<CatalogEntry, 'name'>> => {
-        const e = cat[name.slice(0, 35)]
-        return {
-          description: e?.name ?? header,
-          ...(e && {
-            room: e.room,
-            category: e.category,
-            type: e.type,
-            units: unitsFor(e, STAT_FILENAME_RE.exec(name)?.[2] ? Number(name[36]) : null)
-          })
-        }
-      }
-      const cachedBy = new Map(cached.map((c) => [c.name, c]))
-      const remoteNames = new Set(remote.map((r) => r.name))
-      const rows = remote.map((r) => ({
-        name: r.name,
-        ...about(r.name, cachedBy.get(r.name)?.nameFromHeader ?? null),
-        yyyymm: r.yyyymm,
-        size: r.size,
-        modifiedAt: r.modifiedAt,
-        status: statusOf(r, cachedBy.get(r.name))
-      }))
-      for (const c of cached) {
-        if (remoteNames.has(c.name)) continue
-        rows.push({
-          name: c.name,
-          ...about(c.name, c.nameFromHeader),
-          yyyymm: c.name.slice(-6),
-          size: c.size,
-          modifiedAt: c.modifiedAt,
-          status: 'only-local'
-        })
-      }
+      const rows = await fileRows()
       const f = (filter as string | undefined)?.toLowerCase()
       const filtered = rows.filter(
         (r) =>
@@ -673,6 +765,242 @@ export function buildServer(): McpServer {
     { destructiveHint: true }
   )
 
+  // ── insights (compact aggregates over months, not raw rows) ───────────────
+
+  tool(
+    'find_controls',
+    'List the controls that have statistics — one entry per control instead of one per month ' +
+      '(id = file name without the month: "<uuid>" or "<uuid>_<n>" for meter sub-files: ' +
+      '_1 power, _2 meter reading(s), _3 storage). With name, room, category, type and units from ' +
+      'the Miniserver structure file when available. Start here to answer questions about the data.',
+    { filter: z.string().optional() },
+    async ({ filter }) => {
+      const byControl = new Map<string, FileRow[]>()
+      for (const r of await fileRows()) {
+        const id = controlOf(r.name)
+        byControl.set(id, [...(byControl.get(id) ?? []), r])
+      }
+      const f = (filter as string | undefined)?.toLowerCase()
+      const controls = [...byControl].map(([id, files]) => {
+        files.sort((a, b) => a.yyyymm.localeCompare(b.yyyymm))
+        const last = files[files.length - 1]
+        return {
+          id,
+          description: last.description,
+          room: last.room,
+          category: last.category,
+          type: last.type,
+          units: last.units,
+          months: files.length,
+          from: files[0].yyyymm,
+          to: last.yyyymm
+        }
+      })
+      const filtered = controls.filter(
+        (c) =>
+          !f ||
+          c.id.includes(f) ||
+          [c.description, c.room, c.category, c.type].some((x) => x?.toLowerCase().includes(f))
+      )
+      return json({ count: filtered.length, controls: filtered })
+    },
+    { readOnlyHint: true }
+  )
+
+  const periodArg = z.enum(['hour', 'day', 'week', 'month'])
+  const label = (ts: number, period: string): string =>
+    period === 'hour'
+      ? loxToDisplay(ts).slice(0, 13) + ':00'
+      : loxToDisplay(ts).slice(0, period === 'month' ? 7 : 10)
+  const counterNote =
+    'counter = cumulative meter reading: "total" is the consumption in the period (resets skipped). ' +
+    'Otherwise "total" is value × hours (kW → kWh; meaningless for °C, %).'
+
+  tool(
+    'get_aggregates',
+    'Aggregate one control over several months into hours/days/weeks/months: min, max, avg and ' +
+      'total per period, plus the overall result. Downloads missing months. ' +
+      counterNote +
+      ' Months default to the newest 12; compare periods by calling it twice.',
+    {
+      control: controlArg,
+      period: periodArg.default('day'),
+      from: monthArg,
+      to: monthArg,
+      column: z.number().int().min(0).default(0),
+      counter: z.boolean().optional().describe('override the cumulative-series detection')
+    },
+    async ({ control, period, from, to, column, counter }) => {
+      const c = await loadControl(await fileRows(), control as string, from as string, to as string)
+      const col = column as number
+      if (col >= (c.records[0]?.values.length ?? 1)) {
+        throw new CodedError('UNKNOWN', `column ${col} does not exist (0-based)`)
+      }
+      const ctr = (counter as boolean | undefined) ?? isCounter(c.records, col)
+      const buckets = aggregate(c.records, col, period as Period, ctr)
+      if (buckets.length > 1500) {
+        throw new CodedError(
+          'UNKNOWN',
+          `${buckets.length} periods — use a coarser period or a shorter month range`
+        )
+      }
+      const all = aggregate(c.records, col, 'month', ctr)
+      const finite = buckets.filter((b) => b.n)
+      return json({
+        control,
+        description: c.row.description,
+        room: c.row.room,
+        unit: c.row.units?.[col] ?? null,
+        counter: ctr,
+        months: c.months,
+        ...(c.skipped.length && { skippedMonths: c.skipped }),
+        ...(c.spikesIgnored && { spikesIgnored: c.spikesIgnored }),
+        ...(c.stale.length && {
+          staleMonths: c.stale,
+          staleNote: 'the Miniserver has newer data for these months — download_files to refresh'
+        }),
+        overall: {
+          min: round(Math.min(...finite.map((b) => b.min))),
+          max: round(Math.max(...finite.map((b) => b.max))),
+          avg: round(
+            finite.reduce((s, b) => s + b.avg * b.n, 0) / finite.reduce((s, b) => s + b.n, 0)
+          ),
+          total: round(all.reduce((s, b) => s + b.total, 0))
+        },
+        periods: buckets.map((b) => ({
+          period: label(b.start, period as string),
+          min: round(b.min),
+          max: round(b.max),
+          avg: round(b.avg),
+          total: round(b.total)
+        }))
+      })
+    },
+    { readOnlyHint: true }
+  )
+
+  tool(
+    'get_usage_profile',
+    'Typical week of one control: average per weekday × hour, average day, weekday vs weekend, ' +
+      'base load (the lowest 10 % of hours — standby) and the highest hours (at most one per day). ' +
+      'For counters the values are consumption per hour, otherwise the hourly average ' +
+      '(a kW series reads as kW either way). Times are the Miniserver local time. Months default to the newest 3.',
+    {
+      control: controlArg,
+      from: monthArg,
+      to: monthArg,
+      column: z.number().int().min(0).default(0),
+      counter: z.boolean().optional().describe('override the cumulative-series detection')
+    },
+    async ({ control, from, to, column, counter }) => {
+      const c = await loadControl(
+        await fileRows(),
+        control as string,
+        from as string,
+        to as string,
+        3
+      )
+      const col = column as number
+      const ctr = (counter as boolean | undefined) ?? isCounter(c.records, col)
+      const p = usageProfile(aggregate(c.records, col, 'hour', ctr), ctr)
+      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+      return json({
+        control,
+        description: c.row.description,
+        room: c.row.room,
+        unit: c.row.units?.[col] ?? null,
+        counter: ctr,
+        months: c.months,
+        ...(c.spikesIgnored && { spikesIgnored: c.spikesIgnored }),
+        ...(c.stale.length && {
+          staleMonths: c.stale,
+          staleNote: 'the Miniserver has newer data for these months — download_files to refresh'
+        }),
+        base: round(p.base),
+        weekdayAvg: round(p.weekdayAvg),
+        weekendAvg: round(p.weekendAvg),
+        day: p.day.map(round),
+        weekdayHour: Object.fromEntries(p.weekdayHour.map((row, d) => [days[d], row.map(round)])),
+        peaks: p.peaks.map((x) => ({ hour: label(x.start, 'hour'), value: round(x.value) }))
+      })
+    },
+    { readOnlyHint: true }
+  )
+
+  tool(
+    'energy_overview',
+    'Energy per month for every control whose unit is energy or power ' +
+      '(meter readings → consumption, kW/W → integrated to kWh), largest first — the top consumers. ' +
+      'Needs units from the Miniserver structure file; controls without (e.g. energy managers) are ' +
+      'listed as skipped — use get_aggregates for those. Months default to the newest 3; downloads missing months.',
+    { from: monthArg, to: monthArg },
+    async ({ from, to }) => {
+      const rows = await fileRows()
+      // one series per uuid: a meter reading beats a power series of the same control
+      const best = new Map<string, { id: string; unit: string }>()
+      const skipped = new Set<string>()
+      for (const r of rows) {
+        const id = controlOf(r.name)
+        const unit = r.units?.[0]
+        if (!isEnergyUnit(unit)) {
+          if (r.type && /meter|energy/i.test(r.type)) skipped.add(id)
+          continue
+        }
+        const prev = best.get(id.slice(0, 35))
+        if (!prev || (!prev.unit.endsWith('h') && unit!.endsWith('h'))) {
+          best.set(id.slice(0, 35), { id, unit: unit! })
+        }
+      }
+      const series: unknown[] = []
+      for (const { id, unit } of best.values()) {
+        let c: Awaited<ReturnType<typeof loadControl>>
+        try {
+          c = await loadControl(rows, id, from as string, to as string, 3)
+        } catch {
+          continue // no months of this control in the range
+        }
+        const toK = unit.startsWith('k') ? 1 : unit.startsWith('M') ? 1000 : 0.001
+        const perColumn = Array.from({ length: c.records[0]?.values.length ?? 0 }, (_, col) => {
+          const ctr = isCounter(c.records, col)
+          // ponytail: a non-cumulative kWh series (per-interval amounts) has no safe meaning here
+          if (unit.endsWith('h') && !ctr) return null
+          return aggregate(c.records, col, 'month', ctr).map((b) => ({
+            month: label(b.start, 'month'),
+            kWh: round(b.total * toK)
+          }))
+        })
+        const totals = perColumn.map((m) =>
+          m ? round(m.reduce((s, b) => s + (b.kWh ?? 0), 0)) : null
+        )
+        series.push({
+          control: id,
+          description: c.row.description,
+          room: c.row.room,
+          source: unit.endsWith('h') ? 'meter reading' : 'power (integrated)',
+          totalKWh: totals.length > 1 ? totals : totals[0],
+          perMonth: perColumn.length > 1 ? perColumn : perColumn[0]
+        })
+      }
+      const first = (x: unknown): number => {
+        const t = (x as { totalKWh: number | null | (number | null)[] }).totalKWh
+        return (Array.isArray(t) ? t[0] : t) ?? -1
+      }
+      series.sort((a, b) => first(b) - first(a))
+      for (const id of skipped) if (best.has(id.slice(0, 35))) skipped.delete(id)
+      return json({
+        note:
+          'Includes producers (e.g. PV) and sub-meters of the same circuit — judge by description; ' +
+          'do not add them up blindly.' +
+          (series.some((x) => Array.isArray((x as { totalKWh: unknown }).totalKWh))
+            ? ' Array totals = a meter with two reading columns [consumption, production/second tariff].'
+            : ''),
+        series,
+        ...(skipped.size && { skippedNoUnit: [...skipped] })
+      })
+    },
+    { readOnlyHint: true }
+  )
+
   tool(
     'export_csv',
     'Export a statistics file as CSV text (semicolon-separated, same format as the app).',
@@ -708,6 +1036,76 @@ export function buildServer(): McpServer {
         }
       ]
     })
+  )
+
+  const insightPrompt = (name: string, description: string, goal: string[]): void => {
+    server.registerPrompt(name, { description }, () => ({
+      messages: [
+        {
+          role: 'user' as const,
+          content: {
+            type: 'text' as const,
+            text: [
+              ...goal,
+              '',
+              'How to get the data (Lox DataManager tools, all read-only):',
+              '- find_controls — what is measured, with rooms and units. Ids ending in _1 are power, _2 meter readings, _3 storage.',
+              '- energy_overview — energy per control and month (top consumers, but also producers like PV).',
+              '- get_usage_profile — typical week per control: hourly pattern, base load, peak hours.',
+              '- get_aggregates — per hour/day/week/month for a time range; call twice to compare periods.',
+              'Prefer these aggregates over read_stat_file (raw rows are large). Times are Miniserver local time.',
+              'If Loxone MCP tools are also available (Miniserver: live states; Loxone Config: the project),',
+              'use them for current states and to see how the installation is programmed — but never change',
+              'the Loxone Config project or trigger anything without asking me first.',
+              'Do not edit, save or upload statistics for this. Say which numbers your conclusions rest on,',
+              'and mention when data is missing or a month is incomplete.'
+            ].join('\n')
+          }
+        }
+      ]
+    }))
+  }
+
+  insightPrompt(
+    'energy-report',
+    'Where and when electricity is used, with the biggest savings levers',
+    [
+      'Write a short energy report about my home from the Loxone statistics:',
+      '1. Total consumption and the top consumers over the last months, month-over-month changes.',
+      '2. When electricity is used: typical day and week, weekday vs weekend, evening/night peaks.',
+      '3. Base load (standby): how high, what share of the total, which controls contribute.',
+      '4. Anything unusual (sudden changes, a device that never turns off, gaps in the data).',
+      '5. The three most promising savings levers, each with the expected effect in kWh per year.'
+    ]
+  )
+
+  insightPrompt(
+    'automation-ideas',
+    'Automation ideas for the Miniserver derived from the measured usage patterns',
+    [
+      'Suggest automations for my Loxone installation based on the measured data:',
+      '1. Look at the usage profiles of consumers, heating/cooling, lighting and presence where available.',
+      '2. Find patterns an automation could use or fix: loads at fixed times, devices running when nobody',
+      '   is home or at night, heating while windows are open, load that could move to PV/cheap hours.',
+      '3. For each idea: the observation (with numbers), the automation in Loxone terms (which function',
+      '   blocks / inputs it would need), the expected benefit, and the risk or comfort trade-off.',
+      'Rank the ideas by benefit. Only describe them — do not program anything.'
+    ]
+  )
+
+  insightPrompt(
+    'what-to-buy',
+    'Sizing advice for PV, battery, heat pump or more sensors from the measured profile',
+    [
+      'Help me decide what to add to my home next, based on the measured data:',
+      '1. From the yearly and daily consumption profile: is a PV system, a battery or a bigger one worth it?',
+      '   Estimate sizes (kWp, kWh) and self-consumption from the hourly profile; state your assumptions',
+      '   (location, tariff) and ask me for the ones that matter most.',
+      '2. If PV/battery/heat pump data already exists, check how well it is used (self-consumption,',
+      '   battery cycles, heat pump runtime) and whether an upgrade would help.',
+      '3. Where the data is blind: which meters or sensors would answer the open questions.',
+      'Give a short ranked list with rough costs vs. benefit; be explicit about uncertainty.'
+    ]
   )
 
   return server

@@ -210,7 +210,14 @@ const de: typeof en = {
     mcpRunning: 'Läuft — {url}',
     mcpStopped: 'Gestoppt',
     mcpError: 'Start fehlgeschlagen: {error}',
-    mcpSnippetLabel: 'Claude Code verbinden:',
+    mcpClient: 'Verbinden',
+    mcpWhere: {
+      claudeCode: 'Im Terminal ausführen:',
+      claudeDesktop:
+        'Einstellungen → Entwickler → Konfiguration bearbeiten, in claude_desktop_config.json einfügen, Claude Desktop neu starten (braucht Node.js):',
+      cursor: 'In ~/.cursor/mcp.json einfügen (oder .cursor/mcp.json im Projekt):',
+      vscode: 'In .vscode/mcp.json einfügen, oder „MCP: Open User Configuration“ ausführen:'
+    },
     mcpHint:
       'Erlaubt MCP-Clients (Claude Code, Claude Desktop, …), Statistiken über diese App anzusehen und zu bearbeiten. ' +
       'Jeder Client mit Streamable HTTP funktioniert mit dieser URL und diesem Token. ' +

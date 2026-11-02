@@ -54,8 +54,10 @@ your Miniserver connection in the app.
 - **Work offline**: open downloaded stats, a backup folder or single files without
   connecting — see [Work offline](docs/offline.md)
 - **CSV export**, saved connections (password in the OS keychain), Gen 1 and Gen 2 support
-- **MCP server**: let AI assistants (Claude Code, Claude Desktop, …) browse, analyze,
-  and fix your statistics through the app — see [MCP server](#mcp-server)
+- **MCP server**: let AI assistants (Claude Code, Claude Desktop, Cursor, VS Code, …) browse,
+  analyze, and fix your statistics through the app — and **understand** them: energy report,
+  usage patterns, standby load, automation ideas, what to buy next. See
+  [Ask AI about your data](docs/insights.md)
 
 ## How it works
 
@@ -88,7 +90,8 @@ click in the app, with an admin user) and clear the Loxone app's cache (the app 
 up automatically, so you can always [restore it](docs/backups.md).
 
 **Optional: let an AI help** — turn on the built-in MCP server in Settings and ask
-Claude (or any MCP client) to find and fix problems for you. See [MCP server](#mcp-server).
+Claude (or any MCP client) to find and fix problems, or where your electricity goes. See
+[MCP server](#mcp-server) and [Ask AI about your data](docs/insights.md).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/settings-dark.png">
@@ -210,7 +213,8 @@ fill gaps, apply formulas, edit records, save, and upload (Loxone's official MCP
 server is read-only; this one can write, because it uses the app's FTP path).
 
 1. Open **Settings** (gear icon or Cmd/Ctrl+,) → **MCP server** → enable it.
-2. Copy the shown command, e.g. for Claude Code:
+2. Pick your AI app under **Connect** (Claude Code, Claude Desktop, Cursor, VS Code) and copy
+   the snippet, e.g. for Claude Code:
 
    ```sh
    claude mcp add --transport http lox-datamanager http://127.0.0.1:12009/mcp \
@@ -220,8 +224,10 @@ server is read-only; this one can write, because it uses the app's FTP path).
    Any MCP client supporting Streamable HTTP works with the same URL + token.
 
 3. Ask things like _"connect to my Miniserver, find gaps in last month's energy
-   statistics and fill them"_ — destructive steps (upload, delete) always go through
-   your client's tool-approval prompt.
+   statistics and fill them"_ or _"what are my biggest consumers and what runs at night?"_,
+   or use the prompts `energy-report`, `automation-ideas`, `what-to-buy` — see
+   [Ask AI about your data](docs/insights.md). Destructive steps (upload, delete) always
+   go through your client's tool-approval prompt.
 
 The server listens on `127.0.0.1` only and runs while the app is open. The token can
 be regenerated anytime in Settings.

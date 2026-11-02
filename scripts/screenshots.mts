@@ -24,6 +24,8 @@ const ROOT = join(import.meta.dirname, '..')
 const OUT = join(ROOT, 'docs', 'images')
 const FTP_PORT = 2121
 const WEB_PORT = 2443
+// ponytail: env override only so --serve can run next to an installed app
+const MCP_PORT = Number(process.env.LDM_MCP_PORT ?? 12009)
 const MONTHS = ['202604', '202605', '202606', '202607', '202608', '202609']
 
 // mulberry32 — deterministic noise so screenshots don't change between runs
@@ -233,7 +235,7 @@ async function launch(
     JSON.stringify({
       connections: [],
       secrets: {},
-      mcp: { enabled: true, port: 12009, tokenEnc: 'plain:demo-token-not-a-real-secret' }
+      mcp: { enabled: true, port: MCP_PORT, tokenEnc: 'plain:demo-token-not-a-real-secret' }
     })
   )
   const env = { ...process.env, LDM_USER_DATA: userData, LDM_WEB_PORT: String(WEB_PORT) }
@@ -463,15 +465,27 @@ async function showcase(dark: boolean): Promise<void> {
 // A running real app holds the MCP port → "EADDRINUSE" would end up in the settings shot
 await new Promise<void>((resolve, reject) => {
   const probe = createServer()
-    .once('error', () => reject(new Error('Port 12009 is busy — quit Lox DataManager first')))
-    .listen(12009, '127.0.0.1', () => probe.close(() => resolve()))
+    .once('error', () => reject(new Error(`Port ${MCP_PORT} is busy — quit Lox DataManager first`)))
+    .listen(MCP_PORT, '127.0.0.1', () => probe.close(() => resolve()))
 })
 
 const ftpRoot = mkdtempSync(join(tmpdir(), 'ldm-ftp-'))
 mkdirSync(OUT, { recursive: true })
 const servers = await startServers(ftpRoot)
 try {
-  for (const dark of [false, true]) {
+  if (process.argv.includes('--serve')) {
+    // fake Miniserver + connected app with MCP on, for trying the MCP tools; quit the app to stop
+    writeDemoFiles(join(ftpRoot, 'ftp', 'stats'))
+    const userData = mkdtempSync(join(tmpdir(), 'ldm-shot-'))
+    const { app, page } = await launch(false, userData)
+    await connect(page)
+    console.log(
+      `MCP: http://127.0.0.1:${MCP_PORT}/mcp  Authorization: Bearer demo-token-not-a-real-secret`
+    )
+    await new Promise((resolve) => app.once('close', resolve))
+    rmSync(userData, { recursive: true, force: true })
+  }
+  for (const dark of process.argv.includes('--serve') ? [] : [false, true]) {
     // fresh per run: the showcase uploads its fixed file to the fake Miniserver
     writeDemoFiles(join(ftpRoot, 'ftp', 'stats'))
     if (process.argv.includes('--showcase')) await showcase(dark)

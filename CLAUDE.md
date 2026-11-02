@@ -61,7 +61,8 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     v1, **stateless** Streamable HTTP: fresh `McpServer` + transport per POST) on
     `http://127.0.0.1:<port>/mcp`, default port 12009. Bearer-token auth (token
     generated in Settings, safeStorage-encrypted in store.ts, `plain:` prefix
-    fallback); 20 tools + `fix-statistics` prompt share ftp/cache/stats-service
+    fallback); 24 tools + 4 prompts (`fix-statistics`, `energy-report`, `automation-ideas`,
+    `what-to-buy`) share ftp/cache/stats-service
     with the UI. Edits are in-memory until `save_stat_file`; `mcp:activity`
     events tell the renderer to refresh (EditorView shows a reload banner —
     last-save-wins, no merging). Lifecycle: start on app ready if enabled,
@@ -78,7 +79,10 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
   timestamp parsing) + `formula.ts` (hand-rolled CSP-safe parser) + `records.ts`
   (pure record transforms: dominantInterval, fillGaps, summarizeRecords,
   statusOf, isCurrentMonth — used by the editor store AND the MCP tools; put new
-  record logic here, not in a Pinia action).
+  record logic here, not in a Pinia action) + `insights.ts` (multi-month analytics:
+  period buckets, counter detection, usage profile — the MCP insight tools `find_controls`,
+  `get_aggregates`, `get_usage_profile`, `energy_overview` return these aggregates, never raw
+  rows; they drop spike-rule hits and never overwrite cached months).
 - `src/renderer/src/` — Vue 3 + Pinia + PrimeVue 4 + uPlot + vue-i18n. Views:
   Connection → Browser (file list w/ sync status) → Editor (chart + virtualized
   grid + problems panel) and Months (`/months/<uuid[_n]>`, read-only stitched chart of
@@ -179,6 +183,8 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
   drives the built app against a local ftp-srv with generated demo stat files and a
   throwaway profile (`LDM_USER_DATA` env overrides userData) + a fake LoxAPP3.json over https
   (`LDM_WEB_PORT`). `pnpm run showcase` records the README tour GIFs the same way (CDP
-  screencast → ffmpeg; Playwright's `recordVideo` hangs Electron pages). **Never** real data,
+  screencast → ffmpeg; Playwright's `recordVideo` hangs Electron pages). `node scripts/screenshots.mts --serve`
+  keeps the fake Miniserver + a connected app running for driving the MCP tools with curl
+  (`LDM_MCP_PORT` moves the MCP port when the installed app holds 12009). **Never** real data,
   hosts, tokens or the real profile in docs images; quit the real app first (port 12009).
 - Before a release run `docs/e2e-checklist.md` against a real Gen 2 Miniserver.
