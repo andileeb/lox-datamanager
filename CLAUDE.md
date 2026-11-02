@@ -136,8 +136,14 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
   meter reading(s), 1 or 2 values (`totalFormat`), `_3` = storage (`storageFormat`).
   EFM suffix files don't follow that (two cumulative, one not) → no guessed units.
   Stat file uuids are the controls' `uuidAction` (also EFM subControls).
-- Loxone's official MCP server (fw 17.1) reads history but cannot write; it's a
-  potential read-only add-on, never a replacement for FTP.
+- Loxone ships two MCP servers (read from loxone.com changelogs 2026-11-02; the old
+  `/kb/mcp-server/` page is 404): **Miniserver "McpServer" plugin** (released since Config
+  17.1.6.30, plugin 1.0.8 in 17.2; runs on the MS, added via Network Periphery; states,
+  commands, weather, system messages; Loxone-user sign-in, Remote Connect address works) and
+  **"LOXONE Config MCP Server"** (17.3 *beta* only, 0.1.15 in Beta 4; runs in Config on the PC,
+  edits the open project: blocks, wiring, devices, simulation; undoable; one-click connect for
+  Claude Code/Codex/Desktop). Neither writes statistics — FTP stays our write path; they are
+  complements for live state + programming (docs/insights.md).
 - **Auto-update**: only the *notification* exists (`updates.ts`), deliberately.
   `electron-updater` with the GitHub provider is free for a public repo, but
   macOS auto-update needs a real Developer ID signature — Squirrel.Mac rejects

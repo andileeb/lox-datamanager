@@ -56,10 +56,19 @@ Good to know:
 
 ## Together with Loxone's own MCP servers
 
-Since Loxone Config 17.1 Loxone ships MCP servers of its own: one on the **Miniserver**
-(live states, controlling functions) and one in **Loxone Config** (reading the open
-project, placing and wiring function blocks, simulation). Add them to the same AI app
-next to Lox DataManager and the AI can combine both:
+Loxone has two MCP servers of its own (as of November 2026):
+
+- **Miniserver MCP** — a plugin that runs on the Miniserver (Gen 2), released with Loxone
+  Config 17.1 and added under *Network Periphery*. Live states, controlling functions,
+  weather forecast, system messages. Clients sign in with a Loxone user; the address can
+  be the Remote Connect one.
+- **Loxone Config MCP** — runs inside Loxone Config on your PC and works on the **open
+  project**: reading it, placing and wiring function blocks, adding devices, changing
+  settings, driving the simulation. Enabled from its entry in Config's title bar; Claude
+  Code, Codex and Claude Desktop connect with one click. Every change goes through Config
+  and can be undone step by step. Currently only in the **Config 17.3 public beta**.
+
+Add them to the same AI app next to Lox DataManager and the AI can combine both:
 
 - **History** (this app): what happened over months — usage patterns, base load, peaks.
 - **Live state & programming** (Loxone): what is installed, how it's programmed, what
@@ -67,10 +76,11 @@ next to Lox DataManager and the AI can combine both:
 
 Example: _"My base load is high at night — check in my Loxone Config project which
 outputs stay on, and suggest a change."_ The prompts here tell the AI to **ask before
-changing anything** in Loxone Config or triggering functions — still review every change
-in Config and test it in the simulation before saving it to the Miniserver. See
-[Loxone's MCP documentation](https://www.loxone.com/enen/kb/mcp-server/) for setting
-those up.
+changing anything** in Loxone Config or triggering functions. Still review every change
+in Config and test it in the simulation before saving to the Miniserver. Setup steps are
+in Loxone Config's MCP Server dialog and the
+[Config changelog](https://www.loxone.com/enen/support/changelog-config/) /
+[public beta changelog](https://www.loxone.com/enen/support/loxone-config-public-beta/).
 
 ## Privacy
 
