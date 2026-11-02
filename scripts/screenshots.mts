@@ -328,9 +328,6 @@ async function capture(dark: boolean): Promise<void> {
   }
 }
 
-/** spike record 1250 of a 15-min September series, as a fraction of the chart's time axis */
-const SPIKE_AT = (1250 * 900) / (30 * 86400 - 900)
-
 /** type into the value cell of the selected grid row */
 async function editSelected(page: Page, value: string): Promise<void> {
   const cell = page.locator('.grid tr.selected-row .cell-input').last()
@@ -414,27 +411,10 @@ async function showcase(dark: boolean): Promise<void> {
     await settle(page, 900)
     await click(page.getByRole('button', { name: 'Fill gaps' }), 1500)
 
-    // the spike: drag-zoom around it, click it (selects its row), type a plausible value
-    const plot = (await page.locator('.u-over').first().boundingBox())!
-    const spikeX = plot.x + plot.width * SPIKE_AT
-    const midY = plot.y + plot.height / 2
-    await page.mouse.move(spikeX - plot.width * 0.012, midY, { steps: 20 })
-    await page.mouse.down()
-    await page.mouse.move(spikeX + plot.width * 0.012, midY, { steps: 25 })
-    await page.mouse.up()
-    await settle(page, 1200)
-    // hover along the zoomed chart until the live legend shows the spike, then click it
-    const legend = page.locator('.u-legend .u-value').last()
-    for (let x = plot.x + plot.width * 0.3; x < plot.x + plot.width * 0.7; x += 4) {
-      await page.mouse.move(x, plot.y + plot.height * 0.2)
-      if ((await legend.textContent())?.includes('48.6')) break
-    }
-    await settle(page, 500)
-    await page.mouse.down()
-    await page.mouse.up()
-    await settle(page, 700)
+    // the spike is a problem too: jump there, type a plausible value
+    await click(page.locator('.problem', { hasText: 'spike' }).first(), 900)
     await editSelected(page, '0.45')
-    await settle(page, 1200)
+    await settle(page, 1500)
 
     // upload: diff confirm, then the restart checklist (not clicked — nothing to restart here)
     await click(page.getByRole('button', { name: 'Upload to Miniserver' }), 2200)

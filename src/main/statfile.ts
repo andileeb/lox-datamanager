@@ -1,5 +1,6 @@
 import type { Problem, StatRecord } from '../shared/types'
 import { LOXONE_EPOCH_OFFSET, STAT_FILENAME_RE } from '../shared/types'
+import { findSpikes } from '../shared/records'
 
 /**
  * Loxone statistics binary format (little-endian, reverse-engineered — see
@@ -126,7 +127,16 @@ export function validateRecords(
       })
     }
   }
-  return problems
+  for (const [row] of findSpikes(records, valueCount)) {
+    if (problems.some((p) => p.row === row)) continue
+    problems.push({
+      row,
+      rule: 'spike',
+      severity: 'warning',
+      message: 'Value is far outside the usual range of this series (spike?)'
+    })
+  }
+  return problems.sort((a, b) => (a.row ?? -1) - (b.row ?? -1))
 }
 
 export function parseStatFile(buf: Buffer, fileName: string): ParsedStatFile {

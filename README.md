@@ -37,7 +37,8 @@ your Miniserver connection in the app.
   [Names, rooms & units](docs/names-and-rooms.md)
 - **Chart + grid viewer** for the binary stat files (handles 40k+ entries per month
   smoothly), with validation ("Problems") like LoxStatEdit: wrong UUIDs, unordered
-  timestamps, out-of-month entries, NaN values
+  timestamps, out-of-month entries, NaN values — plus spikes (a single value far outside
+  the usual range of the series, e.g. a sensor glitch); click a problem to jump to it
 - **All months** of a control in one chart (e.g. a meter over a whole year), with
   min/max/average per month — see [All months](docs/all-months.md)
 - **Edit**: change timestamps and values inline, insert/delete entries, fill gaps with

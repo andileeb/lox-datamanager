@@ -5,6 +5,7 @@ import {
   dominantInterval,
   fileOffsets,
   fillGaps,
+  findSpikes,
   isCurrentMonth,
   locateIndex,
   type MonthFileLike,
@@ -16,7 +17,7 @@ import {
 } from '../src/shared/records'
 import { compileFormula } from '../src/shared/formula'
 import { loxTs, makeRecords } from './build-statfile'
-import type { CachedFile, RemoteFile } from '../src/shared/types'
+import type { CachedFile, RemoteFile, StatRecord } from '../src/shared/types'
 
 describe('dominantInterval', () => {
   it('finds the most frequent delta', () => {
@@ -249,5 +250,57 @@ describe('fileOffsets / locateIndex', () => {
     // index 3 belongs to file 2 — file 1 is empty
     expect(locateIndex(offsets, 3)).toEqual({ file: 2, local: 0 })
     expect(locateIndex(offsets, 4)).toEqual({ file: 2, local: 1 })
+  })
+})
+
+describe('findSpikes', () => {
+  const series = (vals: number[]): StatRecord[] =>
+    vals.map((v, i) => ({ ts: i * 900, values: [v] }))
+  // realistic power profile: base load with noise + evening on/off blocks
+  const power = Array.from(
+    { length: 400 },
+    (_, i) => 0.3 + ((i * 7919) % 13) / 50 + (i % 96 > 70 && i % 96 < 86 ? 2.1 : 0)
+  )
+
+  it('flags an isolated glitch, in either direction', () => {
+    const up = [...power]
+    up[150] = 48.6
+    expect(findSpikes(series(up), 1)).toEqual([[150, 0]])
+    const temp = Array.from({ length: 100 }, (_, i) => 21 + Math.sin(i / 8) * 0.5)
+    temp[40] = -40
+    expect(findSpikes(series(temp), 1)).toEqual([[40, 0]])
+  })
+
+  it('leaves normal patterns alone: on/off steps, ramps, meter readings, short pulses', () => {
+    expect(findSpikes(series(power), 1)).toEqual([])
+    const meter = Array.from(
+      { length: 200 },
+      (_, i) => 18400 + i * 0.3 + (i % 24 > 17 ? i * 0.01 : 0)
+    )
+    expect(findSpikes(series(meter), 1)).toEqual([])
+    const heatPump = Array.from({ length: 200 }, (_, i) => (i % 12 < 4 ? 1.4 : 0.02))
+    expect(findSpikes(series(heatPump), 1)).toEqual([])
+    const kettle = [...power]
+    kettle[150] = 2.6 // one 15-min burst in range of the series' own swings
+    expect(findSpikes(series(kettle), 1)).toEqual([])
+  })
+
+  it('a meter glitch is a spike, a meter reset (stays low) is not', () => {
+    const meter = Array.from({ length: 100 }, (_, i) => 18400 + i * 3)
+    const glitch = [...meter]
+    glitch[50] = 0
+    expect(findSpikes(series(glitch), 1)).toEqual([[50, 0]])
+    const reset = meter.map((v, i) => (i >= 50 ? (i - 50) * 3 : v))
+    expect(findSpikes(series(reset), 1)).toEqual([])
+  })
+
+  it('checks every value column; skips short series and non-finite values', () => {
+    const recs = power.map((v, i) => ({ ts: i * 900, values: [v, i === 30 ? 999 : 20] }))
+    expect(findSpikes(recs, 2)).toEqual([[30, 1]])
+    expect(findSpikes(series([1, 1, 99, 1, 1]), 1)).toEqual([])
+    const withNaN = [...power]
+    withNaN[149] = NaN
+    withNaN[150] = 48.6
+    expect(findSpikes(series(withNaN), 1)).toEqual([])
   })
 })

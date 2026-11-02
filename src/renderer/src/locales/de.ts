@@ -154,6 +154,7 @@ const de: typeof en = {
     'timestamp-outside-month-last':
       'Letzter Eintrag liegt außerhalb des Monats (für Interpolation erlaubt)',
     'invalid-value': 'Eintrag enthält NaN/Unendlich oder eine falsche Anzahl an Werten',
+    spike: 'Weit außerhalb des üblichen Bereichs dieser Reihe — ein Ausreißer?',
     'bad-header': 'Ungültiger Datei-Header'
   },
   months: {

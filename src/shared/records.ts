@@ -22,6 +22,37 @@ export function dominantInterval(records: StatRecord[]): number {
   return best
 }
 
+/**
+ * Isolated outliers: one entry far beyond everything else in the series (outside the range
+ * of all values but the most extreme 0.2 % by more than 10× that range) while both neighbours
+ * are back inside — a sensor/transfer glitch. Measured on real files: power series have rare
+ * short bursts (kettle, oven) far above base load, so percentile bands or neighbour
+ * differences flag those; lasting jumps (meter reset) don't count either.
+ * Returns [record index, value index] pairs.
+ * ponytail: one band per value column; per-day/seasonal bands if series mix regimes.
+ */
+export function findSpikes(records: StatRecord[], valueCount: number): [number, number][] {
+  const out: [number, number][] = []
+  if (records.length < 20) return out
+  for (let k = 0; k < valueCount; k++) {
+    const v = records.map((r) => r.values[k])
+    const sorted = v.filter(Number.isFinite).sort((a, b) => a - b)
+    if (sorted.length < 20) continue
+    const skip = Math.ceil(sorted.length * 0.002)
+    const lo = sorted[skip]
+    const hi = sorted[sorted.length - 1 - skip]
+    // ponytail: absolute 0.001 floor — below any meaningful kW/°C/kWh/% step; unit-aware if needed
+    const margin = Math.max(10 * (hi - lo), 1e-3)
+    const inside = (x: number): boolean => x >= lo - margin && x <= hi + margin
+    for (let i = 1; i < v.length - 1; i++) {
+      if (Number.isFinite(v[i]) && !inside(v[i]) && inside(v[i - 1]) && inside(v[i + 1])) {
+        out.push([i, k])
+      }
+    }
+  }
+  return out.sort((p, q) => p[0] - q[0] || p[1] - q[1])
+}
+
 /** insert linearly interpolated rows into gaps > 1.5× the interval; returns a new array */
 export function fillGaps(
   records: StatRecord[],

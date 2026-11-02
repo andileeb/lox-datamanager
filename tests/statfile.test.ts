@@ -157,3 +157,18 @@ describe('real fixture files (drop anonymized Miniserver files into tests/fixtur
     })
   }
 })
+
+describe('spike rule', () => {
+  it('reports a spike as a warning, not on rows that already have an error', () => {
+    const records = makeRecords(200, 1, '2024-01-01T00:00:00Z', 900)
+    records[50].values[0] = 1e6
+    records[120].values[0] = NaN
+    const problems = validateRecords(records, '202401', 1)
+    expect(problems.filter((p) => p.rule === 'spike')).toEqual([
+      expect.objectContaining({ row: 50, severity: 'warning' })
+    ])
+    expect(problems.map((p) => p.row)).toEqual(
+      [...problems.map((p) => p.row)].sort((a, b) => a! - b!)
+    )
+  })
+})
