@@ -209,7 +209,8 @@ export function registerIpc(): void {
     return mcpState()
   })
 
-  handle('updates:check', () => updates.check(app.getVersion()))
+  // LDM_CURRENT_VERSION: test harness only (shows the update banner against the real latest release)
+  handle('updates:check', () => updates.check(process.env.LDM_CURRENT_VERSION ?? app.getVersion()))
 
   handle('stat:parse', (name: string) => stats.toStatFileData(stats.loadParsed(name)))
   handle('stat:validate', (name: string, records: StatRecord[]) => {

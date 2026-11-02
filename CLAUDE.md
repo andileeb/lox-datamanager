@@ -72,6 +72,8 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     `/releases/latest` per launch; every failure (offline, 403 rate-limit, no
     published release) resolves as `latest: null` — a failed check must never
     surface as an app error. See "Auto-update" below for why there's no installer.
+    Shown app-wide by `UpdateBanner.vue` (floating, reserves its height via `--banner-space`,
+    dismissed per version in localStorage); `LDM_CURRENT_VERSION` fakes the current version (tests only).
 - `src/preload/index.ts` — contextBridge exposing `window.api`, typed by the
   single contract interface in `src/shared/api.ts` (preload implements it,
   renderer consumes it — extend the interface first when adding IPC).

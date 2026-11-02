@@ -225,6 +225,7 @@ export default {
     checking: 'Checking…',
     available: 'Version {latest} is available.',
     download: 'Download',
+    dismiss: 'Hide until the next version',
     upToDate: 'Up to date',
     checkFailed: 'Could not check for updates'
   },

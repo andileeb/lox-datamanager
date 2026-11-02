@@ -230,6 +230,7 @@ const de: typeof en = {
     checking: 'Suche…',
     available: 'Version {latest} ist verfügbar.',
     download: 'Herunterladen',
+    dismiss: 'Bis zur nächsten Version ausblenden',
     upToDate: 'Aktuell',
     checkFailed: 'Update-Suche fehlgeschlagen'
   },
