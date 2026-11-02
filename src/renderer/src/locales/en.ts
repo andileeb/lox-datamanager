@@ -205,7 +205,14 @@ export default {
     mcpRunning: 'Running — {url}',
     mcpStopped: 'Stopped',
     mcpError: 'Failed to start: {error}',
-    mcpSnippetLabel: 'Connect Claude Code:',
+    mcpClient: 'Connect',
+    mcpWhere: {
+      claudeCode: 'Run in a terminal:',
+      claudeDesktop:
+        'Settings → Developer → Edit Config, merge into claude_desktop_config.json, restart Claude Desktop (needs Node.js):',
+      cursor: 'Merge into ~/.cursor/mcp.json (or .cursor/mcp.json in a project):',
+      vscode: 'Merge into .vscode/mcp.json, or run "MCP: Open User Configuration":'
+    },
     mcpHint:
       'Lets MCP clients (Claude Code, Claude Desktop, …) view and edit statistics through this app. ' +
       'Any client supporting Streamable HTTP works with this URL and token. ' +

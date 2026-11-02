@@ -61,7 +61,8 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     v1, **stateless** Streamable HTTP: fresh `McpServer` + transport per POST) on
     `http://127.0.0.1:<port>/mcp`, default port 12009. Bearer-token auth (token
     generated in Settings, safeStorage-encrypted in store.ts, `plain:` prefix
-    fallback); 20 tools + `fix-statistics` prompt share ftp/cache/stats-service
+    fallback); 24 tools + 4 prompts (`fix-statistics`, `energy-report`, `automation-ideas`,
+    `what-to-buy`) share ftp/cache/stats-service
     with the UI. Edits are in-memory until `save_stat_file`; `mcp:activity`
     events tell the renderer to refresh (EditorView shows a reload banner —
     last-save-wins, no merging). Lifecycle: start on app ready if enabled,
@@ -78,7 +79,10 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
   timestamp parsing) + `formula.ts` (hand-rolled CSP-safe parser) + `records.ts`
   (pure record transforms: dominantInterval, fillGaps, summarizeRecords,
   statusOf, isCurrentMonth — used by the editor store AND the MCP tools; put new
-  record logic here, not in a Pinia action).
+  record logic here, not in a Pinia action) + `insights.ts` (multi-month analytics:
+  period buckets, counter detection, usage profile — the MCP insight tools `find_controls`,
+  `get_aggregates`, `get_usage_profile`, `energy_overview` return these aggregates, never raw
+  rows; they drop spike-rule hits and never overwrite cached months).
 - `src/renderer/src/` — Vue 3 + Pinia + PrimeVue 4 + uPlot + vue-i18n. Views:
   Connection → Browser (file list w/ sync status) → Editor (chart + virtualized
   grid + problems panel) and Months (`/months/<uuid[_n]>`, read-only stitched chart of
@@ -132,8 +136,14 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
   meter reading(s), 1 or 2 values (`totalFormat`), `_3` = storage (`storageFormat`).
   EFM suffix files don't follow that (two cumulative, one not) → no guessed units.
   Stat file uuids are the controls' `uuidAction` (also EFM subControls).
-- Loxone's official MCP server (fw 17.1) reads history but cannot write; it's a
-  potential read-only add-on, never a replacement for FTP.
+- Loxone ships two MCP servers (read from loxone.com changelogs 2026-11-02; the old
+  `/kb/mcp-server/` page is 404): **Miniserver "McpServer" plugin** (released since Config
+  17.1.6.30, plugin 1.0.8 in 17.2; runs on the MS, added via Network Periphery; states,
+  commands, weather, system messages; Loxone-user sign-in, Remote Connect address works) and
+  **"LOXONE Config MCP Server"** (17.3 *beta* only, 0.1.15 in Beta 4; runs in Config on the PC,
+  edits the open project: blocks, wiring, devices, simulation; undoable; one-click connect for
+  Claude Code/Codex/Desktop). Neither writes statistics — FTP stays our write path; they are
+  complements for live state + programming (docs/insights.md).
 - **Auto-update**: only the *notification* exists (`updates.ts`), deliberately.
   `electron-updater` with the GitHub provider is free for a public repo, but
   macOS auto-update needs a real Developer ID signature — Squirrel.Mac rejects
@@ -179,6 +189,8 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
   drives the built app against a local ftp-srv with generated demo stat files and a
   throwaway profile (`LDM_USER_DATA` env overrides userData) + a fake LoxAPP3.json over https
   (`LDM_WEB_PORT`). `pnpm run showcase` records the README tour GIFs the same way (CDP
-  screencast → ffmpeg; Playwright's `recordVideo` hangs Electron pages). **Never** real data,
+  screencast → ffmpeg; Playwright's `recordVideo` hangs Electron pages). `node scripts/screenshots.mts --serve`
+  keeps the fake Miniserver + a connected app running for driving the MCP tools with curl
+  (`LDM_MCP_PORT` moves the MCP port when the installed app holds 12009). **Never** real data,
   hosts, tokens or the real profile in docs images; quit the real app first (port 12009).
 - Before a release run `docs/e2e-checklist.md` against a real Gen 2 Miniserver.

@@ -2,6 +2,8 @@
 
 Feature pages beyond the [README](../README.md) overview.
 
+- [Ask AI about your data](insights.md) — energy report, usage patterns, standby load,
+  automation ideas and what to buy next, via the MCP server
 - [All months of a control](all-months.md) — every month of one control in one chart,
   with a summary per month
 - [Names, rooms & units](names-and-rooms.md) — how files get their Loxone Config
