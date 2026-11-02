@@ -150,6 +150,7 @@ export default {
     'timestamp-outside-month-mid': "Timestamp lies outside the file's month",
     'timestamp-outside-month-last': 'Last entry lies outside the month (allowed for interpolation)',
     'invalid-value': 'Entry contains NaN/Infinity or a wrong number of values',
+    spike: 'Far outside the usual range of this series — a spike?',
     'bad-header': 'Invalid file header'
   },
   months: {

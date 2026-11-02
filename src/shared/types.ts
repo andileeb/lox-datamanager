@@ -62,7 +62,12 @@ export interface Problem {
   /** record index, null for file-level problems */
   row: number | null
   rule:
-    'uuid-mismatch' | 'timestamp-order' | 'timestamp-outside-month' | 'invalid-value' | 'bad-header'
+    | 'uuid-mismatch'
+    | 'timestamp-order'
+    | 'timestamp-outside-month'
+    | 'invalid-value'
+    | 'spike'
+    | 'bad-header'
   severity: 'error' | 'warning'
   message: string
 }
