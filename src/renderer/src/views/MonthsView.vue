@@ -162,7 +162,7 @@ watch(
           icon="pi pi-arrow-left"
           text
           severity="secondary"
-          aria-label="Back"
+          :aria-label="t('editor.back')"
           @click="router.push('/browser')"
         />
         <div>
@@ -204,7 +204,12 @@ watch(
     </Message>
 
     <template v-if="chartRecords.length">
-      <StatChart :records="chartRecords" :value-count="valueCount" @select="onChartSelect" />
+      <StatChart
+        :records="chartRecords"
+        :value-count="valueCount"
+        :units="unitList"
+        @select="onChartSelect"
+      />
       <p class="hint">{{ t('months.hint') }}</p>
     </template>
 
@@ -249,7 +254,7 @@ watch(
             v-tooltip.left="t('browser.tipOpen')"
             icon="pi pi-chart-line"
             text
-            aria-label="Open"
+            :aria-label="t('browser.tipOpen')"
             @click.stop="openMonth(data.name)"
           />
         </template>

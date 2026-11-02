@@ -185,6 +185,7 @@ const de: typeof en = {
   chart: {
     resetZoom: 'Zoom zurücksetzen',
     resetZoomTip: 'Doppelklick auf das Diagramm setzt den Zoom ebenfalls zurück',
+    time: 'Zeit',
     value: 'Wert {n}'
   },
   settings: {
