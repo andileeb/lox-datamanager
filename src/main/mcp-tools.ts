@@ -31,6 +31,9 @@ import { displayToLox, loxToDisplay } from '../shared/time'
 import {
   STAT_FILENAME_RE,
   type CatalogEntry,
+  type ControlProfile,
+  type EnergyOverview,
+  type EnergySeries,
   type Problem,
   type StatRecord,
   type SyncStatus
@@ -247,6 +250,86 @@ async function loadControl(
 }
 
 const isEnergyUnit = (u: string | null | undefined): boolean => !!u && /^(k|M)?Wh?$/.test(u)
+
+const label = (ts: number, period: string): string =>
+  period === 'hour'
+    ? loxToDisplay(ts).slice(0, 13) + ':00'
+    : loxToDisplay(ts).slice(0, period === 'month' ? 7 : 10)
+
+/** typical week of one column (get_usage_profile + dashboard heatmap); months default to the newest 3 */
+export async function controlProfile(
+  control: string,
+  from?: string,
+  to?: string,
+  column = 0,
+  counter?: boolean
+): Promise<ControlProfile> {
+  const c = await loadControl(await fileRows(), control, from, to, 3)
+  const ctr = counter ?? isCounter(c.records, column)
+  return {
+    control,
+    description: c.row.description,
+    room: c.row.room ?? null,
+    unit: c.row.units?.[column] ?? null,
+    counter: ctr,
+    months: c.months,
+    spikesIgnored: c.spikesIgnored,
+    stale: c.stale,
+    profile: usageProfile(aggregate(c.records, column, 'hour', ctr), ctr)
+  }
+}
+
+/**
+ * kWh per month of every energy/power control (energy_overview + dashboard), largest first.
+ * One series per uuid: a meter reading beats a power series of the same control.
+ */
+export async function energyOverview(from?: string, to?: string): Promise<EnergyOverview> {
+  const rows = await fileRows()
+  const best = new Map<string, { id: string; unit: string }>()
+  const skipped = new Set<string>()
+  for (const r of rows) {
+    const id = controlOf(r.name)
+    const unit = r.units?.[0]
+    if (!isEnergyUnit(unit)) {
+      if (r.type && /meter|energy/i.test(r.type)) skipped.add(id)
+      continue
+    }
+    const prev = best.get(id.slice(0, 35))
+    if (!prev || (!prev.unit.endsWith('h') && unit!.endsWith('h'))) {
+      best.set(id.slice(0, 35), { id, unit: unit! })
+    }
+  }
+  const series: EnergySeries[] = []
+  for (const { id, unit } of best.values()) {
+    let c: Awaited<ReturnType<typeof loadControl>>
+    try {
+      c = await loadControl(rows, id, from, to, 3)
+    } catch {
+      continue // no months of this control in the range
+    }
+    const toK = unit.startsWith('k') ? 1 : unit.startsWith('M') ? 1000 : 0.001
+    const perMonth = Array.from({ length: c.records[0]?.values.length ?? 0 }, (_, col) => {
+      const ctr = isCounter(c.records, col)
+      // ponytail: a non-cumulative kWh series (per-interval amounts) has no safe meaning here
+      if (unit.endsWith('h') && !ctr) return null
+      return aggregate(c.records, col, 'month', ctr).map((b) => ({
+        month: label(b.start, 'month'),
+        kWh: round(b.total * toK)
+      }))
+    })
+    series.push({
+      control: id,
+      description: c.row.description,
+      room: c.row.room ?? null,
+      source: unit.endsWith('h') ? 'meter reading' : 'power (integrated)',
+      totalKWh: perMonth.map((m) => (m ? round(m.reduce((s, b) => s + (b.kWh ?? 0), 0)) : null)),
+      perMonth
+    })
+  }
+  series.sort((a, b) => (b.totalKWh[0] ?? -1) - (a.totalKWh[0] ?? -1))
+  for (const id of skipped) if (best.has(id.slice(0, 35))) skipped.delete(id)
+  return { series, skippedNoUnit: [...skipped] }
+}
 
 const nameArg = z.string().regex(STAT_FILENAME_RE, 'stat file name like <uuid>.YYYYMM')
 
@@ -808,10 +891,6 @@ export function buildServer(): McpServer {
   )
 
   const periodArg = z.enum(['hour', 'day', 'week', 'month'])
-  const label = (ts: number, period: string): string =>
-    period === 'hour'
-      ? loxToDisplay(ts).slice(0, 13) + ':00'
-      : loxToDisplay(ts).slice(0, period === 'month' ? 7 : 10)
   const counterNote =
     'counter = cumulative meter reading: "total" is the consumption in the period (resets skipped). ' +
     'Otherwise "total" is value × hours (kW → kWh; meaningless for °C, %).'
@@ -893,23 +972,20 @@ export function buildServer(): McpServer {
       counter: z.boolean().optional().describe('override the cumulative-series detection')
     },
     async ({ control, from, to, column, counter }) => {
-      const c = await loadControl(
-        await fileRows(),
+      const { profile: p, ...c } = await controlProfile(
         control as string,
         from as string,
         to as string,
-        3
+        column as number,
+        counter as boolean | undefined
       )
-      const col = column as number
-      const ctr = (counter as boolean | undefined) ?? isCounter(c.records, col)
-      const p = usageProfile(aggregate(c.records, col, 'hour', ctr), ctr)
       const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
       return json({
         control,
-        description: c.row.description,
-        room: c.row.room,
-        unit: c.row.units?.[col] ?? null,
-        counter: ctr,
+        description: c.description,
+        room: c.room,
+        unit: c.unit,
+        counter: c.counter,
         months: c.months,
         ...(c.spikesIgnored && { spikesIgnored: c.spikesIgnored }),
         ...(c.stale.length && {
@@ -935,67 +1011,22 @@ export function buildServer(): McpServer {
       'listed as skipped — use get_aggregates for those. Months default to the newest 3; downloads missing months.',
     { from: monthArg, to: monthArg },
     async ({ from, to }) => {
-      const rows = await fileRows()
-      // one series per uuid: a meter reading beats a power series of the same control
-      const best = new Map<string, { id: string; unit: string }>()
-      const skipped = new Set<string>()
-      for (const r of rows) {
-        const id = controlOf(r.name)
-        const unit = r.units?.[0]
-        if (!isEnergyUnit(unit)) {
-          if (r.type && /meter|energy/i.test(r.type)) skipped.add(id)
-          continue
-        }
-        const prev = best.get(id.slice(0, 35))
-        if (!prev || (!prev.unit.endsWith('h') && unit!.endsWith('h'))) {
-          best.set(id.slice(0, 35), { id, unit: unit! })
-        }
-      }
-      const series: unknown[] = []
-      for (const { id, unit } of best.values()) {
-        let c: Awaited<ReturnType<typeof loadControl>>
-        try {
-          c = await loadControl(rows, id, from as string, to as string, 3)
-        } catch {
-          continue // no months of this control in the range
-        }
-        const toK = unit.startsWith('k') ? 1 : unit.startsWith('M') ? 1000 : 0.001
-        const perColumn = Array.from({ length: c.records[0]?.values.length ?? 0 }, (_, col) => {
-          const ctr = isCounter(c.records, col)
-          // ponytail: a non-cumulative kWh series (per-interval amounts) has no safe meaning here
-          if (unit.endsWith('h') && !ctr) return null
-          return aggregate(c.records, col, 'month', ctr).map((b) => ({
-            month: label(b.start, 'month'),
-            kWh: round(b.total * toK)
-          }))
-        })
-        const totals = perColumn.map((m) =>
-          m ? round(m.reduce((s, b) => s + (b.kWh ?? 0), 0)) : null
-        )
-        series.push({
-          control: id,
-          description: c.row.description,
-          room: c.row.room,
-          source: unit.endsWith('h') ? 'meter reading' : 'power (integrated)',
-          totalKWh: totals.length > 1 ? totals : totals[0],
-          perMonth: perColumn.length > 1 ? perColumn : perColumn[0]
-        })
-      }
-      const first = (x: unknown): number => {
-        const t = (x as { totalKWh: number | null | (number | null)[] }).totalKWh
-        return (Array.isArray(t) ? t[0] : t) ?? -1
-      }
-      series.sort((a, b) => first(b) - first(a))
-      for (const id of skipped) if (best.has(id.slice(0, 35))) skipped.delete(id)
+      const o = await energyOverview(from as string, to as string)
+      // one column → plain values (the tool's original shape), two → arrays
+      const flat = <T>(x: T[]): T | T[] => (x.length > 1 ? x : x[0])
       return json({
         note:
           'Includes producers (e.g. PV) and sub-meters of the same circuit — judge by description; ' +
           'do not add them up blindly.' +
-          (series.some((x) => Array.isArray((x as { totalKWh: unknown }).totalKWh))
+          (o.series.some((x) => x.totalKWh.length > 1)
             ? ' Array totals = a meter with two reading columns [consumption, production/second tariff].'
             : ''),
-        series,
-        ...(skipped.size && { skippedNoUnit: [...skipped] })
+        series: o.series.map((x) => ({
+          ...x,
+          totalKWh: flat(x.totalKWh),
+          perMonth: flat(x.perMonth)
+        })),
+        ...(o.skippedNoUnit.length && { skippedNoUnit: o.skippedNoUnit })
       })
     },
     { readOnlyHint: true }

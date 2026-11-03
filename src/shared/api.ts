@@ -3,7 +3,9 @@ import type {
   CachedFile,
   Catalog,
   ConnMeta,
+  ControlProfile,
   DownloadOutcome,
+  EnergyOverview,
   IpcResult,
   LocalOpened,
   LocalSource,
@@ -68,6 +70,12 @@ export interface Api {
   /** uuid → name/room/category/unit from the Miniserver's LoxAPP3.json; {} when unavailable */
   catalog: {
     get(): Promise<IpcResult<Catalog>>
+  }
+  /** dashboard: the same aggregates as the MCP insight tools; downloads missing months (read-only) */
+  insights: {
+    /** from = YYYYMM, default the newest 3 months per control */
+    energy(from?: string): Promise<IpcResult<EnergyOverview>>
+    profile(control: string, from?: string): Promise<IpcResult<ControlProfile>>
   }
   miniserver: {
     /** restarts the connected Miniserver over its web server (admin user needed) */

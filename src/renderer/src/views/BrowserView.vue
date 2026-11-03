@@ -231,6 +231,12 @@ onBeforeUnmount(() => {
       </div>
       <div class="actions">
         <Button
+          :label="t('dashboard.title')"
+          icon="pi pi-chart-bar"
+          severity="secondary"
+          @click="router.push('/dashboard')"
+        />
+        <Button
           v-if="selection.length && !conn.offline"
           :label="t('browser.downloadSelected', { n: selection.length })"
           icon="pi pi-download"

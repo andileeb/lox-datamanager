@@ -1,4 +1,5 @@
 // Types shared between main and renderer (IPC payloads).
+import type { UsageProfile } from './insights'
 
 export type TlsPref = 'auto' | 'ftps' | 'plain'
 export type TlsMode = 'ftps' | 'plain'
@@ -158,3 +159,32 @@ export interface CatalogEntry {
 
 /** lowercase uuid → entry */
 export type Catalog = Record<string, CatalogEntry>
+
+/** kWh of one energy/power control; per column (0 = consumption, 1 = production / 2nd tariff) */
+export interface EnergySeries {
+  control: string
+  description: string | null
+  room: string | null
+  source: 'meter reading' | 'power (integrated)'
+  /** null = column is not a cumulative reading */
+  totalKWh: (number | null)[]
+  perMonth: ({ month: string; kWh: number | null }[] | null)[]
+}
+
+export interface EnergyOverview {
+  series: EnergySeries[]
+  /** meter/energy controls without units in the structure file */
+  skippedNoUnit: string[]
+}
+
+export interface ControlProfile {
+  control: string
+  description: string | null
+  room: string | null
+  unit: string | null
+  counter: boolean
+  months: string[]
+  spikesIgnored: number
+  stale: string[]
+  profile: UsageProfile
+}

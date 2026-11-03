@@ -32,6 +32,11 @@ const api: Api = {
   catalog: {
     get: () => ipcRenderer.invoke('catalog:get')
   },
+  insights: {
+    energy: (from?: string) => ipcRenderer.invoke('insights:energy', from),
+    profile: (control: string, from?: string) =>
+      ipcRenderer.invoke('insights:profile', control, from)
+  },
   miniserver: {
     reboot: () => ipcRenderer.invoke('miniserver:reboot')
   },

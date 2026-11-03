@@ -10,6 +10,7 @@ const router = createRouter({
     { path: '/settings', component: () => import('./views/SettingsView.vue') },
     { path: '/browser', component: () => import('./views/BrowserView.vue') },
     { path: '/editor/:filename', component: () => import('./views/EditorView.vue'), props: true },
+    { path: '/dashboard', component: () => import('./views/DashboardView.vue') },
     { path: '/months/:base', component: () => import('./views/MonthsView.vue'), props: true }
   ]
 })

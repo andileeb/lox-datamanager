@@ -171,6 +171,29 @@ export default {
     colValue: 'Value {n} (min – max · average)',
     empty: 'No months downloaded for this control.'
   },
+  dashboard: {
+    title: 'Dashboard',
+    months: '{n} months',
+    loading: 'Calculating… missing months are downloaded from the Miniserver (read-only).',
+    empty:
+      'No energy meters found. The dashboard needs units (kWh, kW) from the Miniserver structure file — connect to the Miniserver once so names and units can be read.',
+    skipped:
+      '1 energy control has no units and is left out. | {n} energy controls have no units and are left out.',
+    consumers: 'Energy by control',
+    consumersHint:
+      'Largest first. Producers (e.g. PV) and sub-meters are listed too — don’t add them up.',
+    second: 'second reading {v} kWh',
+    fromMeter: 'from meter readings',
+    fromPower: 'from power, integrated over time',
+    perMonth: 'kWh per month',
+    openMonth: 'Open this month in the editor',
+    week: 'Typical week (average per weekday and hour)',
+    weekHint: 'Stronger color = more. Times are the Miniserver’s local time.',
+    base: 'Standby (base load)',
+    baseYear: '≈ {v} kWh per year',
+    weekdays: 'Weekdays',
+    weekend: 'Weekend'
+  },
   restart: {
     now: 'Restart now',
     confirm:

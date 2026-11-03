@@ -11,6 +11,7 @@ import * as mcp from './mcp'
 import * as updates from './updates'
 import * as catalog from './catalog'
 import * as web from './web'
+import { controlProfile, energyOverview } from './mcp-tools'
 import { CodedError, toApiError } from './stats-service'
 import { parseStatFile, validateRecords } from './statfile'
 import { diffRecords } from '../shared/records'
@@ -176,6 +177,8 @@ export function registerIpc(): void {
   })
 
   handle('catalog:get', () => catalog.sessionCatalog())
+  handle('insights:energy', (from?: string) => energyOverview(from))
+  handle('insights:profile', (control: string, from?: string) => controlProfile(control, from))
   handle('miniserver:reboot', async () => {
     await web.reboot()
     return null
