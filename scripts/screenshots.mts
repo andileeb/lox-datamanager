@@ -322,6 +322,11 @@ async function capture(dark: boolean): Promise<void> {
     await page.locator('.p-datatable-table-container').evaluate((el) => (el.scrollTop = 0))
     await shot('browser')
 
+    await page.getByRole('button', { name: 'Dashboard' }).click()
+    await page.locator('.consumer').nth(1).click()
+    await page.locator('.heatmap').waitFor({ timeout: 60000 })
+    await shot('dashboard')
+
     await page.evaluate(() => (location.hash = '#/settings'))
     await shot('settings')
   } finally {

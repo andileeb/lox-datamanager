@@ -11,6 +11,7 @@ import * as mcp from './mcp'
 import * as updates from './updates'
 import * as catalog from './catalog'
 import * as web from './web'
+import { controlProfile, energyOverview } from './mcp-tools'
 import { CodedError, toApiError } from './stats-service'
 import { parseStatFile, validateRecords } from './statfile'
 import { diffRecords } from '../shared/records'
@@ -176,6 +177,8 @@ export function registerIpc(): void {
   })
 
   handle('catalog:get', () => catalog.sessionCatalog())
+  handle('insights:energy', (from?: string) => energyOverview(from))
+  handle('insights:profile', (control: string, from?: string) => controlProfile(control, from))
   handle('miniserver:reboot', async () => {
     await web.reboot()
     return null
@@ -209,7 +212,8 @@ export function registerIpc(): void {
     return mcpState()
   })
 
-  handle('updates:check', () => updates.check(app.getVersion()))
+  // LDM_CURRENT_VERSION: test harness only (shows the update banner against the real latest release)
+  handle('updates:check', () => updates.check(process.env.LDM_CURRENT_VERSION ?? app.getVersion()))
 
   handle('stat:parse', (name: string) => stats.toStatFileData(stats.loadParsed(name)))
   handle('stat:validate', (name: string, records: StatRecord[]) => {

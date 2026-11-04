@@ -175,6 +175,29 @@ const de: typeof en = {
     colValue: 'Wert {n} (min – max · Durchschnitt)',
     empty: 'Für diesen Baustein sind keine Monate heruntergeladen.'
   },
+  dashboard: {
+    title: 'Dashboard',
+    months: '{n} Monate',
+    loading: 'Wird berechnet… fehlende Monate werden vom Miniserver geladen (nur lesend).',
+    empty:
+      'Keine Energiezähler gefunden. Das Dashboard braucht Einheiten (kWh, kW) aus der Strukturdatei des Miniservers – einmal mit dem Miniserver verbinden, damit Namen und Einheiten gelesen werden.',
+    skipped:
+      '1 Energie-Baustein hat keine Einheiten und fehlt. | {n} Energie-Bausteine haben keine Einheiten und fehlen.',
+    consumers: 'Energie je Baustein',
+    consumersHint:
+      'Größte zuerst. Erzeuger (z. B. PV) und Unterzähler sind auch dabei – nicht einfach addieren.',
+    second: 'zweiter Zählerstand {v} kWh',
+    fromMeter: 'aus Zählerständen',
+    fromPower: 'aus Leistung, über die Zeit aufsummiert',
+    perMonth: 'kWh pro Monat',
+    openMonth: 'Diesen Monat im Editor öffnen',
+    week: 'Typische Woche (Durchschnitt je Wochentag und Stunde)',
+    weekHint: 'Kräftigere Farbe = mehr. Zeiten in Ortszeit des Miniservers.',
+    base: 'Standby (Grundlast)',
+    baseYear: '≈ {v} kWh pro Jahr',
+    weekdays: 'Werktags',
+    weekend: 'Wochenende'
+  },
   restart: {
     now: 'Jetzt neu starten',
     confirm:
@@ -230,6 +253,7 @@ const de: typeof en = {
     checking: 'Suche…',
     available: 'Version {latest} ist verfügbar.',
     download: 'Herunterladen',
+    dismiss: 'Bis zur nächsten Version ausblenden',
     upToDate: 'Aktuell',
     checkFailed: 'Update-Suche fehlgeschlagen'
   },

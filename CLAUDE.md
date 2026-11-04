@@ -72,6 +72,8 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     `/releases/latest` per launch; every failure (offline, 403 rate-limit, no
     published release) resolves as `latest: null` — a failed check must never
     surface as an app error. See "Auto-update" below for why there's no installer.
+    Shown app-wide by `UpdateBanner.vue` (floating, reserves its height via `--banner-space`,
+    dismissed per version in localStorage); `LDM_CURRENT_VERSION` fakes the current version (tests only).
 - `src/preload/index.ts` — contextBridge exposing `window.api`, typed by the
   single contract interface in `src/shared/api.ts` (preload implements it,
   renderer consumes it — extend the interface first when adding IPC).
@@ -86,7 +88,9 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
 - `src/renderer/src/` — Vue 3 + Pinia + PrimeVue 4 + uPlot + vue-i18n. Views:
   Connection → Browser (file list w/ sync status) → Editor (chart + virtualized
   grid + problems panel) and Months (`/months/<uuid[_n]>`, read-only stitched chart of
-  all months of one control + per-month summary; clicks open the editor with `?row=`), plus Settings (Cmd/Ctrl+, or gear icon). Router guard:
+  all months of one control + per-month summary; clicks open the editor with `?row=`), Dashboard
+  (`/dashboard`: `insights:energy` / `insights:profile` IPC → `energyOverview()` / `controlProfile()`
+  exported from mcp-tools.ts, the same functions behind `energy_overview` / `get_usage_profile`), plus Settings (Cmd/Ctrl+, or gear icon). Router guard:
   everything except `/connect` and `/settings` needs a connection.
 - **i18n**: en + de catalogs in `renderer/src/locales/` (`de.ts` is typed
   `typeof en` so missing keys fail typecheck). ALL user-facing strings go

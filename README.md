@@ -41,6 +41,8 @@ your Miniserver connection in the app.
   the usual range of the series, e.g. a sensor glitch); click a problem to jump to it
 - **All months** of a control in one chart (e.g. a meter over a whole year), with
   min/max/average per month — see [All months](docs/all-months.md)
+- **Dashboard**: energy by meter (largest first), kWh per month, typical week (weekday ×
+  hour heatmap) and standby load with a yearly estimate — see [Dashboard](docs/dashboard.md)
 - **Edit**: change timestamps and values inline, insert/delete entries, fill gaps with
   interpolated entries, bulk-calculate (`v * 1000`, `(v - 32) / 1.8`, …)
 - **Round-trip safe**: files are re-serialized byte-identically (verified by tests) —
@@ -88,6 +90,15 @@ values inline, fill gaps, or recalculate a whole column with a formula.
 **4. Upload** — save and upload the corrected file, then restart the Miniserver (one
 click in the app, with an admin user) and clear the Loxone app's cache (the app reminds you). The previous server copy is backed
 up automatically, so you can always [restore it](docs/backups.md).
+
+**See where your energy goes** — the **Dashboard** (button above the file list) shows kWh
+per meter and month, a typical week as a heatmap and the standby load — no AI needed.
+See [Dashboard](docs/dashboard.md).
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
+  <img src="docs/images/dashboard-light.png" alt="Dashboard with energy per meter, kWh per month and a typical-week heatmap">
+</picture>
 
 **Optional: let an AI help** — turn on the built-in MCP server in Settings and ask
 Claude (or any MCP client) to find and fix problems, or where your electricity goes. See

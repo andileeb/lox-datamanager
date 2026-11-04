@@ -2,6 +2,8 @@
 
 Feature pages beyond the [README](../README.md) overview.
 
+- [Dashboard](dashboard.md) — energy by meter, kWh per month, typical week and
+  standby load, without AI
 - [Ask AI about your data](insights.md) — energy report, usage patterns, standby load,
   automation ideas and what to buy next, via the MCP server
 - [All months of a control](all-months.md) — every month of one control in one chart,
