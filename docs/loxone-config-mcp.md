@@ -30,12 +30,12 @@ Keep Lox DataManager and Loxone Config open on this PC while you work.
 
 1. In Lox DataManager, open **Settings → Loxone Config on another computer**, paste the code
    and click **Connect**. It shows the Config version and number of tools when it works.
-2. Pick your AI app under **Connect** and copy the snippet (for Claude Code: run it in a
-   terminal). The AI app then has both servers: `lox-datamanager` for your statistics and
-   `loxone-config` for the project.
+2. Under **Add to Claude**, click **Add** next to Claude Code or Claude Desktop. The app
+   writes both servers into Claude's settings: `lox-datamanager` for your statistics and
+   `loxone-config` for the project. Start a new Claude Code session or reopen Claude Desktop.
+   For other AI apps pick one under **Connect** and copy the snippet instead.
 
-Claude Code adds the server for the folder you run the command in; add `--scope user`
-to have it in every session.
+When the code changes (Regenerate on the PC, new address), connect again and click **Update**.
 
 ## Try it
 
@@ -53,7 +53,8 @@ Then a small change you can take back:
 And the combination with your statistics:
 
 - _"My standby load is high at night — look at my Loxone Config project and suggest what
-  to change. Ask before changing anything."_
+  to change. Ask before changing anything."_ — or the ready-made prompt **improve-config**
+  (see [Ask AI about your data](insights.md#change-loxone-config-from-your-data)).
 
 ## Parallels on a Mac
 

@@ -263,7 +263,18 @@ const de: typeof en = {
     remoteConnected: 'Verbunden — {name} {version}, {tools} Tools',
     remoteHint:
       'Dein KI-Client arbeitet dann am Projekt, das in Loxone Config auf diesem PC geöffnet ist. ' +
-      'Änderungen landen in Config: Dort prüfst du sie, machst sie rückgängig oder speicherst sie.'
+      'Änderungen landen in Config: Dort prüfst du sie, machst sie rückgängig oder speicherst sie.',
+    claudeTitle: 'Zu Claude hinzufügen',
+    claudeStatus: { current: 'Hinzugefügt', outdated: 'Alter Token', missing: 'Nicht hinzugefügt' },
+    claudeAdd: 'Hinzufügen',
+    claudeUpdate: 'Aktualisieren',
+    claudeRestart: {
+      claudeCode: 'Hinzugefügt — starte eine neue Claude-Code-Sitzung, um es zu nutzen.',
+      claudeDesktop: 'Hinzugefügt — beende Claude Desktop und öffne es neu (braucht Node.js).'
+    },
+    claudeHint:
+      'Trägt {servers} für dich in die Einstellungen der Claude-App ein — ohne Kopieren. ' +
+      'Nach „Neu erzeugen“ oder einem neuen Verbindungscode auf „Aktualisieren“ klicken.'
   },
   update: {
     version: 'Version',
@@ -290,7 +301,9 @@ const de: typeof en = {
     MCP_NOT_LAN: 'Abgelehnt — nur Computer im selben lokalen Netzwerk können sich verbinden',
     MCP_UNREACHABLE:
       'Der PC antwortet nicht — ist Lox DataManager dort geöffnet und freigegeben, und sind beide im selben Netzwerk?',
-    CONFIG_NOT_RUNNING: 'PC erreicht, aber Loxone Config oder sein MCP-Server läuft dort nicht'
+    CONFIG_NOT_RUNNING: 'PC erreicht, aber Loxone Config oder sein MCP-Server läuft dort nicht',
+    CLIENT_CONFIG_UNREADABLE:
+      'Die Einstellungsdatei der Claude-App ist nicht lesbar — repariere oder entferne sie, oder kopiere stattdessen das Snippet'
   }
 }
 

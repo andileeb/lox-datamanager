@@ -227,8 +227,11 @@ fill gaps, apply formulas, edit records, save, and upload (Loxone's official MCP
 server is read-only; this one can write, because it uses the app's FTP path).
 
 1. Open **Settings** (gear icon or Cmd/Ctrl+,) → **MCP server** → enable it.
-2. Pick your AI app under **Connect** (Claude Code, Claude Desktop, Cursor, VS Code) and copy
-   the snippet, e.g. for Claude Code:
+2. **Claude Code / Claude Desktop**: click **Add** under **Settings → Add to Claude** — the app
+   writes the entry into Claude's settings (Claude Desktop also needs Node.js). Start a new
+   Claude Code session or reopen Claude Desktop.
+   Other apps (Cursor, VS Code, …): pick it under **Connect** and copy the snippet, e.g. for
+   Claude Code by hand:
 
    ```sh
    claude mcp add --transport http lox-datamanager http://127.0.0.1:12009/mcp \
@@ -239,7 +242,7 @@ server is read-only; this one can write, because it uses the app's FTP path).
 
 3. Ask things like _"connect to my Miniserver, find gaps in last month's energy
    statistics and fill them"_ or _"what are my biggest consumers and what runs at night?"_,
-   or use the prompts `energy-report`, `automation-ideas`, `what-to-buy` — see
+   or use the prompts `energy-report`, `automation-ideas`, `what-to-buy`, `improve-config` — see
    [Ask AI about your data](docs/insights.md). Destructive steps (upload, delete) always
    go through your client's tool-approval prompt.
 

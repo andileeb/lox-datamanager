@@ -1,5 +1,6 @@
 // Types shared between main and renderer (IPC payloads).
 import type { UsageProfile } from './insights'
+import type { ClaudeClient, ServerStatus } from './mcp-clients'
 
 export type TlsPref = 'auto' | 'ftps' | 'plain'
 export type TlsMode = 'ftps' | 'plain'
@@ -112,6 +113,7 @@ export interface ApiError {
     | 'MCP_NOT_LAN'
     | 'MCP_UNREACHABLE'
     | 'CONFIG_NOT_RUNNING'
+    | 'CLIENT_CONFIG_UNREADABLE'
     | 'UNKNOWN'
   message: string
 }
@@ -141,6 +143,12 @@ export interface ConfigMcpState {
   codes: string[]
   /** code pasted on this computer to reach another one's Config */
   remoteCode: string | null
+}
+
+/** "Add to Claude": one per Claude app found on this computer, status per server name */
+export interface ClaudeSetup {
+  client: ClaudeClient
+  servers: Record<string, ServerStatus>
 }
 
 /** what a shared Config MCP answered to initialize + tools/list */

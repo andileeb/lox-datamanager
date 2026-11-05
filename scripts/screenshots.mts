@@ -8,7 +8,15 @@
  *   pnpm run build && pnpm run showcase      # docs/images/showcase-*.gif (needs ffmpeg)
  */
 import { execFileSync } from 'child_process'
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from 'fs'
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  utimesSync,
+  writeFileSync
+} from 'fs'
 import { createRequire } from 'module'
 import { createServer as createHttpsServer } from 'https'
 import { createServer } from 'net'
@@ -238,7 +246,17 @@ async function launch(
       mcp: { enabled: true, port: MCP_PORT, tokenEnc: 'plain:demo-token-not-a-real-secret' }
     })
   )
-  const env = { ...process.env, LDM_USER_DATA: userData, LDM_WEB_PORT: String(WEB_PORT) }
+  // "Add to Claude" must never see (or write) the real Claude config files
+  const claudeDir = join(userData, 'claude')
+  mkdirSync(claudeDir, { recursive: true })
+  if (!existsSync(join(claudeDir, '.claude.json')))
+    writeFileSync(join(claudeDir, '.claude.json'), '{}')
+  const env = {
+    ...process.env,
+    LDM_USER_DATA: userData,
+    LDM_WEB_PORT: String(WEB_PORT),
+    LDM_CLAUDE_CONFIG_DIR: claudeDir
+  }
   delete env['ELECTRON_RENDERER_URL']
   const app = await electron.launch({
     executablePath: require('electron') as unknown as string,

@@ -14,7 +14,14 @@ import { isDark, toggleDark } from '../theme'
 import { formatDateTime, prefs } from '../prefs'
 import { errorText } from '../i18n'
 import { connectionUrl, parseConnectionCode } from '../../../shared/config-mcp'
-import type { ConfigMcpState, ConfigRemoteInfo, McpState, UpdateCheck } from '../../../shared/types'
+import { clientEntry, type ClaudeClient } from '../../../shared/mcp-clients'
+import type {
+  ClaudeSetup,
+  ConfigMcpState,
+  ConfigRemoteInfo,
+  McpState,
+  UpdateCheck
+} from '../../../shared/types'
 
 const router = useRouter()
 const { t, locale } = useI18n()
@@ -82,12 +89,14 @@ onMounted(async () => {
     remoteInput.value = configMcp.value.remoteCode
     void connectRemote()
   }
+  await loadClaude()
   await checkUpdates()
 })
 
 async function configureMcp(enabled: boolean, port: number): Promise<void> {
   const r = await window.api.mcp.configure(enabled, port)
   if (r.ok) mcp.value = r.data
+  await loadClaude()
 }
 
 function onMcpToggle(): void {
@@ -101,6 +110,7 @@ function onMcpPortBlur(): void {
 async function regenerateToken(): Promise<void> {
   const r = await window.api.mcp.regenerateToken()
   if (r.ok) mcp.value = r.data
+  await loadClaude()
 }
 
 type McpClient = 'claudeCode' | 'claudeDesktop' | 'cursor' | 'vscode'
@@ -119,17 +129,7 @@ function snippet(name: string, url: string, token: string | null): string {
     case 'claudeCode':
       return `claude mcp add --transport http ${name} ${url} --header "Authorization: ${auth}"`
     case 'claudeDesktop':
-      // Claude Desktop's config file only starts local (stdio) servers → mcp-remote bridges to HTTP;
-      // the header goes through env because spaces in args break on Windows
-      return json({
-        mcpServers: {
-          [name]: {
-            command: 'npx',
-            args: ['-y', 'mcp-remote', url, '--header', 'Authorization:${AUTH_HEADER}'],
-            env: { AUTH_HEADER: auth }
-          }
-        }
-      })
+      return json({ mcpServers: { [name]: clientEntry('claudeDesktop', url, token ?? '<token>') } })
     case 'cursor':
       return json({ mcpServers: { [name]: { url, headers: { Authorization: auth } } } })
     case 'vscode':
@@ -178,6 +178,7 @@ async function connectRemote(): Promise<void> {
   connecting.value = false
   remote.value = r.ok ? r.data : null
   if (!r.ok) remoteError.value = errorText(r.error)
+  await loadClaude()
 }
 
 async function forgetRemote(): Promise<void> {
@@ -185,6 +186,36 @@ async function forgetRemote(): Promise<void> {
   remote.value = null
   remoteError.value = null
   remoteInput.value = ''
+  await loadClaude()
+}
+
+// "Add to Claude": writes both servers into Claude Code's / Claude Desktop's config file
+const claudeApps = ref<ClaudeSetup[]>([])
+const claudeAdded = ref<ClaudeClient | null>(null)
+const claudeError = ref<string | null>(null)
+
+async function loadClaude(): Promise<void> {
+  const r = await window.api.claude.get()
+  if (r.ok) claudeApps.value = r.data.filter((c) => Object.keys(c.servers).length)
+}
+
+/** current = every server there and up to date; outdated = one has an old token/URL */
+function claudeStatus(c: ClaudeSetup): 'current' | 'outdated' | 'missing' {
+  const s = Object.values(c.servers)
+  return s.every((x) => x === 'current')
+    ? 'current'
+    : s.includes('outdated')
+      ? 'outdated'
+      : 'missing'
+}
+
+async function addToClaude(client: ClaudeClient): Promise<void> {
+  claudeError.value = null
+  const r = await window.api.claude.add(client)
+  if (r.ok) {
+    claudeApps.value = r.data.filter((c) => Object.keys(c.servers).length)
+    claudeAdded.value = client
+  } else claudeError.value = errorText(r.error)
 }
 
 const remoteSnippet = computed(() => {
@@ -469,6 +500,32 @@ async function copyText(text: string, which: NonNullable<typeof copied.value>): 
           </div>
         </template>
         <p class="hint">{{ t('settings.remoteHint') }}</p>
+      </template>
+
+      <template v-if="claudeApps.length">
+        <h2>{{ t('settings.claudeTitle') }}</h2>
+        <div v-for="c in claudeApps" :key="c.client" class="row">
+          <label>{{ mcpClients.find((m) => m.value === c.client)?.label }}</label>
+          <div class="mcp-status">
+            <Tag
+              :severity="claudeStatus(c) === 'current' ? 'success' : 'secondary'"
+              :value="t(`settings.claudeStatus.${claudeStatus(c)}`)"
+            />
+            <Button
+              v-if="claudeStatus(c) !== 'current'"
+              :label="
+                t(claudeStatus(c) === 'outdated' ? 'settings.claudeUpdate' : 'settings.claudeAdd')
+              "
+              size="small"
+              @click="addToClaude(c.client)"
+            />
+          </div>
+        </div>
+        <Tag v-if="claudeError" class="remote-tag" severity="danger" :value="claudeError" />
+        <p v-else-if="claudeAdded" class="hint">{{ t(`settings.claudeRestart.${claudeAdded}`) }}</p>
+        <p class="hint">
+          {{ t('settings.claudeHint', { servers: Object.keys(claudeApps[0].servers).join(', ') }) }}
+        </p>
       </template>
     </div>
   </main>

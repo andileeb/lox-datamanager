@@ -10,6 +10,7 @@ import * as stats from './stats-service'
 import * as mcp from './mcp'
 import * as configShare from './config-share'
 import * as updates from './updates'
+import * as claude from './claude-clients'
 import * as catalog from './catalog'
 import * as web from './web'
 import { controlProfile, energyOverview } from './mcp-tools'
@@ -24,7 +25,8 @@ import type {
   McpState,
   StatRecord
 } from '../shared/types'
-import { formatConnectionCode } from '../shared/config-mcp'
+import { connectionUrl, formatConnectionCode, parseConnectionCode } from '../shared/config-mcp'
+import { clientEntry, type ClaudeClient } from '../shared/mcp-clients'
 import { STAT_FILENAME_RE } from '../shared/types'
 import type { ConnectPayload, TransferFilePayload } from '../shared/api'
 
@@ -254,6 +256,25 @@ export function registerIpc(): void {
   handle('configMcp:forget', async () => {
     await store.setConfigRemoteCode(null)
     return null
+  })
+
+  // what "Add to Claude" writes: this app's server when it's on, Loxone Config's when connected
+  const claudeEntries = async (): Promise<(client: ClaudeClient) => Record<string, object>> => {
+    const { enabled, port } = store.getMcpConfig()
+    const token = enabled ? await store.getMcpToken() : null
+    const remote = parseConnectionCode((await store.getConfigRemoteCode()) ?? '')
+    return (client) => ({
+      ...(token && {
+        'lox-datamanager': clientEntry(client, `http://127.0.0.1:${port}/mcp`, token)
+      }),
+      ...(remote && { 'loxone-config': clientEntry(client, connectionUrl(remote), remote.token) })
+    })
+  }
+  handle('claude:get', async () => claude.setup(await claudeEntries()))
+  handle('claude:add', async (client: ClaudeClient) => {
+    const entries = await claudeEntries()
+    claude.add(client, entries(client))
+    return claude.setup(entries)
   })
 
   // LDM_CURRENT_VERSION: test harness only (shows the update banner against the real latest release)

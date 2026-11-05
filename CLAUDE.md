@@ -61,8 +61,8 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     v1, **stateless** Streamable HTTP: fresh `McpServer` + transport per POST) on
     `http://127.0.0.1:<port>/mcp`, default port 12009. Bearer-token auth (token
     generated in Settings, safeStorage-encrypted in store.ts, `plain:` prefix
-    fallback); 24 tools + 4 prompts (`fix-statistics`, `energy-report`, `automation-ideas`,
-    `what-to-buy`) share ftp/cache/stats-service
+    fallback); 24 tools + 5 prompts (`fix-statistics`, `energy-report`, `automation-ideas`,
+    `what-to-buy`, `improve-config` — the only one allowed to change the Config project, after an OK) share ftp/cache/stats-service
     with the UI. Edits are in-memory until `save_stat_file`; `mcp:activity`
     events tell the renderer to refresh (EditorView shows a reload banner —
     last-save-wins, no merging). Lifecycle: start on app ready if enabled,
@@ -76,6 +76,12 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     pasted connection code `<host>:<port>/<token>`; Settings then shows the client snippet.
     `LDM_CONFIG_MCP_PORT` fakes a Config MCP (enables sharing off Windows), `LDM_CONFIG_SHARE_PORT`
     moves 12010 (tests only). docs/loxone-config-mcp.md.
+  - `claude-clients.ts` — Settings "Add to Claude": merges our servers (`lox-datamanager` when the
+    MCP server is on, `loxone-config` when a remote code is stored) into `~/.claude.json` (Claude Code,
+    user scope) and `<appData>/Claude/claude_desktop_config.json` (via `npx mcp-remote`); pure merge +
+    status (current/outdated/missing) in `shared/mcp-clients.ts`. An unparseable file is never
+    overwritten (`CLIENT_CONFIG_UNREADABLE`). `LDM_CLAUDE_CONFIG_DIR` redirects both files — tests and
+    screenshots must set it so they never touch the real Claude config.
   - `updates.ts` — release-notification only, **no Electron imports** (takes the
     current version as an argument, so it unit-tests). One `fetch` of GitHub's
     `/releases/latest` per launch; every failure (offline, 403 rate-limit, no

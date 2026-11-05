@@ -258,7 +258,18 @@ export default {
     remoteConnected: 'Connected — {name} {version}, {tools} tools',
     remoteHint:
       'Your AI client then works on the project open in Loxone Config on that PC. ' +
-      'Changes land in Config, where you review, undo or save them.'
+      'Changes land in Config, where you review, undo or save them.',
+    claudeTitle: 'Add to Claude',
+    claudeStatus: { current: 'Added', outdated: 'Old token', missing: 'Not added' },
+    claudeAdd: 'Add',
+    claudeUpdate: 'Update',
+    claudeRestart: {
+      claudeCode: 'Added — start a new Claude Code session to use it.',
+      claudeDesktop: 'Added — quit and reopen Claude Desktop to use it (needs Node.js).'
+    },
+    claudeHint:
+      'Writes {servers} into the Claude app’s settings for you — no copying. ' +
+      'After Regenerate or a new connection code, click Update.'
   },
   update: {
     version: 'Version',
@@ -285,6 +296,8 @@ export default {
     MCP_NOT_LAN: 'Refused — only computers on the same local network can connect',
     MCP_UNREACHABLE:
       'The PC did not answer — is Lox DataManager open there with sharing on, and are both on the same network?',
-    CONFIG_NOT_RUNNING: 'Reached the PC, but Loxone Config or its MCP server is not running there'
+    CONFIG_NOT_RUNNING: 'Reached the PC, but Loxone Config or its MCP server is not running there',
+    CLIENT_CONFIG_UNREADABLE:
+      'The Claude app’s settings file could not be read — fix or remove it, or copy the snippet instead'
   }
 }

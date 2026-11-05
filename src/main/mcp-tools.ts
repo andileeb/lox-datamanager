@@ -1139,5 +1139,50 @@ export function buildServer(): McpServer {
     ]
   )
 
+  // the one prompt that may change something: the Loxone Config project, step by step after an OK
+  server.registerPrompt(
+    'improve-config',
+    {
+      description:
+        'Find something to improve in the measured data, then change the Loxone Config project — only after you approve',
+      argsSchema: {
+        goal: z
+          .string()
+          .optional()
+          .describe('What to improve, e.g. "standby at night", "PV self-consumption"')
+      }
+    },
+    ({ goal }) => ({
+      messages: [
+        {
+          role: 'user' as const,
+          content: {
+            type: 'text' as const,
+            text: [
+              `Goal: ${goal?.trim() || 'lower my standby (base) load'}.`,
+              '',
+              '1. Data (Lox DataManager, read-only): find_controls, energy_overview, get_usage_profile and',
+              '   get_aggregates — find the controls that matter for the goal, with numbers. Prefer these',
+              '   aggregates over read_stat_file. Times are Miniserver local time.',
+              '2. Project (loxone-config tools, read-only in this step): read skill_read / sdk_describe first',
+              '   to learn how to work with the project, then code_query to find the blocks, inputs and outputs',
+              '   behind the controls from step 1 (match by name and room).',
+              '3. Suggest up to three changes, ranked by benefit: the observation (with numbers), the change',
+              '   in Loxone terms (which blocks, which wiring), the expected effect per year, the risk or comfort',
+              '   trade-off. Then stop and ask me which one to make.',
+              '4. Only after my OK: make that one change with code_run. Prefer adding blocks over rewiring',
+              '   existing ones. Then tell me what to check in Loxone Config (and in its simulation); use undo',
+              '   if I do not like it.',
+              '',
+              'Never call save_project, never send anything to the Miniserver, never edit, save or upload',
+              'statistics — I review and save in Loxone Config myself. If no loxone-config tools are available,',
+              'stop after step 3 and tell me to connect Loxone Config (Settings in Lox DataManager).'
+            ].join('\n')
+          }
+        }
+      ]
+    })
+  )
+
   return server
 }
