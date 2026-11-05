@@ -113,7 +113,10 @@ async function installExtensions(servers: Servers): Promise<void> {
   mkdirSync(dir, { recursive: true })
   const bridge = readFileSync(join(__dirname, 'bridge.js'))
   const have = extensionNames()
-  for (const name of Object.keys(servers).filter((n) => !have.includes(n))) {
+  // one per click: a second install dialog opened right away replaces the first in Claude Desktop
+  for (const name of Object.keys(servers)
+    .filter((n) => !have.includes(n))
+    .slice(0, 1)) {
     const file = join(dir, `${name}.mcpb`)
     const manifest = extensionManifest(name, app.getVersion(), bridgeConfig())
     writeFileSync(

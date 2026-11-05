@@ -234,15 +234,19 @@ async function loadClaude(): Promise<void> {
   if (r.ok) claudeApps.value = r.data
 }
 
-/** current = every server there and up to date; outdated = one has an old token/URL */
-function claudeStatus(c: ClaudeSetup): 'current' | 'outdated' | 'missing' {
+/** current = every server there and up to date; outdated = one has an old token/URL;
+ *  partial = Claude Desktop installs one extension per click, some are in already */
+function claudeStatus(c: ClaudeSetup): 'current' | 'outdated' | 'partial' | 'missing' {
   const s = Object.values(c.servers)
-  return s.every((x) => x === 'current')
-    ? 'current'
-    : s.includes('outdated')
-      ? 'outdated'
-      : 'missing'
+  if (s.every((x) => x === 'current')) return 'current'
+  if (s.includes('outdated')) return 'outdated'
+  return s.includes('current') ? 'partial' : 'missing'
 }
+
+const claudeDone = (c: ClaudeSetup): { done: number; total: number } => ({
+  done: Object.values(c.servers).filter((x) => x === 'current').length,
+  total: Object.keys(c.servers).length
+})
 
 async function addToClaude(client: ClaudeClient): Promise<void> {
   claudeError.value = null
@@ -367,7 +371,7 @@ const prompts = [
                 <div class="mcp-status">
                   <Tag
                     :severity="claudeStatus(c) === 'current' ? 'success' : 'secondary'"
-                    :value="t(`settings.claudeStatus.${claudeStatus(c)}`)"
+                    :value="t(`settings.claudeStatus.${claudeStatus(c)}`, claudeDone(c))"
                   />
                   <Button
                     v-if="claudeStatus(c) !== 'current'"

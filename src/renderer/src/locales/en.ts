@@ -264,7 +264,12 @@ export default {
       'Claude then works on the project open in Loxone Config on that PC; Claude apps added above get it automatically. ' +
       'Changes land in Config, where you review, undo or save them.',
     claudeTitle: 'Claude',
-    claudeStatus: { current: 'Added', outdated: 'Old token', missing: 'Not added' },
+    claudeStatus: {
+      current: 'Added',
+      outdated: 'Old token',
+      partial: '{done} of {total} added',
+      missing: 'Not added'
+    },
     claudeAdd: 'Add',
     claudeUpdate: 'Update',
     claudeRestart: {

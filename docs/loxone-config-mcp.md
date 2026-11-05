@@ -71,12 +71,13 @@ Loxone Config also runs in Windows on Parallels, on the same Mac:
 
 ## If it doesn't connect
 
-| Message on the Mac                                         | What to do                                                                                                                                |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| _The PC did not answer_                                    | Is Lox DataManager open on the PC with sharing on? Same network? Network set to _Private_ in Windows and the app allowed in the firewall? |
-| _The code is not valid any more_                           | The code was regenerated — copy the current one from the PC.                                                                              |
-| _Reached the PC, but Loxone Config … is not running there_ | Open Loxone Config and enable its MCP Server in the title bar. Then click ↻ next to the status on the PC.                                 |
-| _Refused — only computers on the same local network_       | You're connecting through a VPN or from outside; this only works inside your local network.                                               |
+| Message on the Mac                                                        | What to do                                                                                                                                                                         |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| _The PC did not answer_                                                   | Is Lox DataManager open on the PC with sharing on? Same network? Network set to _Private_ in Windows and the app allowed in the firewall?                                          |
+| _The code is not valid any more_                                          | The code was regenerated — copy the current one from the PC.                                                                                                                       |
+| _Reached the PC, but Loxone Config … is not running there_                | Open Loxone Config and enable its MCP Server in the title bar. Then click ↻ next to the status on the PC.                                                                          |
+| _Refused — only computers on the same local network_                      | You're connecting through a VPN or from outside; this only works inside your local network.                                                                                        |
+| Claude Desktop: _couldn't connect to Loxone Config (via Lox DataManager)_ | macOS asks every app before it may reach your local network. Allow **Claude** under System Settings → Privacy & Security → **Local Network**, then quit and reopen Claude Desktop. |
 
 The PC's address can change when your router hands out a new one — copy the code again then.
 

@@ -15,6 +15,10 @@ export interface Target {
 
 const NOT_RUNNING =
   'Lox DataManager is not running or AI access is off — open it (Settings → AI) and try again.'
+// macOS asks per app before it may reach the local network; a denied app gets EHOSTUNREACH
+const UNREACHABLE = (code: string): string =>
+  `Can't reach the PC sharing Loxone Config (${code}). Is Lox DataManager open there with sharing on? ` +
+  'On a Mac, also allow Claude under System Settings → Privacy & Security → Local Network, then restart Claude.'
 
 /** one JSON-RPC message from Claude → our server; replies go to `write`, one line each */
 export async function forward(
@@ -45,8 +49,11 @@ export async function forward(
       },
       body: msg
     })
-  } catch {
-    return fail(NOT_RUNNING)
+  } catch (e) {
+    // our own server is on this computer; anything else is the shared Loxone Config on another PC
+    if (new URL(target.url).hostname === '127.0.0.1') return fail(NOT_RUNNING)
+    const cause = (e as { cause?: { code?: string } }).cause
+    return fail(UNREACHABLE(cause?.code ?? 'no answer'))
   }
   const text = await res.text()
   if (res.status === 202) return

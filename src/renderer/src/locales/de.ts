@@ -269,7 +269,12 @@ const de: typeof en = {
       'Claude arbeitet dann am Projekt, das in Loxone Config auf diesem PC geöffnet ist; oben hinzugefügte Claude-Apps bekommen es automatisch. ' +
       'Änderungen landen in Config: Dort prüfst du sie, machst sie rückgängig oder speicherst sie.',
     claudeTitle: 'Claude',
-    claudeStatus: { current: 'Hinzugefügt', outdated: 'Alter Token', missing: 'Nicht hinzugefügt' },
+    claudeStatus: {
+      current: 'Hinzugefügt',
+      outdated: 'Alter Token',
+      partial: '{done} von {total} hinzugefügt',
+      missing: 'Nicht hinzugefügt'
+    },
     claudeAdd: 'Hinzufügen',
     claudeUpdate: 'Aktualisieren',
     claudeRestart: {

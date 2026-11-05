@@ -63,6 +63,13 @@ describe('bridge forward', () => {
       'http://127.0.0.1:1/mcp'
     )
     expect(JSON.parse(line).error.message).toMatch(/not running/)
+    // another PC (Loxone Config share): says what to check, incl. macOS's Local Network permission
+    const [lan] = await run(
+      { jsonrpc: '2.0', id: 6, method: 'x' },
+      'good',
+      'http://localhost:1/mcp'
+    )
+    expect(JSON.parse(lan).error.message).toMatch(/Local Network/)
     const out: string[] = []
     await forward('{"jsonrpc":"2.0","id":5}', null, (l) => out.push(l))
     expect(JSON.parse(out[0]).error.message).toMatch(/not running/)
