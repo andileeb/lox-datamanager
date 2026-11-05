@@ -270,6 +270,7 @@ async function launch(
   await page.evaluate((d) => {
     localStorage.setItem('ldm.dark', d ? '1' : '0')
     localStorage.setItem('ldm.locale', 'en')
+    localStorage.setItem('ldm.claudeOfferDismissed', '1') // the docs shots show no banner
   }, dark)
   await page.reload()
   return { app, page }

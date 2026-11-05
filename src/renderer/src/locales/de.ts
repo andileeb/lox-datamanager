@@ -297,6 +297,15 @@ const de: typeof en = {
       'Claude Code: /mcp__lox-datamanager__energy-report (usw.) eingeben. Claude Desktop: Menü + → Lox DataManager. Oder einfach fragen, z. B. „Was läuft nachts?“',
     advancedTitle: 'Andere KI-Apps & Erweitert'
   },
+  banner: {
+    added: 'Zu {apps} hinzugefügt — starte Claude neu, um es zu nutzen.',
+    needsNode: 'Claude Desktop braucht Node.js.',
+    claudeOffer: 'Deine Statistiken in {apps} nutzen?',
+    and: ' und ',
+    notNow: 'Nicht jetzt',
+    notNowTip: 'Du kannst es später unter Einstellungen → KI hinzufügen',
+    close: 'Schließen'
+  },
   update: {
     version: 'Version',
     check: 'Nach Updates suchen',

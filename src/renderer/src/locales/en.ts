@@ -292,6 +292,15 @@ export default {
       'Claude Code: type /mcp__lox-datamanager__energy-report (etc.). Claude Desktop: + menu → Lox DataManager. Or just ask, e.g. “what runs at night?”',
     advancedTitle: 'Other AI apps & advanced'
   },
+  banner: {
+    added: 'Added to {apps} — restart Claude to use it.',
+    needsNode: 'Claude Desktop needs Node.js.',
+    claudeOffer: 'Use your statistics in {apps}?',
+    and: ' and ',
+    notNow: 'Not now',
+    notNowTip: 'You can add it later in Settings → AI',
+    close: 'Close'
+  },
   update: {
     version: 'Version',
     check: 'Check for updates',
