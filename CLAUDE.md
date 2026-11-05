@@ -67,6 +67,15 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     events tell the renderer to refresh (EditorView shows a reload banner —
     last-save-wins, no merging). Lifecycle: start on app ready if enabled,
     `mcp:configure` IPC restarts, `EADDRINUSE` lands in `McpState.error`.
+  - `config-share.ts` — Loxone Config's MCP across computers. Sharing side (Windows): token-gated
+    HTTP proxy on all interfaces, port 12010, LAN peers only (`isLanAddress`), forwards to Config's
+    own MCP with `Host: 127.0.0.1:<port>` (Config 403s any other Host; it has no auth). Config's
+    port changes per start → `detectConfigPort()` = `tasklist` PID of `LoxoneConfigMcpServer.exe`
+    + `netstat` listener (localized output, parsers in `shared/config-mcp.ts`), re-detected when
+    the cached port refuses. Other side: `testRemote()` (SDK client, initialize + tools/list) for a
+    pasted connection code `<host>:<port>/<token>`; Settings then shows the client snippet.
+    `LDM_CONFIG_MCP_PORT` fakes a Config MCP (enables sharing off Windows), `LDM_CONFIG_SHARE_PORT`
+    moves 12010 (tests only). docs/loxone-config-mcp.md.
   - `updates.ts` — release-notification only, **no Electron imports** (takes the
     current version as an argument, so it unit-tests). One `fetch` of GitHub's
     `/releases/latest` per launch; every failure (offline, 403 rate-limit, no

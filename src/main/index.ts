@@ -4,6 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { registerIpc } from './ipc'
 import * as mcp from './mcp'
+import * as configShare from './config-share'
 import { resolveUserData } from './userdata'
 
 // The macOS app menu, About panel and Quit item all read app.name, which otherwise
@@ -65,6 +66,7 @@ app.whenReady().then(() => {
 
   registerIpc()
   void mcp.start()
+  void configShare.start()
   createWindow()
 
   app.on('activate', function () {
@@ -85,6 +87,7 @@ app.on('window-all-closed', () => {
 
 app.on('will-quit', () => {
   void mcp.stop()
+  void configShare.stop()
 })
 
 // In this file you can include the rest of your app's specific main process

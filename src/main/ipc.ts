@@ -8,6 +8,7 @@ import * as store from './store'
 import * as cache from './cache'
 import * as stats from './stats-service'
 import * as mcp from './mcp'
+import * as configShare from './config-share'
 import * as updates from './updates'
 import * as catalog from './catalog'
 import * as web from './web'
@@ -15,7 +16,15 @@ import { controlProfile, energyOverview } from './mcp-tools'
 import { CodedError, toApiError } from './stats-service'
 import { parseStatFile, validateRecords } from './statfile'
 import { diffRecords } from '../shared/records'
-import type { ConnMeta, IpcResult, LocalOpened, McpState, StatRecord } from '../shared/types'
+import type {
+  ConfigMcpState,
+  ConnMeta,
+  IpcResult,
+  LocalOpened,
+  McpState,
+  StatRecord
+} from '../shared/types'
+import { formatConnectionCode } from '../shared/config-mcp'
 import { STAT_FILENAME_RE } from '../shared/types'
 import type { ConnectPayload, TransferFilePayload } from '../shared/api'
 
@@ -210,6 +219,41 @@ export function registerIpc(): void {
   handle('mcp:regenerateToken', async () => {
     await store.regenerateMcpToken()
     return mcpState()
+  })
+
+  const configMcpState = async (): Promise<ConfigMcpState> => {
+    const shareAvailable = configShare.shareAvailable()
+    const token = shareAvailable ? await store.getConfigShareToken() : null
+    const port = configShare.SHARE_PORT
+    return {
+      shareAvailable,
+      shareEnabled: store.getConfigShareEnabled(),
+      ...configShare.status(),
+      configPort: shareAvailable ? await configShare.detectConfigPort() : null,
+      codes: token
+        ? configShare.lanAddresses().map((host) => formatConnectionCode({ host, port, token }))
+        : [],
+      remoteCode: await store.getConfigRemoteCode()
+    }
+  }
+  handle('configMcp:get', () => configMcpState())
+  handle('configMcp:share', async (enabled: boolean) => {
+    store.setConfigShareEnabled(enabled)
+    await configShare.start() // reads the stored flag; stops when disabled
+    return configMcpState()
+  })
+  handle('configMcp:regenerate', async () => {
+    await store.regenerateConfigShareToken()
+    return configMcpState()
+  })
+  handle('configMcp:connect', async (code: string) => {
+    const info = await configShare.testRemote(code)
+    await store.setConfigRemoteCode(code.trim())
+    return info
+  })
+  handle('configMcp:forget', async () => {
+    await store.setConfigRemoteCode(null)
+    return null
   })
 
   // LDM_CURRENT_VERSION: test harness only (shows the update banner against the real latest release)

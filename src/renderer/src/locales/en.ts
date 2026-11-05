@@ -240,7 +240,25 @@ export default {
     mcpHint:
       'Lets MCP clients (Claude Code, Claude Desktop, …) view and edit statistics through this app. ' +
       'Any client supporting Streamable HTTP works with this URL and token. ' +
-      'The server only runs while the app is open.'
+      'The server only runs while the app is open.',
+    shareTitle: 'Share Loxone Config',
+    shareEnable: 'Share on local network',
+    shareRunning: 'Sharing — Loxone Config found',
+    shareNoConfig: 'Sharing — waiting for Loxone Config',
+    shareRecheck: 'Check again',
+    shareCode: 'Connection code',
+    shareHint:
+      'Lets your other computer use the MCP server of Loxone Config on this PC (Config 17.3 or newer: enable it in Config’s title bar). ' +
+      'Paste the code under "Loxone Config on another computer" there. Only computers on this local network can connect; ' +
+      'if Windows asks, allow access on private networks. Keep the app open while you work.',
+    remoteTitle: 'Loxone Config on another computer',
+    remotePlaceholder: 'Paste the code from the PC with Loxone Config',
+    remoteConnect: 'Connect',
+    remoteForget: 'Forget',
+    remoteConnected: 'Connected — {name} {version}, {tools} tools',
+    remoteHint:
+      'Your AI client then works on the project open in Loxone Config on that PC. ' +
+      'Changes land in Config, where you review, undo or save them.'
   },
   update: {
     version: 'Version',
@@ -259,6 +277,14 @@ export default {
     FTP_NOT_CONNECTED: 'Not connected to a Miniserver',
     NO_PASSWORD: 'No stored password — enter it manually',
     NO_PERMISSION:
-      'The Miniserver refused — restarting needs a user with admin rights. Restart it from Loxone Config instead.'
+      'The Miniserver refused — restarting needs a user with admin rights. Restart it from Loxone Config instead.',
+    BAD_CONNECTION_CODE:
+      'That is not a connection code — copy it again from the PC with Loxone Config',
+    MCP_AUTH_FAILED:
+      'The code is not valid any more — copy the current one from the PC with Loxone Config',
+    MCP_NOT_LAN: 'Refused — only computers on the same local network can connect',
+    MCP_UNREACHABLE:
+      'The PC did not answer — is Lox DataManager open there with sharing on, and are both on the same network?',
+    CONFIG_NOT_RUNNING: 'Reached the PC, but Loxone Config or its MCP server is not running there'
   }
 }

@@ -245,7 +245,25 @@ const de: typeof en = {
     mcpHint:
       'Erlaubt MCP-Clients (Claude Code, Claude Desktop, …), Statistiken über diese App anzusehen und zu bearbeiten. ' +
       'Jeder Client mit Streamable HTTP funktioniert mit dieser URL und diesem Token. ' +
-      'Der Server läuft nur, solange die App geöffnet ist.'
+      'Der Server läuft nur, solange die App geöffnet ist.',
+    shareTitle: 'Loxone Config freigeben',
+    shareEnable: 'Im lokalen Netzwerk freigeben',
+    shareRunning: 'Freigegeben — Loxone Config gefunden',
+    shareNoConfig: 'Freigegeben — wartet auf Loxone Config',
+    shareRecheck: 'Erneut prüfen',
+    shareCode: 'Verbindungscode',
+    shareHint:
+      'Damit kann dein anderer Computer den MCP-Server von Loxone Config auf diesem PC nutzen (ab Config 17.3: in der Titelleiste von Config aktivieren). ' +
+      'Füge den Code dort unter „Loxone Config auf einem anderen Computer“ ein. Nur Computer in diesem lokalen Netzwerk können sich verbinden; ' +
+      'fragt Windows nach, erlaube den Zugriff in privaten Netzwerken. Lass die App geöffnet, während du arbeitest.',
+    remoteTitle: 'Loxone Config auf einem anderen Computer',
+    remotePlaceholder: 'Code vom PC mit Loxone Config einfügen',
+    remoteConnect: 'Verbinden',
+    remoteForget: 'Vergessen',
+    remoteConnected: 'Verbunden — {name} {version}, {tools} Tools',
+    remoteHint:
+      'Dein KI-Client arbeitet dann am Projekt, das in Loxone Config auf diesem PC geöffnet ist. ' +
+      'Änderungen landen in Config: Dort prüfst du sie, machst sie rückgängig oder speicherst sie.'
   },
   update: {
     version: 'Version',
@@ -264,7 +282,15 @@ const de: typeof en = {
     FTP_NOT_CONNECTED: 'Nicht mit einem Miniserver verbunden',
     NO_PASSWORD: 'Kein gespeichertes Passwort — bitte manuell eingeben',
     NO_PERMISSION:
-      'Der Miniserver hat abgelehnt — Neustarten braucht einen Benutzer mit Admin-Rechten. Bitte über Loxone Config neu starten.'
+      'Der Miniserver hat abgelehnt — Neustarten braucht einen Benutzer mit Admin-Rechten. Bitte über Loxone Config neu starten.',
+    BAD_CONNECTION_CODE:
+      'Das ist kein Verbindungscode — bitte erneut vom PC mit Loxone Config kopieren',
+    MCP_AUTH_FAILED:
+      'Der Code ist nicht mehr gültig — bitte den aktuellen vom PC mit Loxone Config kopieren',
+    MCP_NOT_LAN: 'Abgelehnt — nur Computer im selben lokalen Netzwerk können sich verbinden',
+    MCP_UNREACHABLE:
+      'Der PC antwortet nicht — ist Lox DataManager dort geöffnet und freigegeben, und sind beide im selben Netzwerk?',
+    CONFIG_NOT_RUNNING: 'PC erreicht, aber Loxone Config oder sein MCP-Server läuft dort nicht'
   }
 }
 
