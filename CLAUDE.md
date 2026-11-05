@@ -207,3 +207,11 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
   (`LDM_MCP_PORT` moves the MCP port when the installed app holds 12009). **Never** real data,
   hosts, tokens or the real profile in docs images; quit the real app first (port 12009).
 - Before a release run `docs/e2e-checklist.md` against a real Gen 2 Miniserver.
+
+## Docs & wiki
+
+User docs live in `docs/` (index `docs/guide.md`). The GitHub wiki is **generated** from them by
+`.github/workflows/wiki.yml` → `scripts/wiki-sync.mts` on every push to main touching `docs/`
+(guide → Home, pages named after their `# Title`, links rewritten, `e2e-checklist.md` left out).
+Never edit the wiki directly — it is overwritten. Try locally:
+`git clone https://github.com/andileeb/lox-datamanager.wiki.git /tmp/w && node scripts/wiki-sync.mts docs /tmp/w`.

@@ -60,6 +60,9 @@ your Miniserver connection in the app.
   analyze, and fix your statistics through the app — and **understand** them: energy report,
   usage patterns, standby load, automation ideas, what to buy next. See
   [Ask AI about your data](docs/insights.md)
+- **Loxone Config from another computer**: share Loxone Config's own MCP server (Config 17.3+)
+  from the Windows PC to your Mac over the local network, with a connection code — see
+  [Loxone Config from another computer](docs/loxone-config-mcp.md)
 
 ## How it works
 
@@ -111,7 +114,7 @@ Claude (or any MCP client) to find and fix problems, or where your electricity g
 
 <sub>All screenshots and the tour show generated demo data (`pnpm run screenshots`, `pnpm run showcase`).</sub>
 
-More in the [guide](docs/guide.md).
+More in the [guide](docs/guide.md) (also as the [wiki](https://github.com/andileeb/lox-datamanager/wiki)).
 
 ## Installation
 
