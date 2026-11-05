@@ -15,6 +15,10 @@ interface StoreShape {
     /** safeStorage-encrypted token (base64), or plaintext with the `plain:` prefix */
     tokenEnc: string | null
   }
+  /** this PC shares Loxone Config's MCP on the local network (config-share.ts) */
+  configShare?: { enabled: boolean; tokenEnc: string | null }
+  /** connection code of a Config MCP shared by another computer */
+  configRemote?: { codeEnc: string }
 }
 
 const storeFile = (): string => join(app.getPath('userData'), 'connections.json')
@@ -97,19 +101,61 @@ export function setMcpConfig(enabled: boolean, port: number): void {
   persist(s)
 }
 
-export async function getMcpToken(): Promise<string | null> {
-  const enc = load().mcp?.tokenEnc
+// ponytail: plaintext fallback — tokens only gate a localhost / LAN port, same trust level as the stats cache itself
+async function seal(secret: string): Promise<string> {
+  return (await encrypt(secret)) ?? `plain:${secret}`
+}
+
+async function unseal(enc: string | null | undefined): Promise<string | null> {
   if (!enc) return null
-  if (enc.startsWith('plain:')) return enc.slice(6)
-  return decrypt(enc)
+  return enc.startsWith('plain:') ? enc.slice(6) : decrypt(enc)
+}
+
+const newToken = (): string => randomBytes(32).toString('base64url')
+
+export async function getMcpToken(): Promise<string | null> {
+  return unseal(load().mcp?.tokenEnc)
 }
 
 export async function regenerateMcpToken(): Promise<string> {
-  const token = randomBytes(32).toString('base64url')
-  // ponytail: plaintext fallback — the token only gates a localhost port, same trust level as the stats cache itself
-  const tokenEnc = (await encrypt(token)) ?? `plain:${token}`
+  const token = newToken()
+  const tokenEnc = await seal(token)
   const s = load()
   s.mcp = { ...(s.mcp ?? MCP_DEFAULTS), tokenEnc }
   persist(s)
   return token
+}
+
+export function getConfigShareEnabled(): boolean {
+  return load().configShare?.enabled ?? false
+}
+
+export function setConfigShareEnabled(enabled: boolean): void {
+  const s = load()
+  s.configShare = { tokenEnc: null, ...s.configShare, enabled }
+  persist(s)
+}
+
+export async function getConfigShareToken(): Promise<string | null> {
+  return unseal(load().configShare?.tokenEnc)
+}
+
+export async function regenerateConfigShareToken(): Promise<string> {
+  const token = newToken()
+  const tokenEnc = await seal(token)
+  const s = load()
+  s.configShare = { enabled: false, ...s.configShare, tokenEnc }
+  persist(s)
+  return token
+}
+
+export async function getConfigRemoteCode(): Promise<string | null> {
+  return unseal(load().configRemote?.codeEnc)
+}
+
+export async function setConfigRemoteCode(code: string | null): Promise<void> {
+  const s = load()
+  if (code) s.configRemote = { codeEnc: await seal(code) }
+  else delete s.configRemote
+  persist(s)
 }

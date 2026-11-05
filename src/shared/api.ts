@@ -9,6 +9,8 @@ import type {
   IpcResult,
   LocalOpened,
   LocalSource,
+  ConfigMcpState,
+  ConfigRemoteInfo,
   McpActivity,
   McpState,
   Problem,
@@ -100,6 +102,16 @@ export interface Api {
     /** persists the config and starts/stops/restarts the server accordingly */
     configure(enabled: boolean, port: number): Promise<IpcResult<McpState>>
     regenerateToken(): Promise<IpcResult<McpState>>
+  }
+  configMcp: {
+    get(): Promise<IpcResult<ConfigMcpState>>
+    /** start/stop sharing this PC's Loxone Config MCP on the local network */
+    share(enabled: boolean): Promise<IpcResult<ConfigMcpState>>
+    /** new token → the old connection code stops working */
+    regenerate(): Promise<IpcResult<ConfigMcpState>>
+    /** tests a connection code (initialize + tools/list) and remembers it when it works */
+    connect(code: string): Promise<IpcResult<ConfigRemoteInfo>>
+    forget(): Promise<IpcResult<null>>
   }
   updates: {
     /** asks GitHub for the newest release; never rejects, latest is null when it failed */

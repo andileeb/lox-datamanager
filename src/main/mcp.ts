@@ -18,12 +18,15 @@ function sha256(s: string): Buffer {
   return createHash('sha256').update(s).digest()
 }
 
-async function authorized(req: IncomingMessage): Promise<boolean> {
-  const token = await store.getMcpToken()
-  if (!token) return false
+/** constant-time `Authorization: Bearer <token>` check (also used by config-share.ts) */
+export function bearerMatches(req: IncomingMessage, token: string | null): boolean {
   const header = req.headers.authorization
-  if (!header?.startsWith('Bearer ')) return false
+  if (!token || !header?.startsWith('Bearer ')) return false
   return timingSafeEqual(sha256(header.slice(7)), sha256(token))
+}
+
+async function authorized(req: IncomingMessage): Promise<boolean> {
+  return bearerMatches(req, await store.getMcpToken())
 }
 
 async function handleHttp(req: IncomingMessage, res: ServerResponse): Promise<void> {

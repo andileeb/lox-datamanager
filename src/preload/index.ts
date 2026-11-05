@@ -60,6 +60,13 @@ const api: Api = {
       ipcRenderer.invoke('mcp:configure', enabled, port),
     regenerateToken: () => ipcRenderer.invoke('mcp:regenerateToken')
   },
+  configMcp: {
+    get: () => ipcRenderer.invoke('configMcp:get'),
+    share: (enabled: boolean) => ipcRenderer.invoke('configMcp:share', enabled),
+    regenerate: () => ipcRenderer.invoke('configMcp:regenerate'),
+    connect: (code: string) => ipcRenderer.invoke('configMcp:connect', code),
+    forget: () => ipcRenderer.invoke('configMcp:forget')
+  },
   updates: {
     check: () => ipcRenderer.invoke('updates:check')
   },

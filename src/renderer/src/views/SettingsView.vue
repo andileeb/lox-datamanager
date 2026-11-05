@@ -12,7 +12,9 @@ import ToggleSwitch from 'primevue/toggleswitch'
 import { setLocale, type AppLocale } from '../i18n'
 import { isDark, toggleDark } from '../theme'
 import { formatDateTime, prefs } from '../prefs'
-import type { McpState, UpdateCheck } from '../../../shared/types'
+import { errorText } from '../i18n'
+import { connectionUrl, parseConnectionCode } from '../../../shared/config-mcp'
+import type { ConfigMcpState, ConfigRemoteInfo, McpState, UpdateCheck } from '../../../shared/types'
 
 const router = useRouter()
 const { t, locale } = useI18n()
@@ -53,7 +55,7 @@ const example = computed(() => {
 })
 
 const mcp = ref<McpState | null>(null)
-const copied = ref<'token' | 'snippet' | null>(null)
+const copied = ref<'token' | 'snippet' | 'code' | 'remoteSnippet' | null>(null)
 
 const appVersion: string = import.meta.env.APP_VERSION
 const update = ref<UpdateCheck | null>(null)
@@ -75,6 +77,11 @@ const updateStatus = computed(() => {
 onMounted(async () => {
   const r = await window.api.mcp.get()
   if (r.ok) mcp.value = r.data
+  await loadConfigMcp()
+  if (configMcp.value?.remoteCode) {
+    remoteInput.value = configMcp.value.remoteCode
+    void connectRemote()
+  }
   await checkUpdates()
 })
 
@@ -105,11 +112,8 @@ const mcpClients: { value: McpClient; label: string }[] = [
 ]
 const mcpClient = ref<McpClient>('claudeCode')
 
-const mcpSnippet = computed(() => {
-  if (!mcp.value) return ''
-  const { url } = mcp.value
-  const auth = `Bearer ${mcp.value.token ?? '<token>'}`
-  const name = 'lox-datamanager'
+function snippet(name: string, url: string, token: string | null): string {
+  const auth = `Bearer ${token ?? '<token>'}`
   const json = (o: unknown): string => JSON.stringify(o, null, 2)
   switch (mcpClient.value) {
     case 'claudeCode':
@@ -132,9 +136,63 @@ const mcpSnippet = computed(() => {
       return json({ servers: { [name]: { type: 'http', url, headers: { Authorization: auth } } } })
   }
   return ''
+}
+
+const mcpSnippet = computed(() =>
+  mcp.value ? snippet('lox-datamanager', mcp.value.url, mcp.value.token) : ''
+)
+
+// Loxone Config's MCP across computers: this PC shares it, or connects to another PC's share
+const configMcp = ref<ConfigMcpState | null>(null)
+const shareCode = ref<string | null>(null)
+const remoteInput = ref('')
+const remote = ref<ConfigRemoteInfo | null>(null)
+const remoteError = ref<string | null>(null)
+const connecting = ref(false)
+
+function setConfigMcp(s: ConfigMcpState): void {
+  configMcp.value = s
+  if (!shareCode.value || !s.codes.includes(shareCode.value)) shareCode.value = s.codes[0] ?? null
+}
+
+async function loadConfigMcp(): Promise<void> {
+  const r = await window.api.configMcp.get()
+  if (r.ok) setConfigMcp(r.data)
+}
+
+async function onShareToggle(): Promise<void> {
+  if (!configMcp.value) return
+  const r = await window.api.configMcp.share(configMcp.value.shareEnabled)
+  if (r.ok) setConfigMcp(r.data)
+}
+
+async function regenerateShare(): Promise<void> {
+  const r = await window.api.configMcp.regenerate()
+  if (r.ok) setConfigMcp(r.data)
+}
+
+async function connectRemote(): Promise<void> {
+  connecting.value = true
+  remoteError.value = null
+  const r = await window.api.configMcp.connect(remoteInput.value)
+  connecting.value = false
+  remote.value = r.ok ? r.data : null
+  if (!r.ok) remoteError.value = errorText(r.error)
+}
+
+async function forgetRemote(): Promise<void> {
+  await window.api.configMcp.forget()
+  remote.value = null
+  remoteError.value = null
+  remoteInput.value = ''
+}
+
+const remoteSnippet = computed(() => {
+  const c = remote.value && parseConnectionCode(remoteInput.value)
+  return c ? snippet('loxone-config', connectionUrl(c), c.token) : ''
 })
 
-async function copyText(text: string, which: 'token' | 'snippet'): Promise<void> {
+async function copyText(text: string, which: NonNullable<typeof copied.value>): Promise<void> {
   await navigator.clipboard.writeText(text)
   copied.value = which
   setTimeout(() => (copied.value = null), 1500)
@@ -290,6 +348,128 @@ async function copyText(text: string, which: 'token' | 'snippet'): Promise<void>
         </template>
         <p class="hint">{{ t('settings.mcpHint') }}</p>
       </template>
+
+      <template v-if="configMcp?.shareAvailable">
+        <h2>{{ t('settings.shareTitle') }}</h2>
+        <div class="row">
+          <label>{{ t('settings.shareEnable') }}</label>
+          <div class="mcp-status">
+            <ToggleSwitch v-model="configMcp.shareEnabled" @change="onShareToggle" />
+            <Tag
+              v-if="configMcp.error"
+              severity="danger"
+              :value="t('settings.mcpError', { error: configMcp.error })"
+            />
+            <Tag
+              v-else-if="configMcp.running && configMcp.configPort"
+              severity="success"
+              :value="t('settings.shareRunning')"
+            />
+            <Tag
+              v-else-if="configMcp.running"
+              severity="warn"
+              :value="t('settings.shareNoConfig')"
+            />
+            <Tag v-else severity="secondary" :value="t('settings.mcpStopped')" />
+            <Button
+              v-tooltip.top="t('settings.shareRecheck')"
+              icon="pi pi-refresh"
+              size="small"
+              severity="secondary"
+              text
+              rounded
+              :aria-label="t('settings.shareRecheck')"
+              @click="loadConfigMcp"
+            />
+          </div>
+        </div>
+        <div v-if="configMcp.running && shareCode" class="row">
+          <label>{{ t('settings.shareCode') }}</label>
+          <div class="mcp-token">
+            <!-- several network adapters: pick the address, Copy takes the whole code -->
+            <Select
+              v-if="configMcp.codes.length > 1"
+              v-model="shareCode"
+              :options="configMcp.codes"
+              :option-label="(c: string) => c.slice(0, c.lastIndexOf(':'))"
+            />
+            <InputText v-else :model-value="shareCode" readonly class="token-input" />
+            <Button
+              :label="copied === 'code' ? t('settings.mcpCopied') : t('settings.mcpCopy')"
+              size="small"
+              severity="secondary"
+              @click="copyText(shareCode, 'code')"
+            />
+            <Button
+              :label="t('settings.mcpRegenerate')"
+              size="small"
+              severity="secondary"
+              outlined
+              @click="regenerateShare"
+            />
+          </div>
+        </div>
+        <p class="hint">{{ t('settings.shareHint') }}</p>
+      </template>
+
+      <template v-if="configMcp">
+        <h2>{{ t('settings.remoteTitle') }}</h2>
+        <div class="row">
+          <label>{{ t('settings.shareCode') }}</label>
+          <div class="mcp-token">
+            <InputText
+              v-model="remoteInput"
+              :placeholder="t('settings.remotePlaceholder')"
+              class="token-input"
+              @keydown.enter="connectRemote"
+            />
+            <Button
+              :label="t('settings.remoteConnect')"
+              size="small"
+              :loading="connecting"
+              :disabled="!remoteInput.trim()"
+              @click="connectRemote"
+            />
+            <Button
+              v-if="configMcp.remoteCode || remote"
+              :label="t('settings.remoteForget')"
+              size="small"
+              severity="secondary"
+              outlined
+              @click="forgetRemote"
+            />
+          </div>
+        </div>
+        <Tag
+          v-if="remote"
+          class="remote-tag"
+          severity="success"
+          :value="t('settings.remoteConnected', remote)"
+        />
+        <Tag v-else-if="remoteError" class="remote-tag" severity="danger" :value="remoteError" />
+        <template v-if="remoteSnippet">
+          <div class="row">
+            <label>{{ t('settings.mcpClient') }}</label>
+            <Select
+              v-model="mcpClient"
+              :options="mcpClients"
+              option-label="label"
+              option-value="value"
+            />
+          </div>
+          <p class="hint">{{ t(`settings.mcpWhere.${mcpClient}`) }}</p>
+          <div class="mcp-snippet">
+            <pre>{{ remoteSnippet }}</pre>
+            <Button
+              :label="copied === 'remoteSnippet' ? t('settings.mcpCopied') : t('settings.mcpCopy')"
+              size="small"
+              severity="secondary"
+              @click="copyText(remoteSnippet, 'remoteSnippet')"
+            />
+          </div>
+        </template>
+        <p class="hint">{{ t('settings.remoteHint') }}</p>
+      </template>
     </div>
   </main>
 </template>
@@ -350,8 +530,19 @@ h2 {
 }
 .token-input {
   flex: 1;
+  min-width: 0;
   font-family: ui-monospace, Menlo, monospace;
   font-size: 0.85rem;
+}
+.mcp-token :deep(.p-button) {
+  flex-shrink: 0;
+}
+.mcp-token :deep(.p-select) {
+  flex: 1;
+  min-width: 0;
+}
+.remote-tag {
+  align-self: flex-start;
 }
 .mcp-snippet {
   display: flex;

@@ -107,6 +107,11 @@ export interface ApiError {
     | 'NO_PERMISSION'
     | 'PARSE_ERROR'
     | 'IO_ERROR'
+    | 'BAD_CONNECTION_CODE'
+    | 'MCP_AUTH_FAILED'
+    | 'MCP_NOT_LAN'
+    | 'MCP_UNREACHABLE'
+    | 'CONFIG_NOT_RUNNING'
     | 'UNKNOWN'
   message: string
 }
@@ -121,6 +126,28 @@ export interface McpState {
   running: boolean
   url: string
   error: string | null
+}
+
+/** Loxone Config MCP shared across computers (config-share.ts), for the Settings UI */
+export interface ConfigMcpState {
+  /** this computer can share (Loxone Config runs on Windows only) */
+  shareAvailable: boolean
+  shareEnabled: boolean
+  running: boolean
+  error: string | null
+  /** port Config's MCP listens on right now; null = Config or its MCP isn't running */
+  configPort: number | null
+  /** connection codes for the other computer, one per local-network address */
+  codes: string[]
+  /** code pasted on this computer to reach another one's Config */
+  remoteCode: string | null
+}
+
+/** what a shared Config MCP answered to initialize + tools/list */
+export interface ConfigRemoteInfo {
+  name: string
+  version: string
+  tools: number
 }
 
 /** result of the GitHub release check (notification only — the app never self-installs) */

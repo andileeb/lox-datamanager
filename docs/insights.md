@@ -81,6 +81,7 @@ in Config and test it in the simulation before saving to the Miniserver. Setup s
 in Loxone Config's MCP Server dialog and the
 [Config changelog](https://www.loxone.com/enen/support/changelog-config/) /
 [public beta changelog](https://www.loxone.com/enen/support/loxone-config-public-beta/).
+Config on another PC than your AI app: see [Loxone Config from another computer](loxone-config-mcp.md).
 
 ## Privacy
 

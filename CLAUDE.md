@@ -67,6 +67,15 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     events tell the renderer to refresh (EditorView shows a reload banner —
     last-save-wins, no merging). Lifecycle: start on app ready if enabled,
     `mcp:configure` IPC restarts, `EADDRINUSE` lands in `McpState.error`.
+  - `config-share.ts` — Loxone Config's MCP across computers. Sharing side (Windows): token-gated
+    HTTP proxy on all interfaces, port 12010, LAN peers only (`isLanAddress`), forwards to Config's
+    own MCP with `Host: 127.0.0.1:<port>` (Config 403s any other Host; it has no auth). Config's
+    port changes per start → `detectConfigPort()` = `tasklist` PID of `LoxoneConfigMcpServer.exe`
+    + `netstat` listener (localized output, parsers in `shared/config-mcp.ts`), re-detected when
+    the cached port refuses. Other side: `testRemote()` (SDK client, initialize + tools/list) for a
+    pasted connection code `<host>:<port>/<token>`; Settings then shows the client snippet.
+    `LDM_CONFIG_MCP_PORT` fakes a Config MCP (enables sharing off Windows), `LDM_CONFIG_SHARE_PORT`
+    moves 12010 (tests only). docs/loxone-config-mcp.md.
   - `updates.ts` — release-notification only, **no Electron imports** (takes the
     current version as an argument, so it unit-tests). One `fetch` of GitHub's
     `/releases/latest` per launch; every failure (offline, 403 rate-limit, no
@@ -198,3 +207,11 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
   (`LDM_MCP_PORT` moves the MCP port when the installed app holds 12009). **Never** real data,
   hosts, tokens or the real profile in docs images; quit the real app first (port 12009).
 - Before a release run `docs/e2e-checklist.md` against a real Gen 2 Miniserver.
+
+## Docs & wiki
+
+User docs live in `docs/` (index `docs/guide.md`). The GitHub wiki is **generated** from them by
+`.github/workflows/wiki.yml` → `scripts/wiki-sync.mts` on every push to main touching `docs/`
+(guide → Home, pages named after their `# Title`, links rewritten, `e2e-checklist.md` left out).
+Never edit the wiki directly — it is overwritten. Try locally:
+`git clone https://github.com/andileeb/lox-datamanager.wiki.git /tmp/w && node scripts/wiki-sync.mts docs /tmp/w`.
