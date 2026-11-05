@@ -79,7 +79,9 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
   - `claude-clients.ts` — Settings "Add to Claude": merges our servers (`lox-datamanager` when the
     MCP server is on, `loxone-config` when a remote code is stored) into `~/.claude.json` (Claude Code,
     user scope) and `<appData>/Claude/claude_desktop_config.json` (via `npx mcp-remote`); pure merge +
-    status (current/outdated/missing) in `shared/mcp-clients.ts`. An unparseable file is never
+    status (current/outdated/missing) in `shared/mcp-clients.ts`. `sync()` rewrites the entries in every
+    Claude app that already has one of ours after a token / port / connection-code change (never adds
+    us on its own; Forget drops `loxone-config`). An unparseable file is never
     overwritten (`CLIENT_CONFIG_UNREADABLE`). `LDM_CLAUDE_CONFIG_DIR` redirects both files — tests and
     screenshots must set it so they never touch the real Claude config.
   - `updates.ts` — release-notification only, **no Electron imports** (takes the
@@ -105,7 +107,7 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
   grid + problems panel) and Months (`/months/<uuid[_n]>`, read-only stitched chart of
   all months of one control + per-month summary; clicks open the editor with `?row=`), Dashboard
   (`/dashboard`: `insights:energy` / `insights:profile` IPC → `energyOverview()` / `controlProfile()`
-  exported from mcp-tools.ts, the same functions behind `energy_overview` / `get_usage_profile`), plus Settings (Cmd/Ctrl+, or gear icon). Router guard:
+  exported from mcp-tools.ts, the same functions behind `energy_overview` / `get_usage_profile`), plus Settings (Cmd/Ctrl+, or gear icon; tabs General / AI, `?tab=ai` opens AI — the dashboard's "Ask Claude" links there). Router guard:
   everything except `/connect` and `/settings` needs a connection.
 - **i18n**: en + de catalogs in `renderer/src/locales/` (`de.ts` is typed
   `typeof en` so missing keys fail typecheck). ALL user-facing strings go

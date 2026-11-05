@@ -8,7 +8,13 @@ import { app } from 'electron'
 import { existsSync, readFileSync, renameSync, writeFileSync } from 'fs'
 import { homedir } from 'os'
 import { dirname, join } from 'path'
-import { addServers, serverStatus, type ClaudeClient } from '../shared/mcp-clients'
+import {
+  addServers,
+  hasOurServers,
+  OUR_SERVERS,
+  serverStatus,
+  type ClaudeClient
+} from '../shared/mcp-clients'
 import type { ClaudeSetup } from '../shared/types'
 import { CodedError } from './stats-service'
 
@@ -38,16 +44,34 @@ export function setup(entries: (client: ClaudeClient) => Record<string, object>)
   }))
 }
 
+/** our names that are not in `entries` any more (Loxone Config forgotten) leave the file too */
 export function add(client: ClaudeClient, entries: Record<string, object>): void {
   if (!CLIENTS.includes(client)) throw new Error(`unknown client ${client}`)
   const file = configFile(client)
   let text: string
   try {
-    text = addServers(read(file), entries)
+    text = addServers(
+      read(file),
+      entries,
+      OUR_SERVERS.filter((n) => n !== 'lox-datamanager' && !(n in entries))
+    )
   } catch {
     throw new CodedError('CLIENT_CONFIG_UNREADABLE', `${file} is not valid JSON`)
   }
   // write next to it + rename: Claude never sees a half-written file
   writeFileSync(`${file}.ldm-tmp`, text)
   renameSync(`${file}.ldm-tmp`, file)
+}
+
+/** after a new token / connection code: rewrite the entries in every Claude app we were added
+ *  to, so the user never has to click Update. Never adds us to an app on its own. */
+export function sync(entries: (client: ClaudeClient) => Record<string, object>): void {
+  for (const client of CLIENTS.filter(installed)) {
+    if (!hasOurServers(read(configFile(client)))) continue
+    try {
+      add(client, entries(client))
+    } catch {
+      // unreadable file → Settings shows the error when the user clicks Add
+    }
+  }
 }

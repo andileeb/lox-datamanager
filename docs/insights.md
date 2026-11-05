@@ -9,13 +9,13 @@ and cover months at once. Everything it uses for this is read-only.
 
 ## Set it up
 
-1. **Settings** → **MCP server** → enable it.
-2. **Claude Code or Claude Desktop**: under **Add to Claude**, click **Add**. The app writes
-   the entry into Claude's settings — no copying. Start a new Claude Code session or reopen
-   Claude Desktop (it needs [Node.js](https://nodejs.org) for the connection). After
-   **Regenerate** the status shows _Old token_ — click **Update**.
-   Other AI apps: pick one under **Connect** and copy the snippet (Cursor, VS Code — where to
-   put it is shown above the snippet). Apps that support MCP over HTTP work with the same URL
+1. Open **Settings → AI** (or **Ask Claude** on the dashboard).
+2. Click **Add** next to Claude Code or Claude Desktop. The app switches _AI access_ on and
+   writes the entry into Claude's settings — no copying. Start a new Claude Code session or
+   reopen Claude Desktop (it needs [Node.js](https://nodejs.org) for the connection). When the
+   token or a connection code changes later, the app updates Claude's settings by itself.
+   Other AI apps (Cursor, VS Code, …): open **Other AI apps & advanced** and copy the snippet —
+   where to put it is shown above it. Apps that support MCP over HTTP work with the same URL
    and token.
 3. Connect to your Miniserver in the app (or open downloaded stats offline).
 

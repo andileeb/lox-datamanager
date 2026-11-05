@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addServers, clientEntry, serverStatus } from '../src/shared/mcp-clients'
+import { addServers, clientEntry, hasOurServers, serverStatus } from '../src/shared/mcp-clients'
 
 const url = 'http://127.0.0.1:12009/mcp'
 const entry = clientEntry('claudeCode', url, 'tok')
@@ -26,6 +26,10 @@ describe('addServers', () => {
       mcpServers: { other: { x: 1 }, a: entry }
     })
   })
+  it('removes the given names', () => {
+    const old = JSON.stringify({ mcpServers: { a: entry, b: entry } })
+    expect(JSON.parse(addServers(old, { a: entry }, ['b']))).toEqual({ mcpServers: { a: entry } })
+  })
   it('refuses a file it cannot read', () => {
     expect(() => addServers('{broken', { a: entry })).toThrow()
     expect(() => addServers('[1]', { a: entry })).toThrow()
@@ -43,5 +47,14 @@ describe('serverStatus', () => {
   })
   it('an unreadable file counts as missing', () => {
     expect(serverStatus('{broken', { a: entry })).toEqual({ a: 'missing' })
+  })
+})
+
+describe('hasOurServers', () => {
+  it('only when one of our names is there', () => {
+    expect(hasOurServers(JSON.stringify({ mcpServers: { 'loxone-config': {} } }))).toBe(true)
+    expect(hasOurServers(JSON.stringify({ mcpServers: { other: {} } }))).toBe(false)
+    expect(hasOurServers(null)).toBe(false)
+    expect(hasOurServers('{broken')).toBe(false)
   })
 })

@@ -176,6 +176,8 @@ const de: typeof en = {
     empty: 'Für diesen Baustein sind keine Monate heruntergeladen.'
   },
   dashboard: {
+    ask: 'Claude fragen',
+    askTip: 'Claude nach dem Warum fragen — einrichten unter Einstellungen → KI',
     title: 'Dashboard',
     months: '{n} Monate',
     loading: 'Wird berechnet… fehlende Monate werden vom Miniserver geladen (nur lesend).',
@@ -224,17 +226,20 @@ const de: typeof en = {
     example: 'Beispiel: {example}',
     shortcutHint:
       'Diese Einstellungen sind jederzeit mit Cmd+, (macOS) bzw. Strg+, (Windows) erreichbar.',
-    mcpTitle: 'MCP-Server',
-    mcpEnable: 'Aktivieren',
+    tabGeneral: 'Allgemein',
+    tabAi: 'KI',
+    aiIntro:
+      'Frag Claude zu deinen Statistiken — Verbrauch, Standby, Automatisierungsideen — und lass es auf Wunsch an deinem Loxone-Config-Projekt arbeiten.',
+    mcpEnable: 'KI-Zugriff',
     mcpPort: 'Port',
     mcpToken: 'Token',
     mcpCopy: 'Kopieren',
     mcpCopied: 'Kopiert',
     mcpRegenerate: 'Neu erzeugen',
-    mcpRunning: 'Läuft — {url}',
-    mcpStopped: 'Gestoppt',
+    mcpRunning: 'An',
+    mcpStopped: 'Aus',
     mcpError: 'Start fehlgeschlagen: {error}',
-    mcpClient: 'Verbinden',
+    mcpClient: 'App',
     mcpWhere: {
       claudeCode: 'Im Terminal ausführen:',
       claudeDesktop:
@@ -243,9 +248,8 @@ const de: typeof en = {
       vscode: 'In .vscode/mcp.json einfügen, oder „MCP: Open User Configuration“ ausführen:'
     },
     mcpHint:
-      'Erlaubt MCP-Clients (Claude Code, Claude Desktop, …), Statistiken über diese App anzusehen und zu bearbeiten. ' +
-      'Jeder Client mit Streamable HTTP funktioniert mit dieser URL und diesem Token. ' +
-      'Der Server läuft nur, solange die App geöffnet ist.',
+      'Lox DataManager ist ein MCP-Server unter {url}. Jede KI-App mit MCP über HTTP funktioniert mit dieser URL und diesem Token. ' +
+      'Er läuft nur, solange Lox DataManager geöffnet ist.',
     shareTitle: 'Loxone Config freigeben',
     shareEnable: 'Im lokalen Netzwerk freigeben',
     shareRunning: 'Freigegeben — Loxone Config gefunden',
@@ -262,9 +266,9 @@ const de: typeof en = {
     remoteForget: 'Vergessen',
     remoteConnected: 'Verbunden — {name} {version}, {tools} Tools',
     remoteHint:
-      'Dein KI-Client arbeitet dann am Projekt, das in Loxone Config auf diesem PC geöffnet ist. ' +
+      'Claude arbeitet dann am Projekt, das in Loxone Config auf diesem PC geöffnet ist; oben hinzugefügte Claude-Apps bekommen es automatisch. ' +
       'Änderungen landen in Config: Dort prüfst du sie, machst sie rückgängig oder speicherst sie.',
-    claudeTitle: 'Zu Claude hinzufügen',
+    claudeTitle: 'Claude',
     claudeStatus: { current: 'Hinzugefügt', outdated: 'Alter Token', missing: 'Nicht hinzugefügt' },
     claudeAdd: 'Hinzufügen',
     claudeUpdate: 'Aktualisieren',
@@ -273,8 +277,25 @@ const de: typeof en = {
       claudeDesktop: 'Hinzugefügt — beende Claude Desktop und öffne es neu (braucht Node.js).'
     },
     claudeHint:
-      'Trägt {servers} für dich in die Einstellungen der Claude-App ein — ohne Kopieren. ' +
-      'Nach „Neu erzeugen“ oder einem neuen Verbindungscode auf „Aktualisieren“ klicken.'
+      '„Hinzufügen“ trägt Lox DataManager in die Einstellungen von Claude ein — ohne Kopieren. Ändern sich Token oder Verbindungscode, wird der Eintrag automatisch angepasst. ' +
+      'Claude erreicht es nur, solange diese App geöffnet ist.',
+    claudeNotFound:
+      'Weder Claude Code noch Claude Desktop wurde auf diesem Computer gefunden. Installiere eins:',
+    configTitle: 'Loxone Config (optional)',
+    configIntro:
+      'Loxone Config ab 17.3 hat einen eigenen MCP-Server. Hier verbunden, kann Claude dein Projekt lesen und — nach deiner Freigabe — ändern.',
+    tryTitle: 'Claude fragen',
+    prompts: {
+      'energy-report': 'wo und wann Strom verbraucht wird, die größten Sparhebel',
+      'automation-ideas': 'Automatisierungen aus deinen Verbrauchsmustern',
+      'what-to-buy': 'PV, Speicher oder Wärmepumpe passend zu deinem Profil',
+      'improve-config':
+        'von deinen Daten zu einer Änderung in Loxone Config — fragt vor jeder Änderung',
+      'fix-statistics': 'Lücken und falsche Werte finden und reparieren'
+    },
+    tryHint:
+      'Claude Code: /mcp__lox-datamanager__energy-report (usw.) eingeben. Claude Desktop: Menü + → Lox DataManager. Oder einfach fragen, z. B. „Was läuft nachts?“',
+    advancedTitle: 'Andere KI-Apps & Erweitert'
   },
   update: {
     version: 'Version',

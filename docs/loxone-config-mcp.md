@@ -16,7 +16,7 @@ You need Lox DataManager on **both** computers, in the same local network.
 ## On the PC with Loxone Config
 
 1. In Loxone Config, open your project and enable the **MCP Server** in the title bar.
-2. In Lox DataManager, open **Settings → Share Loxone Config** and switch on
+2. In Lox DataManager, open **Settings → AI → Share Loxone Config** and switch on
    **Share on local network**. The status shows _Loxone Config found_ once Config's MCP
    server is running. Config picks a new port each time it starts; the app finds it by itself.
 3. If Windows asks whether to allow Lox DataManager on the network, allow **private
@@ -28,14 +28,16 @@ Keep Lox DataManager and Loxone Config open on this PC while you work.
 
 ## On your other computer
 
-1. In Lox DataManager, open **Settings → Loxone Config on another computer**, paste the code
+1. In Lox DataManager, open **Settings → AI → Loxone Config on another computer**, paste the code
    and click **Connect**. It shows the Config version and number of tools when it works.
-2. Under **Add to Claude**, click **Add** next to Claude Code or Claude Desktop. The app
+2. Under **Claude** (same tab), click **Add** next to Claude Code or Claude Desktop. The app
    writes both servers into Claude's settings: `lox-datamanager` for your statistics and
    `loxone-config` for the project. Start a new Claude Code session or reopen Claude Desktop.
-   For other AI apps pick one under **Connect** and copy the snippet instead.
+   If you added Claude before, it gets `loxone-config` automatically. For other AI apps,
+   **Other AI apps & advanced** has the snippet.
 
-When the code changes (Regenerate on the PC, new address), connect again and click **Update**.
+When the code changes (Regenerate on the PC, new address), paste the new one and click
+**Connect** — Claude's settings follow by themselves.
 
 ## Try it
 

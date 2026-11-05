@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
+import Panel from 'primevue/panel'
 import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
+import Tab from 'primevue/tab'
+import TabList from 'primevue/tablist'
+import TabPanel from 'primevue/tabpanel'
+import TabPanels from 'primevue/tabpanels'
+import Tabs from 'primevue/tabs'
 import Tag from 'primevue/tag'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { setLocale, type AppLocale } from '../i18n'
@@ -24,7 +30,14 @@ import type {
 } from '../../../shared/types'
 
 const router = useRouter()
+const route = useRoute()
 const { t, locale } = useI18n()
+
+// ?tab=ai opens the AI tab directly (e.g. from the dashboard)
+const tab = computed({
+  get: () => (route.query.tab === 'ai' ? 'ai' : 'general'),
+  set: (v: string) => void router.replace({ query: { ...route.query, tab: v } })
+})
 
 const localeModel = computed({
   get: () => locale.value as AppLocale,
@@ -62,7 +75,7 @@ const example = computed(() => {
 })
 
 const mcp = ref<McpState | null>(null)
-const copied = ref<'token' | 'snippet' | 'code' | 'remoteSnippet' | null>(null)
+const copied = ref<'token' | 'snippet' | 'code' | null>(null)
 
 const appVersion: string = import.meta.env.APP_VERSION
 const update = ref<UpdateCheck | null>(null)
@@ -120,27 +133,46 @@ const mcpClients: { value: McpClient; label: string }[] = [
   { value: 'cursor', label: 'Cursor' },
   { value: 'vscode', label: 'VS Code' }
 ]
-const mcpClient = ref<McpClient>('claudeCode')
+const mcpClient = ref<McpClient>('cursor')
 
-function snippet(name: string, url: string, token: string | null): string {
-  const auth = `Bearer ${token ?? '<token>'}`
+interface Server {
+  name: string
+  url: string
+  token: string
+}
+
+/** by-hand setup for apps "Add to Claude" doesn't cover — every server in one snippet */
+function snippet(list: Server[]): string {
   const json = (o: unknown): string => JSON.stringify(o, null, 2)
+  const map = (f: (s: Server) => object): Record<string, object> =>
+    Object.fromEntries(list.map((s) => [s.name, f(s)]))
+  const headers = (s: Server): object => ({ Authorization: `Bearer ${s.token}` })
   switch (mcpClient.value) {
     case 'claudeCode':
-      return `claude mcp add --transport http ${name} ${url} --header "Authorization: ${auth}"`
+      return list
+        .map(
+          (s) =>
+            `claude mcp add --scope user --transport http ${s.name} ${s.url} --header "Authorization: Bearer ${s.token}"`
+        )
+        .join('\n')
     case 'claudeDesktop':
-      return json({ mcpServers: { [name]: clientEntry('claudeDesktop', url, token ?? '<token>') } })
+      return json({ mcpServers: map((s) => clientEntry('claudeDesktop', s.url, s.token)) })
     case 'cursor':
-      return json({ mcpServers: { [name]: { url, headers: { Authorization: auth } } } })
+      return json({ mcpServers: map((s) => ({ url: s.url, headers: headers(s) })) })
     case 'vscode':
-      return json({ servers: { [name]: { type: 'http', url, headers: { Authorization: auth } } } })
+      return json({ servers: map((s) => ({ type: 'http', url: s.url, headers: headers(s) })) })
   }
   return ''
 }
 
-const mcpSnippet = computed(() =>
-  mcp.value ? snippet('lox-datamanager', mcp.value.url, mcp.value.token) : ''
-)
+const mcpSnippet = computed(() => {
+  const list: Server[] = []
+  if (mcp.value?.token)
+    list.push({ name: 'lox-datamanager', url: mcp.value.url, token: mcp.value.token })
+  const c = remote.value && parseConnectionCode(remoteInput.value)
+  if (c) list.push({ name: 'loxone-config', url: connectionUrl(c), token: c.token })
+  return list.length ? snippet(list) : ''
+})
 
 // Loxone Config's MCP across computers: this PC shares it, or connects to another PC's share
 const configMcp = ref<ConfigMcpState | null>(null)
@@ -196,7 +228,7 @@ const claudeError = ref<string | null>(null)
 
 async function loadClaude(): Promise<void> {
   const r = await window.api.claude.get()
-  if (r.ok) claudeApps.value = r.data.filter((c) => Object.keys(c.servers).length)
+  if (r.ok) claudeApps.value = r.data
 }
 
 /** current = every server there and up to date; outdated = one has an old token/URL */
@@ -211,23 +243,28 @@ function claudeStatus(c: ClaudeSetup): 'current' | 'outdated' | 'missing' {
 
 async function addToClaude(client: ClaudeClient): Promise<void> {
   claudeError.value = null
+  // adding Claude means "let Claude in" → switch the server on instead of asking for it first
+  if (mcp.value && !mcp.value.enabled) await configureMcp(true, mcp.value.port)
   const r = await window.api.claude.add(client)
   if (r.ok) {
-    claudeApps.value = r.data.filter((c) => Object.keys(c.servers).length)
+    claudeApps.value = r.data
     claudeAdded.value = client
   } else claudeError.value = errorText(r.error)
 }
-
-const remoteSnippet = computed(() => {
-  const c = remote.value && parseConnectionCode(remoteInput.value)
-  return c ? snippet('loxone-config', connectionUrl(c), c.token) : ''
-})
 
 async function copyText(text: string, which: NonNullable<typeof copied.value>): Promise<void> {
   await navigator.clipboard.writeText(text)
   copied.value = which
   setTimeout(() => (copied.value = null), 1500)
 }
+
+const prompts = [
+  'energy-report',
+  'automation-ideas',
+  'what-to-buy',
+  'improve-config',
+  'fix-statistics'
+]
 </script>
 
 <template>
@@ -245,288 +282,316 @@ async function copyText(text: string, which: NonNullable<typeof copied.value>): 
         <h1>{{ t('settings.title') }}</h1>
       </div>
 
-      <div class="row">
-        <label>{{ t('settings.language') }}</label>
-        <Select
-          v-model="localeModel"
-          :options="languageOptions"
-          option-label="label"
-          option-value="value"
-        />
-      </div>
+      <Tabs v-model:value="tab">
+        <TabList>
+          <Tab value="general">{{ t('settings.tabGeneral') }}</Tab>
+          <Tab value="ai"><i class="pi pi-sparkles" /> {{ t('settings.tabAi') }}</Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel value="general">
+            <div class="tab">
+              <div class="row">
+                <label>{{ t('settings.language') }}</label>
+                <Select
+                  v-model="localeModel"
+                  :options="languageOptions"
+                  option-label="label"
+                  option-value="value"
+                />
+              </div>
 
-      <div class="row">
-        <label>{{ t('settings.theme') }}</label>
-        <SelectButton
-          v-model="themeModel"
-          :options="themeOptions"
-          option-label="label"
-          option-value="value"
-          :allow-empty="false"
-        />
-      </div>
+              <div class="row">
+                <label>{{ t('settings.theme') }}</label>
+                <SelectButton
+                  v-model="themeModel"
+                  :options="themeOptions"
+                  option-label="label"
+                  option-value="value"
+                  :allow-empty="false"
+                />
+              </div>
 
-      <div class="row">
-        <label>{{ t('settings.dateFormat') }}</label>
-        <Select
-          v-model="prefs.dateFormat"
-          :options="dateFormatOptions"
-          option-label="label"
-          option-value="value"
-        />
-      </div>
+              <div class="row">
+                <label>{{ t('settings.dateFormat') }}</label>
+                <Select
+                  v-model="prefs.dateFormat"
+                  :options="dateFormatOptions"
+                  option-label="label"
+                  option-value="value"
+                />
+              </div>
 
-      <div class="row">
-        <label>{{ t('settings.timeFormat') }}</label>
-        <SelectButton
-          v-model="prefs.timeFormat"
-          :options="timeFormatOptions"
-          option-label="label"
-          option-value="value"
-          :allow-empty="false"
-        />
-      </div>
+              <div class="row">
+                <label>{{ t('settings.timeFormat') }}</label>
+                <SelectButton
+                  v-model="prefs.timeFormat"
+                  :options="timeFormatOptions"
+                  option-label="label"
+                  option-value="value"
+                  :allow-empty="false"
+                />
+              </div>
 
-      <p class="example">{{ t('settings.example', { example }) }}</p>
-      <p class="hint">{{ t('settings.shortcutHint') }}</p>
+              <p class="example">{{ t('settings.example', { example }) }}</p>
+              <p class="hint">{{ t('settings.shortcutHint') }}</p>
 
-      <p>{{ t('update.version') }} {{ appVersion }}</p>
-      <div class="update">
-        <Button
-          :label="checking ? t('update.checking') : t('update.check')"
-          size="small"
-          severity="secondary"
-          outlined
-          :disabled="checking"
-          @click="checkUpdates"
-        />
-        <a v-if="update?.updateAvailable" :href="update.url" target="_blank">
-          {{ updateStatus }}
-        </a>
-        <span v-else class="hint">{{ updateStatus }}</span>
-      </div>
+              <p>{{ t('update.version') }} {{ appVersion }}</p>
+              <div class="update">
+                <Button
+                  :label="checking ? t('update.checking') : t('update.check')"
+                  size="small"
+                  severity="secondary"
+                  outlined
+                  :disabled="checking"
+                  @click="checkUpdates"
+                />
+                <a v-if="update?.updateAvailable" :href="update.url" target="_blank">
+                  {{ updateStatus }}
+                </a>
+                <span v-else class="hint">{{ updateStatus }}</span>
+              </div>
+            </div>
+          </TabPanel>
 
-      <template v-if="mcp">
-        <h2>{{ t('settings.mcpTitle') }}</h2>
-        <div class="row">
-          <label>{{ t('settings.mcpEnable') }}</label>
-          <div class="mcp-status">
-            <ToggleSwitch v-model="mcp.enabled" @change="onMcpToggle" />
-            <Tag
-              v-if="mcp.error"
-              severity="danger"
-              :value="t('settings.mcpError', { error: mcp.error })"
-            />
-            <Tag
-              v-else-if="mcp.running"
-              severity="success"
-              :value="t('settings.mcpRunning', { url: mcp.url })"
-            />
-            <Tag v-else severity="secondary" :value="t('settings.mcpStopped')" />
-          </div>
-        </div>
-        <div class="row">
-          <label>{{ t('settings.mcpPort') }}</label>
-          <InputNumber
-            v-model="mcp.port"
-            :min="1024"
-            :max="65535"
-            :use-grouping="false"
-            :disabled="mcp.enabled"
-            @blur="onMcpPortBlur"
-          />
-        </div>
-        <div class="row">
-          <label>{{ t('settings.mcpToken') }}</label>
-          <div class="mcp-token">
-            <InputText :model-value="mcp.token ?? ''" readonly class="token-input" />
-            <Button
-              :label="copied === 'token' ? t('settings.mcpCopied') : t('settings.mcpCopy')"
-              size="small"
-              severity="secondary"
-              :disabled="!mcp.token"
-              @click="copyText(mcp.token ?? '', 'token')"
-            />
-            <Button
-              :label="t('settings.mcpRegenerate')"
-              size="small"
-              severity="secondary"
-              outlined
-              @click="regenerateToken"
-            />
-          </div>
-        </div>
-        <template v-if="mcp.enabled && mcp.token">
-          <div class="row">
-            <label>{{ t('settings.mcpClient') }}</label>
-            <Select
-              v-model="mcpClient"
-              :options="mcpClients"
-              option-label="label"
-              option-value="value"
-            />
-          </div>
-          <p class="hint">{{ t(`settings.mcpWhere.${mcpClient}`) }}</p>
-          <div class="mcp-snippet">
-            <pre>{{ mcpSnippet }}</pre>
-            <Button
-              :label="copied === 'snippet' ? t('settings.mcpCopied') : t('settings.mcpCopy')"
-              size="small"
-              severity="secondary"
-              @click="copyText(mcpSnippet, 'snippet')"
-            />
-          </div>
-        </template>
-        <p class="hint">{{ t('settings.mcpHint') }}</p>
-      </template>
+          <TabPanel v-if="mcp" value="ai">
+            <div class="tab">
+              <p class="intro">{{ t('settings.aiIntro') }}</p>
 
-      <template v-if="configMcp?.shareAvailable">
-        <h2>{{ t('settings.shareTitle') }}</h2>
-        <div class="row">
-          <label>{{ t('settings.shareEnable') }}</label>
-          <div class="mcp-status">
-            <ToggleSwitch v-model="configMcp.shareEnabled" @change="onShareToggle" />
-            <Tag
-              v-if="configMcp.error"
-              severity="danger"
-              :value="t('settings.mcpError', { error: configMcp.error })"
-            />
-            <Tag
-              v-else-if="configMcp.running && configMcp.configPort"
-              severity="success"
-              :value="t('settings.shareRunning')"
-            />
-            <Tag
-              v-else-if="configMcp.running"
-              severity="warn"
-              :value="t('settings.shareNoConfig')"
-            />
-            <Tag v-else severity="secondary" :value="t('settings.mcpStopped')" />
-            <Button
-              v-tooltip.top="t('settings.shareRecheck')"
-              icon="pi pi-refresh"
-              size="small"
-              severity="secondary"
-              text
-              rounded
-              :aria-label="t('settings.shareRecheck')"
-              @click="loadConfigMcp"
-            />
-          </div>
-        </div>
-        <div v-if="configMcp.running && shareCode" class="row">
-          <label>{{ t('settings.shareCode') }}</label>
-          <div class="mcp-token">
-            <!-- several network adapters: pick the address, Copy takes the whole code -->
-            <Select
-              v-if="configMcp.codes.length > 1"
-              v-model="shareCode"
-              :options="configMcp.codes"
-              :option-label="(c: string) => c.slice(0, c.lastIndexOf(':'))"
-            />
-            <InputText v-else :model-value="shareCode" readonly class="token-input" />
-            <Button
-              :label="copied === 'code' ? t('settings.mcpCopied') : t('settings.mcpCopy')"
-              size="small"
-              severity="secondary"
-              @click="copyText(shareCode, 'code')"
-            />
-            <Button
-              :label="t('settings.mcpRegenerate')"
-              size="small"
-              severity="secondary"
-              outlined
-              @click="regenerateShare"
-            />
-          </div>
-        </div>
-        <p class="hint">{{ t('settings.shareHint') }}</p>
-      </template>
+              <!-- 1: Claude — the one thing most users need -->
+              <h2>{{ t('settings.claudeTitle') }}</h2>
+              <div v-for="c in claudeApps" :key="c.client" class="row">
+                <label>{{ mcpClients.find((m) => m.value === c.client)?.label }}</label>
+                <div class="mcp-status">
+                  <Tag
+                    :severity="claudeStatus(c) === 'current' ? 'success' : 'secondary'"
+                    :value="t(`settings.claudeStatus.${claudeStatus(c)}`)"
+                  />
+                  <Button
+                    v-if="claudeStatus(c) !== 'current'"
+                    :label="
+                      t(
+                        claudeStatus(c) === 'outdated'
+                          ? 'settings.claudeUpdate'
+                          : 'settings.claudeAdd'
+                      )
+                    "
+                    size="small"
+                    @click="addToClaude(c.client)"
+                  />
+                </div>
+              </div>
+              <p v-if="!claudeApps.length" class="hint">
+                {{ t('settings.claudeNotFound') }}
+                <a href="https://claude.ai/download" target="_blank">claude.ai/download</a>
+              </p>
+              <div class="row">
+                <label>{{ t('settings.mcpEnable') }}</label>
+                <div class="mcp-status">
+                  <ToggleSwitch v-model="mcp.enabled" @change="onMcpToggle" />
+                  <Tag
+                    v-if="mcp.error"
+                    severity="danger"
+                    :value="t('settings.mcpError', { error: mcp.error })"
+                  />
+                  <Tag
+                    v-else-if="mcp.running"
+                    severity="success"
+                    :value="t('settings.mcpRunning')"
+                  />
+                  <Tag v-else severity="secondary" :value="t('settings.mcpStopped')" />
+                </div>
+              </div>
+              <p class="hint">{{ t('settings.claudeHint') }}</p>
+              <Tag v-if="claudeError" class="remote-tag" severity="danger" :value="claudeError" />
+              <p v-else-if="claudeAdded" class="hint">
+                {{ t(`settings.claudeRestart.${claudeAdded}`) }}
+              </p>
 
-      <template v-if="configMcp">
-        <h2>{{ t('settings.remoteTitle') }}</h2>
-        <div class="row">
-          <label>{{ t('settings.shareCode') }}</label>
-          <div class="mcp-token">
-            <InputText
-              v-model="remoteInput"
-              :placeholder="t('settings.remotePlaceholder')"
-              class="token-input"
-              @keydown.enter="connectRemote"
-            />
-            <Button
-              :label="t('settings.remoteConnect')"
-              size="small"
-              :loading="connecting"
-              :disabled="!remoteInput.trim()"
-              @click="connectRemote"
-            />
-            <Button
-              v-if="configMcp.remoteCode || remote"
-              :label="t('settings.remoteForget')"
-              size="small"
-              severity="secondary"
-              outlined
-              @click="forgetRemote"
-            />
-          </div>
-        </div>
-        <Tag
-          v-if="remote"
-          class="remote-tag"
-          severity="success"
-          :value="t('settings.remoteConnected', remote)"
-        />
-        <Tag v-else-if="remoteError" class="remote-tag" severity="danger" :value="remoteError" />
-        <template v-if="remoteSnippet">
-          <div class="row">
-            <label>{{ t('settings.mcpClient') }}</label>
-            <Select
-              v-model="mcpClient"
-              :options="mcpClients"
-              option-label="label"
-              option-value="value"
-            />
-          </div>
-          <p class="hint">{{ t(`settings.mcpWhere.${mcpClient}`) }}</p>
-          <div class="mcp-snippet">
-            <pre>{{ remoteSnippet }}</pre>
-            <Button
-              :label="copied === 'remoteSnippet' ? t('settings.mcpCopied') : t('settings.mcpCopy')"
-              size="small"
-              severity="secondary"
-              @click="copyText(remoteSnippet, 'remoteSnippet')"
-            />
-          </div>
-        </template>
-        <p class="hint">{{ t('settings.remoteHint') }}</p>
-      </template>
+              <!-- 2: Loxone Config (optional) -->
+              <template v-if="configMcp">
+                <h2>{{ t('settings.configTitle') }}</h2>
+                <p class="hint">{{ t('settings.configIntro') }}</p>
 
-      <template v-if="claudeApps.length">
-        <h2>{{ t('settings.claudeTitle') }}</h2>
-        <div v-for="c in claudeApps" :key="c.client" class="row">
-          <label>{{ mcpClients.find((m) => m.value === c.client)?.label }}</label>
-          <div class="mcp-status">
-            <Tag
-              :severity="claudeStatus(c) === 'current' ? 'success' : 'secondary'"
-              :value="t(`settings.claudeStatus.${claudeStatus(c)}`)"
-            />
-            <Button
-              v-if="claudeStatus(c) !== 'current'"
-              :label="
-                t(claudeStatus(c) === 'outdated' ? 'settings.claudeUpdate' : 'settings.claudeAdd')
-              "
-              size="small"
-              @click="addToClaude(c.client)"
-            />
-          </div>
-        </div>
-        <Tag v-if="claudeError" class="remote-tag" severity="danger" :value="claudeError" />
-        <p v-else-if="claudeAdded" class="hint">{{ t(`settings.claudeRestart.${claudeAdded}`) }}</p>
-        <p class="hint">
-          {{ t('settings.claudeHint', { servers: Object.keys(claudeApps[0].servers).join(', ') }) }}
-        </p>
-      </template>
+                <template v-if="configMcp.shareAvailable">
+                  <h3>{{ t('settings.shareTitle') }}</h3>
+                  <div class="row">
+                    <label>{{ t('settings.shareEnable') }}</label>
+                    <div class="mcp-status">
+                      <ToggleSwitch v-model="configMcp.shareEnabled" @change="onShareToggle" />
+                      <Tag
+                        v-if="configMcp.error"
+                        severity="danger"
+                        :value="t('settings.mcpError', { error: configMcp.error })"
+                      />
+                      <Tag
+                        v-else-if="configMcp.running && configMcp.configPort"
+                        severity="success"
+                        :value="t('settings.shareRunning')"
+                      />
+                      <Tag
+                        v-else-if="configMcp.running"
+                        severity="warn"
+                        :value="t('settings.shareNoConfig')"
+                      />
+                      <Tag v-else severity="secondary" :value="t('settings.mcpStopped')" />
+                      <Button
+                        v-tooltip.top="t('settings.shareRecheck')"
+                        icon="pi pi-refresh"
+                        size="small"
+                        severity="secondary"
+                        text
+                        rounded
+                        :aria-label="t('settings.shareRecheck')"
+                        @click="loadConfigMcp"
+                      />
+                    </div>
+                  </div>
+                  <div v-if="configMcp.running && shareCode" class="row">
+                    <label>{{ t('settings.shareCode') }}</label>
+                    <div class="mcp-token">
+                      <!-- several network adapters: pick the address, Copy takes the whole code -->
+                      <Select
+                        v-if="configMcp.codes.length > 1"
+                        v-model="shareCode"
+                        :options="configMcp.codes"
+                        :option-label="(c: string) => c.slice(0, c.lastIndexOf(':'))"
+                      />
+                      <InputText v-else :model-value="shareCode" readonly class="token-input" />
+                      <Button
+                        :label="copied === 'code' ? t('settings.mcpCopied') : t('settings.mcpCopy')"
+                        size="small"
+                        severity="secondary"
+                        @click="copyText(shareCode, 'code')"
+                      />
+                      <Button
+                        :label="t('settings.mcpRegenerate')"
+                        size="small"
+                        severity="secondary"
+                        outlined
+                        @click="regenerateShare"
+                      />
+                    </div>
+                  </div>
+                  <p class="hint">{{ t('settings.shareHint') }}</p>
+                </template>
+
+                <h3>{{ t('settings.remoteTitle') }}</h3>
+                <div class="row">
+                  <label>{{ t('settings.shareCode') }}</label>
+                  <div class="mcp-token">
+                    <InputText
+                      v-model="remoteInput"
+                      :placeholder="t('settings.remotePlaceholder')"
+                      class="token-input"
+                      @keydown.enter="connectRemote"
+                    />
+                    <Button
+                      :label="t('settings.remoteConnect')"
+                      size="small"
+                      :loading="connecting"
+                      :disabled="!remoteInput.trim()"
+                      @click="connectRemote"
+                    />
+                    <Button
+                      v-if="configMcp.remoteCode || remote"
+                      :label="t('settings.remoteForget')"
+                      size="small"
+                      severity="secondary"
+                      outlined
+                      @click="forgetRemote"
+                    />
+                  </div>
+                </div>
+                <Tag
+                  v-if="remote"
+                  class="remote-tag"
+                  severity="success"
+                  :value="t('settings.remoteConnected', remote)"
+                />
+                <Tag
+                  v-else-if="remoteError"
+                  class="remote-tag"
+                  severity="danger"
+                  :value="remoteError"
+                />
+                <p class="hint">{{ t('settings.remoteHint') }}</p>
+              </template>
+
+              <!-- 3: what to ask -->
+              <h2>{{ t('settings.tryTitle') }}</h2>
+              <ul class="prompts">
+                <li v-for="p in prompts" :key="p">
+                  <code>{{ p }}</code> — {{ t(`settings.prompts.${p}`) }}
+                </li>
+              </ul>
+              <p class="hint">{{ t('settings.tryHint') }}</p>
+
+              <!-- 4: everything else, folded away -->
+              <Panel :header="t('settings.advancedTitle')" toggleable collapsed class="advanced">
+                <div class="tab">
+                  <div class="row">
+                    <label>{{ t('settings.mcpPort') }}</label>
+                    <InputNumber
+                      v-model="mcp.port"
+                      :min="1024"
+                      :max="65535"
+                      :use-grouping="false"
+                      :disabled="mcp.enabled"
+                      @blur="onMcpPortBlur"
+                    />
+                  </div>
+                  <div class="row">
+                    <label>{{ t('settings.mcpToken') }}</label>
+                    <div class="mcp-token">
+                      <InputText :model-value="mcp.token ?? ''" readonly class="token-input" />
+                      <Button
+                        :label="
+                          copied === 'token' ? t('settings.mcpCopied') : t('settings.mcpCopy')
+                        "
+                        size="small"
+                        severity="secondary"
+                        :disabled="!mcp.token"
+                        @click="copyText(mcp.token ?? '', 'token')"
+                      />
+                      <Button
+                        :label="t('settings.mcpRegenerate')"
+                        size="small"
+                        severity="secondary"
+                        outlined
+                        @click="regenerateToken"
+                      />
+                    </div>
+                  </div>
+                  <template v-if="mcpSnippet">
+                    <div class="row">
+                      <label>{{ t('settings.mcpClient') }}</label>
+                      <Select
+                        v-model="mcpClient"
+                        :options="mcpClients"
+                        option-label="label"
+                        option-value="value"
+                      />
+                    </div>
+                    <p class="hint">{{ t(`settings.mcpWhere.${mcpClient}`) }}</p>
+                    <div class="mcp-snippet">
+                      <pre>{{ mcpSnippet }}</pre>
+                      <Button
+                        :label="
+                          copied === 'snippet' ? t('settings.mcpCopied') : t('settings.mcpCopy')
+                        "
+                        size="small"
+                        severity="secondary"
+                        @click="copyText(mcpSnippet, 'snippet')"
+                      />
+                    </div>
+                  </template>
+                  <p class="hint">{{ t('settings.mcpHint', { url: mcp.url }) }}</p>
+                </div>
+              </Panel>
+            </div>
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
     </div>
   </main>
 </template>
@@ -550,7 +615,7 @@ async function copyText(text: string, which: NonNullable<typeof copied.value>): 
 }
 .row {
   display: grid;
-  grid-template-columns: 10rem 1fr;
+  grid-template-columns: 10rem minmax(0, 1fr);
   align-items: center;
   gap: 0.75rem;
 }
@@ -570,6 +635,28 @@ async function copyText(text: string, which: NonNullable<typeof copied.value>): 
 h2 {
   margin: 1rem 0 0;
   font-size: 1.1rem;
+}
+h3 {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+}
+.tab {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.intro {
+  margin: 0;
+}
+.prompts {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.advanced {
+  margin-top: 1rem;
 }
 .mcp-status,
 .mcp-token {

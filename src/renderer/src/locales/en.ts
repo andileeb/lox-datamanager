@@ -172,6 +172,8 @@ export default {
     empty: 'No months downloaded for this control.'
   },
   dashboard: {
+    ask: 'Ask Claude',
+    askTip: 'Ask Claude why — set it up in Settings → AI',
     title: 'Dashboard',
     months: '{n} months',
     loading: 'Calculating… missing months are downloaded from the Miniserver (read-only).',
@@ -219,17 +221,20 @@ export default {
     time12: '12-hour (AM/PM)',
     example: 'Example: {example}',
     shortcutHint: 'Open these settings anytime with Cmd+, (macOS) or Ctrl+, (Windows).',
-    mcpTitle: 'MCP server',
-    mcpEnable: 'Enable',
+    tabGeneral: 'General',
+    tabAi: 'AI',
+    aiIntro:
+      'Ask Claude about your statistics — consumption, standby, automation ideas — and, optionally, let it work on your Loxone Config project.',
+    mcpEnable: 'AI access',
     mcpPort: 'Port',
     mcpToken: 'Token',
     mcpCopy: 'Copy',
     mcpCopied: 'Copied',
     mcpRegenerate: 'Regenerate',
-    mcpRunning: 'Running — {url}',
-    mcpStopped: 'Stopped',
+    mcpRunning: 'On',
+    mcpStopped: 'Off',
     mcpError: 'Failed to start: {error}',
-    mcpClient: 'Connect',
+    mcpClient: 'App',
     mcpWhere: {
       claudeCode: 'Run in a terminal:',
       claudeDesktop:
@@ -238,9 +243,8 @@ export default {
       vscode: 'Merge into .vscode/mcp.json, or run "MCP: Open User Configuration":'
     },
     mcpHint:
-      'Lets MCP clients (Claude Code, Claude Desktop, …) view and edit statistics through this app. ' +
-      'Any client supporting Streamable HTTP works with this URL and token. ' +
-      'The server only runs while the app is open.',
+      'Lox DataManager is an MCP server at {url}. Any AI app supporting MCP over HTTP works with this URL and token. ' +
+      'It only runs while Lox DataManager is open.',
     shareTitle: 'Share Loxone Config',
     shareEnable: 'Share on local network',
     shareRunning: 'Sharing — Loxone Config found',
@@ -257,9 +261,9 @@ export default {
     remoteForget: 'Forget',
     remoteConnected: 'Connected — {name} {version}, {tools} tools',
     remoteHint:
-      'Your AI client then works on the project open in Loxone Config on that PC. ' +
+      'Claude then works on the project open in Loxone Config on that PC; Claude apps added above get it automatically. ' +
       'Changes land in Config, where you review, undo or save them.',
-    claudeTitle: 'Add to Claude',
+    claudeTitle: 'Claude',
     claudeStatus: { current: 'Added', outdated: 'Old token', missing: 'Not added' },
     claudeAdd: 'Add',
     claudeUpdate: 'Update',
@@ -268,8 +272,25 @@ export default {
       claudeDesktop: 'Added — quit and reopen Claude Desktop to use it (needs Node.js).'
     },
     claudeHint:
-      'Writes {servers} into the Claude app’s settings for you — no copying. ' +
-      'After Regenerate or a new connection code, click Update.'
+      'Add puts Lox DataManager into Claude’s settings — no copying. It stays up to date when the token or connection code changes. ' +
+      'Claude can only reach it while this app is open.',
+    claudeNotFound:
+      'Neither Claude Code nor Claude Desktop was found on this computer. Install one:',
+    configTitle: 'Loxone Config (optional)',
+    configIntro:
+      'Loxone Config 17.3+ has its own MCP server. Connected here, Claude can read your project and — after you approve — change it.',
+    tryTitle: 'Ask Claude',
+    prompts: {
+      'energy-report': 'where and when electricity is used, biggest savings levers',
+      'automation-ideas': 'automations derived from your usage patterns',
+      'what-to-buy': 'PV, battery or heat pump sizing from your profile',
+      'improve-config':
+        'from your data to a change in Loxone Config — asks before changing anything',
+      'fix-statistics': 'find and repair gaps and wrong values'
+    },
+    tryHint:
+      'Claude Code: type /mcp__lox-datamanager__energy-report (etc.). Claude Desktop: + menu → Lox DataManager. Or just ask, e.g. “what runs at night?”',
+    advancedTitle: 'Other AI apps & advanced'
   },
   update: {
     version: 'Version',

@@ -35,11 +35,29 @@ function servers(o: Record<string, unknown>): Record<string, unknown> {
   return s && typeof s === 'object' && !Array.isArray(s) ? (s as Record<string, unknown>) : {}
 }
 
-/** sets mcpServers[name] for every entry, keeps everything else in the file */
-export function addServers(text: string | null, entries: Record<string, object>): string {
+/** sets mcpServers[name] for every entry, drops the `remove` names, keeps everything else */
+export function addServers(
+  text: string | null,
+  entries: Record<string, object>,
+  remove: string[] = []
+): string {
   const o = parse(text)
-  o.mcpServers = { ...servers(o), ...entries }
+  const s = { ...servers(o), ...entries }
+  for (const name of remove) delete s[name]
+  o.mcpServers = s
   return JSON.stringify(o, null, 2) + '\n'
+}
+
+/** names "Add to Claude" writes — a client that has one of them is kept in sync */
+export const OUR_SERVERS = ['lox-datamanager', 'loxone-config']
+
+/** true when the file already has one of our servers (= the user added us before) */
+export function hasOurServers(text: string | null): boolean {
+  try {
+    return OUR_SERVERS.some((n) => n in servers(parse(text)))
+  } catch {
+    return false
+  }
 }
 
 export function serverStatus(

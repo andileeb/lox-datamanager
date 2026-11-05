@@ -109,7 +109,7 @@ Claude (or any MCP client) to find and fix problems, or where your electricity g
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/settings-dark.png">
-  <img src="docs/images/settings-light.png" alt="Settings with the MCP server enabled" width="640">
+  <img src="docs/images/settings-light.png" alt="Settings, AI tab: add Lox DataManager to Claude in one click" width="640">
 </picture>
 
 <sub>All screenshots and the tour show generated demo data (`pnpm run screenshots`, `pnpm run showcase`).</sub>
@@ -226,15 +226,15 @@ can view **and edit** statistics — connect, list files, summarize and validate
 fill gaps, apply formulas, edit records, save, and upload (Loxone's official MCP
 server is read-only; this one can write, because it uses the app's FTP path).
 
-1. Open **Settings** (gear icon or Cmd/Ctrl+,) → **MCP server** → enable it.
-2. **Claude Code / Claude Desktop**: click **Add** under **Settings → Add to Claude** — the app
+1. Open **Settings** (gear icon or Cmd/Ctrl+,) → **AI**, or **Ask Claude** on the dashboard.
+2. Click **Add** next to Claude Code or Claude Desktop. The app switches its MCP server on and
    writes the entry into Claude's settings (Claude Desktop also needs Node.js). Start a new
    Claude Code session or reopen Claude Desktop.
-   Other apps (Cursor, VS Code, …): pick it under **Connect** and copy the snippet, e.g. for
-   Claude Code by hand:
+   Other apps (Cursor, VS Code, …): **Other AI apps & advanced** has the snippet to copy, e.g.
+   for Claude Code by hand:
 
    ```sh
-   claude mcp add --transport http lox-datamanager http://127.0.0.1:12009/mcp \
+   claude mcp add --scope user --transport http lox-datamanager http://127.0.0.1:12009/mcp \
      --header "Authorization: Bearer <token>"
    ```
 
@@ -247,7 +247,7 @@ server is read-only; this one can write, because it uses the app's FTP path).
    go through your client's tool-approval prompt.
 
 The server listens on `127.0.0.1` only and runs while the app is open. The token can
-be regenerated anytime in Settings.
+be regenerated anytime in Settings; Claude apps added with **Add** get the new one automatically.
 
 ## License
 

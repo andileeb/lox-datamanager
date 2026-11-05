@@ -345,7 +345,7 @@ async function capture(dark: boolean): Promise<void> {
     await page.locator('.heatmap').waitFor({ timeout: 60000 })
     await shot('dashboard')
 
-    await page.evaluate(() => (location.hash = '#/settings'))
+    await page.evaluate(() => (location.hash = '#/settings?tab=ai'))
     await shot('settings')
   } finally {
     await app.close()

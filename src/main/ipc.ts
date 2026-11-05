@@ -216,10 +216,12 @@ export function registerIpc(): void {
   handle('mcp:configure', async (enabled: boolean, port: number) => {
     store.setMcpConfig(enabled, port)
     await mcp.start() // reads the stored config; stops when disabled
+    if (enabled) claude.sync(await claudeEntries()) // the port may have changed
     return mcpState()
   })
   handle('mcp:regenerateToken', async () => {
     await store.regenerateMcpToken()
+    claude.sync(await claudeEntries())
     return mcpState()
   })
 
@@ -251,22 +253,23 @@ export function registerIpc(): void {
   handle('configMcp:connect', async (code: string) => {
     const info = await configShare.testRemote(code)
     await store.setConfigRemoteCode(code.trim())
+    claude.sync(await claudeEntries())
     return info
   })
   handle('configMcp:forget', async () => {
     await store.setConfigRemoteCode(null)
+    claude.sync(await claudeEntries())
     return null
   })
 
-  // what "Add to Claude" writes: this app's server when it's on, Loxone Config's when connected
+  // what "Add to Claude" writes: this app's server, Loxone Config's when connected
   const claudeEntries = async (): Promise<(client: ClaudeClient) => Record<string, object>> => {
-    const { enabled, port } = store.getMcpConfig()
-    const token = enabled ? await store.getMcpToken() : null
+    const { port } = store.getMcpConfig()
+    // the entry is written even while the server is off — Settings switches it on with "Add"
+    const token = (await store.getMcpToken()) ?? (await store.regenerateMcpToken())
     const remote = parseConnectionCode((await store.getConfigRemoteCode()) ?? '')
     return (client) => ({
-      ...(token && {
-        'lox-datamanager': clientEntry(client, `http://127.0.0.1:${port}/mcp`, token)
-      }),
+      'lox-datamanager': clientEntry(client, `http://127.0.0.1:${port}/mcp`, token),
       ...(remote && { 'loxone-config': clientEntry(client, connectionUrl(remote), remote.token) })
     })
   }
