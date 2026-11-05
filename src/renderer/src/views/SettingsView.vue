@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
@@ -103,8 +103,11 @@ onMounted(async () => {
     void connectRemote()
   }
   await loadClaude()
+  // back from Claude Desktop's install dialog → show "Added"
+  window.addEventListener('focus', loadClaude)
   await checkUpdates()
 })
+onBeforeUnmount(() => window.removeEventListener('focus', loadClaude))
 
 async function configureMcp(enabled: boolean, port: number): Promise<void> {
   const r = await window.api.mcp.configure(enabled, port)

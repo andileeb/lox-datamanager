@@ -130,8 +130,10 @@ async function addToClaude(): Promise<void> {
     <template v-else>
       <span>
         <i class="pi pi-check"></i>
-        {{ t('banner.added', { apps: added.map(label).join(t('banner.and')) }) }}
-        {{ added.includes('claudeDesktop') ? t('banner.needsNode') : '' }}
+        <template v-if="added.includes('claudeCode')">
+          {{ t('banner.added', { apps: 'Claude Code' }) }}
+        </template>
+        {{ added.includes('claudeDesktop') ? t('banner.confirmDesktop') : '' }}
       </span>
       <Button
         icon="pi pi-times"

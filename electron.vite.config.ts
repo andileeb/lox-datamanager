@@ -4,7 +4,14 @@ import vue from '@vitejs/plugin-vue'
 import pkg from './package.json'
 
 export default defineConfig({
-  main: {},
+  main: {
+    build: {
+      rollupOptions: {
+        // bridge.js goes into the Claude Desktop extension (main/claude-clients.ts) — self-contained
+        input: { index: resolve('src/main/index.ts'), bridge: resolve('src/bridge/index.ts') }
+      }
+    }
+  },
   preload: {},
   renderer: {
     // shown in Settings without waiting for the (network) update check

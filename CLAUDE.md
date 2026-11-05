@@ -78,12 +78,19 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     moves 12010 (tests only). docs/loxone-config-mcp.md.
   - `claude-clients.ts` — Settings "Add to Claude": merges our servers (`lox-datamanager` when the
     MCP server is on, `loxone-config` when a remote code is stored) into `~/.claude.json` (Claude Code,
-    user scope) and `<appData>/Claude/claude_desktop_config.json` (via `npx mcp-remote`); pure merge +
-    status (current/outdated/missing) in `shared/mcp-clients.ts`. `sync()` rewrites the entries in every
-    Claude app that already has one of ours after a token / port / connection-code change (never adds
-    us on its own; Forget drops `loxone-config`). An unparseable file is never
-    overwritten (`CLIENT_CONFIG_UNREADABLE`). `LDM_CLAUDE_CONFIG_DIR` redirects both files — tests and
-    screenshots must set it so they never touch the real Claude config.
+    user scope); Claude Desktop gets one **extension** (.mcpb, zipped with fflate, opened with
+    `shell.openPath` → Claude's install dialog) per server. Its `server/bridge.js` is `src/bridge`
+    (second electron-vite main input, node built-ins only): stdio ↔ POST to our HTTP server, address +
+    token read per message from `userData/mcp-bridge.json` (0600, `refreshBridge()` once one of our
+    extensions is installed), so Regenerate/port changes never need a reinstall. Measured in Claude
+    Desktop 4.16: `server.type: node` + `command: node` and **no** `compatibility.runtimes.node` → it
+    runs on Claude's built-in Node (`isUsingBuiltInNodeForMcp`, default on) — users need no Node.js.
+    Installed = a `Claude Extensions/*/manifest.json` with our name (folder names are Claude's ids).
+    Old `mcp-remote` entries in claude_desktop_config.json are removed on install. Pure merge, status
+    and `extensionManifest()` in `shared/mcp-clients.ts`; `sync()` rewrites Claude Code's entries after a
+    token / port / connection-code change (never adds us on its own; Forget drops `loxone-config`).
+    An unparseable file is never overwritten (`CLIENT_CONFIG_UNREADABLE`). `LDM_CLAUDE_CONFIG_DIR`
+    redirects all Claude files and skips opening Claude Desktop — tests and screenshots must set it.
   - `updates.ts` — release-notification only, **no Electron imports** (takes the
     current version as an argument, so it unit-tests). One `fetch` of GitHub's
     `/releases/latest` per launch; every failure (offline, 403 rate-limit, no

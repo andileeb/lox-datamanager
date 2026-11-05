@@ -227,9 +227,9 @@ fill gaps, apply formulas, edit records, save, and upload (Loxone's official MCP
 server is read-only; this one can write, because it uses the app's FTP path).
 
 1. Open **Settings** (gear icon or Cmd/Ctrl+,) → **AI**, or **Ask Claude** on the dashboard.
-2. Click **Add** next to Claude Code or Claude Desktop. The app switches its MCP server on and
-   writes the entry into Claude's settings (Claude Desktop also needs Node.js). Start a new
-   Claude Code session or reopen Claude Desktop.
+2. Click **Add** next to Claude Code or Claude Desktop. The app switches its MCP server on;
+   for Claude Code it writes the entry into Claude's settings (start a new session), Claude
+   Desktop shows its own install dialog for the Lox DataManager extension — click **Install**.
    Other apps (Cursor, VS Code, …): **Other AI apps & advanced** has the snippet to copy, e.g.
    for Claude Code by hand:
 

@@ -6,6 +6,9 @@
 
 export type ClaudeClient = 'claudeCode' | 'claudeDesktop'
 
+/** address + token of each server we hand to Claude, by server name */
+export type Servers = Record<string, { url: string; token: string }>
+
 /** missing = not in the file, outdated = there with another URL/token */
 export type ServerStatus = 'missing' | 'current' | 'outdated'
 
@@ -80,4 +83,43 @@ export function serverStatus(
           : 'outdated'
     ])
   )
+}
+
+const EXTENSION_TEXT: Record<string, { title: string; description: string }> = {
+  'lox-datamanager': {
+    title: 'Lox DataManager',
+    description:
+      'Your Loxone Miniserver statistics: energy, usage profiles, standby, gaps — read and repair.'
+  },
+  'loxone-config': {
+    title: 'Loxone Config (via Lox DataManager)',
+    description: 'The project open in Loxone Config, shared from another computer on your network.'
+  }
+}
+
+/** manifest.json of the Claude Desktop extension for one server. server.type node + command
+ *  "node" and *no* compatibility.runtimes.node = Claude Desktop runs it on its built-in Node
+ *  (measured in Claude Desktop 4.16: a node range there may send it looking for a system Node) */
+export function extensionManifest(name: string, version: string, bridgeConfig: string): object {
+  const text = EXTENSION_TEXT[name] ?? { title: name, description: name }
+  return {
+    manifest_version: '0.3',
+    name,
+    display_name: text.title,
+    version,
+    description: text.description,
+    author: { name: 'Lox DataManager', url: 'https://github.com/andileeb/lox-datamanager' },
+    homepage: 'https://github.com/andileeb/lox-datamanager',
+    icon: 'icon.png',
+    server: {
+      type: 'node',
+      entry_point: 'server/bridge.js',
+      mcp_config: {
+        command: 'node',
+        args: ['${__dirname}/server/bridge.js'],
+        env: { LDM_BRIDGE_CONFIG: bridgeConfig, LDM_BRIDGE_SERVER: name }
+      }
+    },
+    compatibility: { platforms: ['darwin', 'win32'] }
+  }
 }

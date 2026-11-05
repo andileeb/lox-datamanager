@@ -114,6 +114,7 @@ export interface ApiError {
     | 'MCP_UNREACHABLE'
     | 'CONFIG_NOT_RUNNING'
     | 'CLIENT_CONFIG_UNREADABLE'
+    | 'EXTENSION_OPEN_FAILED'
     | 'UNKNOWN'
   message: string
 }

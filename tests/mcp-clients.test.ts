@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { addServers, clientEntry, hasOurServers, serverStatus } from '../src/shared/mcp-clients'
+import {
+  addServers,
+  clientEntry,
+  extensionManifest,
+  hasOurServers,
+  serverStatus
+} from '../src/shared/mcp-clients'
 
 const url = 'http://127.0.0.1:12009/mcp'
 const entry = clientEntry('claudeCode', url, 'tok')
@@ -56,5 +62,25 @@ describe('hasOurServers', () => {
     expect(hasOurServers(JSON.stringify({ mcpServers: { other: {} } }))).toBe(false)
     expect(hasOurServers(null)).toBe(false)
     expect(hasOurServers('{broken')).toBe(false)
+  })
+})
+
+describe('extensionManifest', () => {
+  it('runs the bridge on Claude Desktop’s built-in Node and points it at the config file', () => {
+    const m = extensionManifest('lox-datamanager', '0.12.0', '/data/mcp-bridge.json') as {
+      name: string
+      server: { type: string; mcp_config: { command: string; args: string[]; env: object } }
+      compatibility: { runtimes?: object }
+    }
+    expect(m.name).toBe('lox-datamanager')
+    expect(m.server.type).toBe('node')
+    expect(m.server.mcp_config.command).toBe('node')
+    expect(m.server.mcp_config.args).toEqual(['${__dirname}/server/bridge.js'])
+    expect(m.server.mcp_config.env).toEqual({
+      LDM_BRIDGE_CONFIG: '/data/mcp-bridge.json',
+      LDM_BRIDGE_SERVER: 'lox-datamanager'
+    })
+    // a node version range here can make Claude Desktop look for a system Node instead
+    expect(m.compatibility.runtimes).toBeUndefined()
   })
 })

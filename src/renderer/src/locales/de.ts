@@ -274,7 +274,8 @@ const de: typeof en = {
     claudeUpdate: 'Aktualisieren',
     claudeRestart: {
       claudeCode: 'Hinzugefügt — starte eine neue Claude-Code-Sitzung, um es zu nutzen.',
-      claudeDesktop: 'Hinzugefügt — beende Claude Desktop und öffne es neu (braucht Node.js).'
+      claudeDesktop:
+        'Claude Desktop zeigt einen Installationsdialog — klicke dort auf „Installieren“.'
     },
     claudeHint:
       '„Hinzufügen“ trägt Lox DataManager in die Einstellungen von Claude ein — ohne Kopieren. Ändern sich Token oder Verbindungscode, wird der Eintrag automatisch angepasst. ' +
@@ -298,8 +299,9 @@ const de: typeof en = {
     advancedTitle: 'Andere KI-Apps & Erweitert'
   },
   banner: {
-    added: 'Zu {apps} hinzugefügt — starte Claude neu, um es zu nutzen.',
-    needsNode: 'Claude Desktop braucht Node.js.',
+    added: 'Zu {apps} hinzugefügt — starte eine neue Claude-Sitzung, um es zu nutzen.',
+    confirmDesktop:
+      'Claude Desktop zeigt einen Installationsdialog — klicke dort auf „Installieren“.',
     claudeOffer: 'Deine Statistiken in {apps} nutzen?',
     and: ' und ',
     notNow: 'Nicht jetzt',
@@ -332,6 +334,8 @@ const de: typeof en = {
     MCP_UNREACHABLE:
       'Der PC antwortet nicht — ist Lox DataManager dort geöffnet und freigegeben, und sind beide im selben Netzwerk?',
     CONFIG_NOT_RUNNING: 'PC erreicht, aber Loxone Config oder sein MCP-Server läuft dort nicht',
+    EXTENSION_OPEN_FAILED:
+      'Claude Desktop hat die Erweiterung nicht geöffnet — doppelklicke die Datei im eben geöffneten Ordner',
     CLIENT_CONFIG_UNREADABLE:
       'Die Einstellungsdatei der Claude-App ist nicht lesbar — repariere oder entferne sie, oder kopiere stattdessen das Snippet'
   }

@@ -32,7 +32,8 @@ Keep Lox DataManager and Loxone Config open on this PC while you work.
    and click **Connect**. It shows the Config version and number of tools when it works.
 2. Under **Claude** (same tab), click **Add** next to Claude Code or Claude Desktop. The app
    writes both servers into Claude's settings: `lox-datamanager` for your statistics and
-   `loxone-config` for the project. Start a new Claude Code session or reopen Claude Desktop.
+   `loxone-config` for the project. Start a new Claude Code session; Claude Desktop asks to
+   install each one as an extension — click **Install** twice.
    If you added Claude before, it gets `loxone-config` automatically. For other AI apps,
    **Other AI apps & advanced** has the snippet.
 

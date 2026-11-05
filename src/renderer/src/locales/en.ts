@@ -269,7 +269,7 @@ export default {
     claudeUpdate: 'Update',
     claudeRestart: {
       claudeCode: 'Added — start a new Claude Code session to use it.',
-      claudeDesktop: 'Added — quit and reopen Claude Desktop to use it (needs Node.js).'
+      claudeDesktop: 'Claude Desktop shows an install dialog — click Install there.'
     },
     claudeHint:
       'Add puts Lox DataManager into Claude’s settings — no copying. It stays up to date when the token or connection code changes. ' +
@@ -293,8 +293,8 @@ export default {
     advancedTitle: 'Other AI apps & advanced'
   },
   banner: {
-    added: 'Added to {apps} — restart Claude to use it.',
-    needsNode: 'Claude Desktop needs Node.js.',
+    added: 'Added to {apps} — start a new Claude session to use it.',
+    confirmDesktop: 'Claude Desktop shows an install dialog — click Install there.',
     claudeOffer: 'Use your statistics in {apps}?',
     and: ' and ',
     notNow: 'Not now',
@@ -327,6 +327,8 @@ export default {
     MCP_UNREACHABLE:
       'The PC did not answer — is Lox DataManager open there with sharing on, and are both on the same network?',
     CONFIG_NOT_RUNNING: 'Reached the PC, but Loxone Config or its MCP server is not running there',
+    EXTENSION_OPEN_FAILED:
+      'Claude Desktop did not open the extension — double-click the file in the folder that just opened',
     CLIENT_CONFIG_UNREADABLE:
       'The Claude app’s settings file could not be read — fix or remove it, or copy the snippet instead'
   }

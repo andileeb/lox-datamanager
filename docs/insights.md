@@ -10,13 +10,16 @@ and cover months at once. Everything it uses for this is read-only.
 ## Set it up
 
 When Lox DataManager finds Claude Code or Claude Desktop on your computer, it offers this
-once at the bottom of the window: click **Add** and you're done (restart Claude). Otherwise:
+once at the bottom of the window: click **Add** and you're done. Otherwise:
 
 1. Open **Settings → AI** (or **Ask Claude** on the dashboard).
-2. Click **Add** next to Claude Code or Claude Desktop. The app switches _AI access_ on and
-   writes the entry into Claude's settings — no copying. Start a new Claude Code session or
-   reopen Claude Desktop (it needs [Node.js](https://nodejs.org) for the connection). When the
-   token or a connection code changes later, the app updates Claude's settings by itself.
+2. Click **Add** next to Claude Code or Claude Desktop. The app switches _AI access_ on.
+   - **Claude Code**: the entry goes into Claude Code's settings — start a new session.
+   - **Claude Desktop**: Claude Desktop opens its install dialog for the _Lox DataManager_
+     extension — click **Install**. Nothing else is needed (no Node.js). You find it later under
+     Claude Desktop → Settings → Extensions, where you can switch it off or remove it.
+
+   When the token or a connection code changes later, both keep working by themselves.
    Other AI apps (Cursor, VS Code, …): open **Other AI apps & advanced** and copy the snippet —
    where to put it is shown above it. Apps that support MCP over HTTP work with the same URL
    and token.
