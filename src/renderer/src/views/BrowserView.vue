@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
@@ -198,6 +198,17 @@ function onKeydown(e: KeyboardEvent): void {
   }
 }
 
+// Miniserver briefly away (e.g. restarting after an upload) → the list tries again by itself;
+// every failed attempt clears and re-sets the error, which schedules the next one
+const retrying = computed(
+  () => !conn.offline && ['FTP_REFUSED', 'FTP_TIMEOUT'].includes(files.error?.code ?? '')
+)
+let retryTimer: ReturnType<typeof setTimeout> | undefined
+watch(retrying, (on) => {
+  clearTimeout(retryTimer)
+  if (on) retryTimer = setTimeout(() => !files.transfer && files.refresh(), 10_000)
+})
+
 let unsubscribe: (() => void) | null = null
 onMounted(async () => {
   window.addEventListener('keydown', onKeydown)
@@ -213,6 +224,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown)
   files.listUi.scrollTop = scrollContainer()?.scrollTop ?? 0
   unsubscribe?.()
+  clearTimeout(retryTimer)
 })
 </script>
 
@@ -311,6 +323,7 @@ onBeforeUnmount(() => {
 
     <Message v-if="files.error" severity="error" :closable="false">
       {{ errorText(files.error) }}
+      <template v-if="retrying">— {{ t('browser.retrying') }}</template>
     </Message>
 
     <div v-if="files.transfer" class="transfer">

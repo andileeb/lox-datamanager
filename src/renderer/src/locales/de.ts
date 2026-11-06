@@ -21,12 +21,16 @@ const de: typeof en = {
     cachedHost: '{name} · 1 Datei | {name} · {n} Dateien',
     openFolder: 'Ordner öffnen…',
     openFiles: 'Dateien öffnen…',
+    removeSaved: 'Gespeicherte Verbindung entfernen',
+    offlineCopy:
+      'Offline mit der heruntergeladenen Datei arbeiten | Offline mit den {n} heruntergeladenen Dateien arbeiten',
     connect: 'Verbinden',
     cancel: 'Verbindungsversuch abbrechen',
     ftpHint:
       '<b>Ist FTP am Miniserver aktiviert?</b> Seit Firmware 16.1 ist der FTP-Server standardmäßig deaktiviert. In Loxone Config in den Netzwerkeinstellungen des Miniservers FTP auf „Aktiviert" oder „Aktiviert – nur TLS" stellen, in den Miniserver speichern und erneut versuchen.'
   },
   browser: {
+    retrying: 'neuer Versuch alle 10 Sekunden…',
     filterPlaceholder: 'Dateien filtern…',
     allMonths: 'Alle Monate',
     allStatuses: 'Alle Status',

@@ -276,7 +276,7 @@ watch(
           icon="pi pi-arrow-left"
           text
           severity="secondary"
-          aria-label="Back"
+          :aria-label="t('editor.back')"
           @click="back"
         />
         <div>

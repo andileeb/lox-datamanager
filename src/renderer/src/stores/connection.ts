@@ -60,9 +60,14 @@ export const useConnectionStore = defineStore('connection', {
       this.tlsMode = r.data
       this.activeLabel = saveAs || args.host
       if (saveAs) {
+        // same Miniserver + user saved already → update it (e.g. new password), no second entry;
+        // its name stays unless a new one was typed (saveAs falls back to the host)
+        const prev = this.saved.find(
+          (m) => m.host === args.host && m.port === args.port && m.user === args.user
+        )
         const meta: ConnMeta = {
-          id: crypto.randomUUID(),
-          name: saveAs,
+          id: prev?.id ?? crypto.randomUUID(),
+          name: prev && saveAs === args.host ? prev.name : saveAs,
           host: args.host,
           port: args.port,
           user: args.user,

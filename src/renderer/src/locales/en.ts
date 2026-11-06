@@ -19,12 +19,16 @@ export default {
     cachedHost: '{name} · 1 file | {name} · {n} files',
     openFolder: 'Open folder…',
     openFiles: 'Open files…',
+    removeSaved: 'Remove saved connection',
+    offlineCopy:
+      'Work offline with the downloaded file | Work offline with the {n} downloaded files',
     connect: 'Connect',
     cancel: 'Cancel connection attempt',
     ftpHint:
       '<b>Is FTP enabled on your Miniserver?</b> Since firmware 16.1 the FTP server is disabled by default. In Loxone Config, open your Miniserver\'s network settings and set FTP to "Enabled" or "Enabled – TLS only", then save to the Miniserver and try again.'
   },
   browser: {
+    retrying: 'trying again every 10 seconds…',
     filterPlaceholder: 'Filter files…',
     allMonths: 'All months',
     allStatuses: 'All statuses',
