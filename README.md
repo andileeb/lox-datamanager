@@ -38,13 +38,15 @@ your Miniserver connection in the app.
 - **Chart + grid viewer** for the binary stat files (handles 40k+ entries per month
   smoothly), with validation ("Problems") like LoxStatEdit: wrong UUIDs, unordered
   timestamps, out-of-month entries, NaN values — plus spikes (a single value far outside
-  the usual range of the series, e.g. a sensor glitch); click a problem to jump to it
+  the usual range of the series, e.g. a sensor glitch) and meter resets (a reading that
+  drops and stays low); click a problem to jump to it
 - **All months** of a control in one chart (e.g. a meter over a whole year), with
   min/max/average per month — see [All months](docs/all-months.md)
 - **Dashboard**: energy by meter (largest first), kWh per month, typical week (weekday ×
   hour heatmap) and standby load with a yearly estimate — see [Dashboard](docs/dashboard.md)
 - **Edit**: change timestamps and values inline, insert/delete entries, fill gaps with
-  interpolated entries, bulk-calculate (`v * 1000`, `(v - 32) / 1.8`, …)
+  interpolated entries, repair meter resets in one click (later readings continue where the
+  meter was), bulk-calculate (`v * 1000`, `(v - 32) / 1.8`, …)
 - **Round-trip safe**: files are re-serialized byte-identically (verified by tests) —
   only what you change changes
 - **Upload back** to the Miniserver: the confirm shows what changes (entries changed / added /

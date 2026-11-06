@@ -61,7 +61,7 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     v1, **stateless** Streamable HTTP: fresh `McpServer` + transport per POST) on
     `http://127.0.0.1:<port>/mcp`, default port 12009. Bearer-token auth (token
     generated in Settings, safeStorage-encrypted in store.ts, `plain:` prefix
-    fallback); 24 tools + 5 prompts (`fix-statistics`, `energy-report`, `automation-ideas`,
+    fallback); 25 tools + 5 prompts (`fix-statistics`, `energy-report`, `automation-ideas`,
     `what-to-buy`, `improve-config` — the only one allowed to change the Config project, after an OK) share ftp/cache/stats-service
     with the UI. Edits are in-memory until `save_stat_file`; `mcp:activity`
     events tell the renderer to refresh (EditorView shows a reload banner —

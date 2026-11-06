@@ -95,6 +95,7 @@ const de: typeof en = {
     insertBelow: 'Unterhalb einfügen',
     delete: 'Löschen',
     deleteN: '{n} löschen',
+    fixResets: 'Zählerreset reparieren',
     fillGaps: 'Lücken füllen',
     calculate: 'Berechnen…',
     timestamp: 'Zeitstempel',
@@ -158,6 +159,7 @@ const de: typeof en = {
     'timestamp-outside-month-last':
       'Letzter Eintrag liegt außerhalb des Monats (für Interpolation erlaubt)',
     'invalid-value': 'Eintrag enthält NaN/Unendlich oder eine falsche Anzahl an Werten',
+    'counter-reset': 'Zählerstand fällt hier ab und bleibt niedrig — ein Zählerreset?',
     spike: 'Weit außerhalb des üblichen Bereichs dieser Reihe — ein Ausreißer?',
     'bad-header': 'Ungültiger Datei-Header'
   },

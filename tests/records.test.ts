@@ -5,7 +5,9 @@ import {
   dominantInterval,
   fileOffsets,
   fillGaps,
+  findResets,
   findSpikes,
+  fixResets,
   isCurrentMonth,
   locateIndex,
   type MonthFileLike,
@@ -302,5 +304,37 @@ describe('findSpikes', () => {
     withNaN[149] = NaN
     withNaN[150] = 48.6
     expect(findSpikes(series(withNaN), 1)).toEqual([])
+  })
+})
+
+describe('meter resets', () => {
+  // 300 readings, +1 per entry; resets back to ~0 at the given rows (1 % rule: real months have ~4000)
+  const meter = (resetAt: number[], dipAt = -1): { ts: number; values: number[] }[] => {
+    let v = 100
+    return Array.from({ length: 300 }, (_, i) => {
+      v = resetAt.includes(i) ? 0.5 : v + 1
+      return { ts: i * 600, values: [i === dipAt ? 0 : v, 20 + (i % 3)] }
+    })
+  }
+
+  it('finds a lasting drop in a counter column only', () => {
+    expect(findResets(meter([150]), 2)).toEqual([[150, 0]])
+    // a dip that comes back is a glitch, float noise is no reset
+    expect(findResets(meter([], 150), 2)).toEqual([])
+    const noisy = meter([])
+    noisy[150].values[0] -= 1.00001
+    expect(findResets(noisy, 2)).toEqual([])
+  })
+
+  it('raises the later readings so the counter continues', () => {
+    const r = meter([100, 200])
+    expect(fixResets(r, 2)).toBe(2)
+    const v = r.map((x) => x.values[0])
+    expect(v[99]).toBe(200)
+    expect(v[100]).toBe(200) // the reset step itself becomes 0
+    expect(v[299]).toBe(398)
+    expect(v.every((x, i) => i === 0 || x >= v[i - 1])).toBe(true)
+    expect(r.map((x) => x.values[1]).slice(0, 3)).toEqual([20, 21, 22]) // other column untouched
+    expect(findResets(r, 2)).toEqual([])
   })
 })

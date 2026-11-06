@@ -3,6 +3,7 @@
  * the dashboard). Times are the stored UTC components, so "hour 7" is the Miniserver's local 7:00.
  */
 import { dominantInterval } from './records'
+export { isCounter } from './records'
 import { LOXONE_EPOCH_OFFSET, type StatRecord } from './types'
 
 export type Period = 'hour' | 'day' | 'week' | 'month'
@@ -22,22 +23,6 @@ export function bucketStart(ts: number, period: Period): number {
   if (period === 'week') return day - weekday(ts) * DAY
   const d = new Date((ts + LOXONE_EPOCH_OFFSET) * 1000)
   return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1) / 1000 - LOXONE_EPOCH_OFFSET
-}
-
-/**
- * Cumulative series (meter readings): at most 1 % of the changes go down. A reset (meter
- * replaced) is a single negative step and doesn't change the verdict. Flat series count too —
- * an unused production column then reads 0 kWh (measured: such columns are common).
- */
-export function isCounter(records: StatRecord[], column: number): boolean {
-  let up = 0
-  let down = 0
-  for (let i = 1; i < records.length; i++) {
-    const d = records[i].values[column] - records[i - 1].values[column]
-    if (d > 0) up++
-    else if (d < 0) down++
-  }
-  return down <= (up + down) * 0.01
 }
 
 export interface Bucket {

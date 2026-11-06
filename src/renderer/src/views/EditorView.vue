@@ -136,6 +136,8 @@ function deleteSelected(): void {
   selection.value = []
 }
 
+const hasResets = computed(() => !!editor.data?.problems.some((p) => p.rule === 'counter-reset'))
+
 function fillGaps(): void {
   fillResult.value = editor.fillGaps()
 }
@@ -436,6 +438,14 @@ watch(
           @click="deleteSelected"
         />
         <span class="spacer" />
+        <Button
+          v-if="hasResets"
+          :label="t('editor.fixResets')"
+          icon="pi pi-wrench"
+          size="small"
+          severity="warn"
+          @click="editor.fixResets()"
+        />
         <Button
           :label="t('editor.fillGaps')"
           icon="pi pi-arrows-h"

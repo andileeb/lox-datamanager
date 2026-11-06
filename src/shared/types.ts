@@ -69,6 +69,7 @@ export interface Problem {
     | 'timestamp-outside-month'
     | 'invalid-value'
     | 'spike'
+    | 'counter-reset'
     | 'bad-header'
   severity: 'error' | 'warning'
   message: string
