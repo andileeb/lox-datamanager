@@ -17,6 +17,9 @@ updates:
         versions: ['>=8']
       - dependency-name: '@primeuix/*'
         versions: ['>=3']
+      # types follow the Node inside Electron (45 → Node 24); bump together with Electron
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /

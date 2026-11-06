@@ -16,11 +16,6 @@ export default defineConfig({
   renderer: {
     // shown in Settings without waiting for the (network) update check
     define: { 'import.meta.env.APP_VERSION': JSON.stringify(pkg.version) },
-    resolve: {
-      alias: {
-        '@renderer': resolve('src/renderer/src')
-      }
-    },
     plugins: [vue()]
   }
 })

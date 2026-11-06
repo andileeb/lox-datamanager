@@ -59,7 +59,7 @@ async function resolveHost(host: string): Promise<string> {
     location = res.headers.get('location')
   } catch (e) {
     // don't leak ENOTFOUND/abort up as an FTP error — the lookup, not the Miniserver, failed
-    throw new Error(`Loxone Cloud DNS lookup failed: ${(e as Error).message}`)
+    throw new Error(`Loxone Cloud DNS lookup failed: ${(e as Error).message}`, { cause: e })
   } finally {
     clearTimeout(timer)
     pendingDns = null

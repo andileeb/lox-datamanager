@@ -363,7 +363,7 @@ export function buildServer(): McpServer {
     'Current app state: Miniserver connection, cache location, files open for editing.',
     {},
     () => {
-      let host: string | null = null
+      let host: string | null
       try {
         host = ftp.activeHost()
       } catch {
