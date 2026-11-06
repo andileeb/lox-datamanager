@@ -53,6 +53,57 @@ export function findSpikes(records: StatRecord[], valueCount: number): [number, 
   return out.sort((p, q) => p[0] - q[0] || p[1] - q[1])
 }
 
+/**
+ * Cumulative series (meter readings): at most 1 % of the changes go down. A reset (meter
+ * replaced) is a single negative step and doesn't change the verdict. Flat series count too —
+ * an unused production column then reads 0 kWh (measured: such columns are common).
+ */
+export function isCounter(records: StatRecord[], column: number): boolean {
+  let up = 0
+  let down = 0
+  for (let i = 1; i < records.length; i++) {
+    const d = records[i].values[column] - records[i - 1].values[column]
+    if (d > 0) up++
+    else if (d < 0) down++
+  }
+  return down <= (up + down) * 0.01
+}
+
+/**
+ * Meter resets in counter columns: a reading drops (by more than 1 % and 0.001) and the next
+ * five readings stay below the old level — a dip that comes back is a glitch, not a reset
+ * (findSpikes' job). Returns [record index of the first low reading, value index] pairs.
+ */
+export function findResets(records: StatRecord[], valueCount: number): [number, number][] {
+  const out: [number, number][] = []
+  for (let k = 0; k < valueCount; k++) {
+    if (!isCounter(records, k)) continue
+    for (let i = 1; i < records.length - 1; i++) {
+      const prev = records[i - 1].values[k]
+      const drop = prev - records[i].values[k]
+      if (!(drop > Math.max(Math.abs(prev) * 0.01, 1e-3))) continue
+      const next = records.slice(i + 1, i + 6)
+      if (next.every((r) => r.values[k] < prev)) out.push([i, k])
+    }
+  }
+  return out.sort((p, q) => p[0] - q[0] || p[1] - q[1])
+}
+
+/**
+ * Repair meter resets IN PLACE: every later reading of the column is raised by the drop, so the
+ * series continues where it was. Returns the number of resets repaired.
+ * ponytail: the reset step itself becomes 0 (one interval's usage lost); later months' files keep
+ * the low readings — add the same offset there if a continuous series across months matters.
+ */
+export function fixResets(records: StatRecord[], valueCount: number): number {
+  const resets = findResets(records, valueCount)
+  for (const [i, k] of resets) {
+    const offset = records[i - 1].values[k] - records[i].values[k]
+    for (let j = i; j < records.length; j++) records[j].values[k] += offset
+  }
+  return resets.length
+}
+
 /** insert linearly interpolated rows into gaps > 1.5× the interval; returns a new array */
 export function fillGaps(
   records: StatRecord[],

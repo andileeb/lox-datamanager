@@ -4,6 +4,7 @@ import {
   applyToRecords,
   dominantInterval,
   fillGaps as fillGapsPure,
+  fixResets,
   packRecords,
   unpackRecords
 } from '../../../shared/records'
@@ -151,6 +152,14 @@ export const useEditorStore = defineStore('editor', {
         this.touch()
       }
       return inserted
+    },
+
+    /** raise the readings after each meter reset so the counter continues */
+    fixResets() {
+      if (!this.data) return
+      this.snapshot()
+      fixResets(this.data.records, this.data.valueCount)
+      this.touch()
     },
 
     applyFormula(fn: (v: number) => number, valueIdx: number | 'all', indices: number[]) {

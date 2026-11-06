@@ -1,6 +1,6 @@
 import type { Problem, StatRecord } from '../shared/types'
 import { LOXONE_EPOCH_OFFSET, STAT_FILENAME_RE } from '../shared/types'
-import { findSpikes } from '../shared/records'
+import { findResets, findSpikes } from '../shared/records'
 
 /**
  * Loxone statistics binary format (little-endian, reverse-engineered — see
@@ -134,6 +134,16 @@ export function validateRecords(
       rule: 'spike',
       severity: 'warning',
       message: 'Value is far outside the usual range of this series (spike?)'
+    })
+  }
+  for (const [row] of findResets(records, valueCount)) {
+    if (problems.some((p) => p.row === row)) continue
+    problems.push({
+      row,
+      rule: 'counter-reset',
+      severity: 'warning',
+      message:
+        'Meter reading drops here and stays low (meter reset?) — fix_counter_resets repairs it'
     })
   }
   return problems.sort((a, b) => (a.row ?? -1) - (b.row ?? -1))

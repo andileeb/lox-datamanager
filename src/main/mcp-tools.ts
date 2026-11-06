@@ -22,6 +22,7 @@ import {
   dominantInterval,
   fillGaps,
   findSpikes,
+  fixResets,
   isCurrentMonth,
   orderMonths,
   statusOf,
@@ -713,6 +714,23 @@ export function buildServer(): McpServer {
   )
 
   tool(
+    'fix_counter_resets',
+    'Repair meter resets (validate_stat_file rule counter-reset): raise every later reading of the ' +
+      'column by the drop so the series continues. Not persisted until save_stat_file.',
+    { name: nameArg },
+    async ({ name }) => {
+      const parsed = await ensureLocal(name as string)
+      const fixed = fixResets(parsed.records, parsed.valueCount)
+      if (fixed) stats.markDirty(name as string)
+      return json({
+        fixed,
+        problems: problemsSummary(freshProblems(parsed)),
+        ...monthWarning(name as string)
+      })
+    }
+  )
+
+  tool(
     'shift_timestamps',
     'Shift record timestamps by a number of seconds (negative = earlier). ' +
       'Row selection: explicit indices, or a from/to time range, or all rows. Not persisted until save_stat_file.',
@@ -1057,7 +1075,7 @@ export function buildServer(): McpServer {
               '1. get_status — check the connection; connect_saved if needed (list_connections shows the ids).',
               '2. list_stat_files — find the affected file(s); sync status shows what is cached locally.',
               '3. get_stat_summary + validate_stat_file — understand the data and its problems.',
-              '4. Repair: fill_gaps for missing records, apply_formula for unit/scale errors (e.g. "v * 1000"),',
+              '4. Repair: fill_gaps for missing records, fix_counter_resets for meter resets, apply_formula for unit/scale errors (e.g. "v * 1000"),',
               '   update_records / insert_records / delete_records for individual rows, shift_timestamps for offsets.',
               '5. validate_stat_file again, then save_stat_file.',
               '6. upload_files — and follow the returned checklist (Miniserver restart + Loxone app cache clear).',
