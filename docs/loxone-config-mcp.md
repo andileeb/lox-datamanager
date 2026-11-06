@@ -16,7 +16,7 @@ You need Lox DataManager on **both** computers, in the same local network.
 ## On the PC with Loxone Config
 
 1. In Loxone Config, open your project and enable the **MCP Server** in the title bar.
-2. In Lox DataManager, open **Settings → Share Loxone Config** and switch on
+2. In Lox DataManager, open **Settings → AI → Share Loxone Config** and switch on
    **Share on local network**. The status shows _Loxone Config found_ once Config's MCP
    server is running. Config picks a new port each time it starts; the app finds it by itself.
 3. If Windows asks whether to allow Lox DataManager on the network, allow **private
@@ -28,14 +28,17 @@ Keep Lox DataManager and Loxone Config open on this PC while you work.
 
 ## On your other computer
 
-1. In Lox DataManager, open **Settings → Loxone Config on another computer**, paste the code
+1. In Lox DataManager, open **Settings → AI → Loxone Config on another computer**, paste the code
    and click **Connect**. It shows the Config version and number of tools when it works.
-2. Pick your AI app under **Connect** and copy the snippet (for Claude Code: run it in a
-   terminal). The AI app then has both servers: `lox-datamanager` for your statistics and
-   `loxone-config` for the project.
+2. Under **Claude** (same tab), click **Add** next to Claude Code or Claude Desktop. The app
+   writes both servers into Claude's settings: `lox-datamanager` for your statistics and
+   `loxone-config` for the project. Start a new Claude Code session; Claude Desktop asks to
+   install each one as an extension — click **Install** twice.
+   If you added Claude before, it gets `loxone-config` automatically. For other AI apps,
+   **Other AI apps & advanced** has the snippet.
 
-Claude Code adds the server for the folder you run the command in; add `--scope user`
-to have it in every session.
+When the code changes (Regenerate on the PC, new address), paste the new one and click
+**Connect** — Claude's settings follow by themselves.
 
 ## Try it
 
@@ -53,7 +56,8 @@ Then a small change you can take back:
 And the combination with your statistics:
 
 - _"My standby load is high at night — look at my Loxone Config project and suggest what
-  to change. Ask before changing anything."_
+  to change. Ask before changing anything."_ — or the ready-made prompt **improve-config**
+  (see [Ask AI about your data](insights.md#change-loxone-config-from-your-data)).
 
 ## Parallels on a Mac
 
@@ -67,12 +71,13 @@ Loxone Config also runs in Windows on Parallels, on the same Mac:
 
 ## If it doesn't connect
 
-| Message on the Mac                                         | What to do                                                                                                                                |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| _The PC did not answer_                                    | Is Lox DataManager open on the PC with sharing on? Same network? Network set to _Private_ in Windows and the app allowed in the firewall? |
-| _The code is not valid any more_                           | The code was regenerated — copy the current one from the PC.                                                                              |
-| _Reached the PC, but Loxone Config … is not running there_ | Open Loxone Config and enable its MCP Server in the title bar. Then click ↻ next to the status on the PC.                                 |
-| _Refused — only computers on the same local network_       | You're connecting through a VPN or from outside; this only works inside your local network.                                               |
+| Message on the Mac                                                        | What to do                                                                                                                                                                         |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| _The PC did not answer_                                                   | Is Lox DataManager open on the PC with sharing on? Same network? Network set to _Private_ in Windows and the app allowed in the firewall?                                          |
+| _The code is not valid any more_                                          | The code was regenerated — copy the current one from the PC.                                                                                                                       |
+| _Reached the PC, but Loxone Config … is not running there_                | Open Loxone Config and enable its MCP Server in the title bar. Then click ↻ next to the status on the PC.                                                                          |
+| _Refused — only computers on the same local network_                      | You're connecting through a VPN or from outside; this only works inside your local network.                                                                                        |
+| Claude Desktop: _couldn't connect to Loxone Config (via Lox DataManager)_ | macOS asks every app before it may reach your local network. Allow **Claude** under System Settings → Privacy & Security → **Local Network**, then quit and reopen Claude Desktop. |
 
 The PC's address can change when your router hands out a new one — copy the code again then.
 

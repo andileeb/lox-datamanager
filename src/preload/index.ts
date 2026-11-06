@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 import type { Api, ConnectPayload, TransferFilePayload } from '../shared/api'
+import type { ClaudeClient } from '../shared/mcp-clients'
 import type { ConnMeta, McpActivity, StatRecord, TransferProgress } from '../shared/types'
 
 const api: Api = {
@@ -66,6 +67,10 @@ const api: Api = {
     regenerate: () => ipcRenderer.invoke('configMcp:regenerate'),
     connect: (code: string) => ipcRenderer.invoke('configMcp:connect', code),
     forget: () => ipcRenderer.invoke('configMcp:forget')
+  },
+  claude: {
+    get: () => ipcRenderer.invoke('claude:get'),
+    add: (client: ClaudeClient) => ipcRenderer.invoke('claude:add', client)
   },
   updates: {
     check: () => ipcRenderer.invoke('updates:check')

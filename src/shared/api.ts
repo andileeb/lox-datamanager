@@ -2,6 +2,7 @@ import type {
   Backup,
   CachedFile,
   Catalog,
+  ClaudeSetup,
   ConnMeta,
   ControlProfile,
   DownloadOutcome,
@@ -23,6 +24,7 @@ import type {
   UpdateCheck
 } from './types'
 import type { RecordsDiff } from './records'
+import type { ClaudeClient } from './mcp-clients'
 
 export interface ConnectPayload {
   host: string
@@ -112,6 +114,12 @@ export interface Api {
     /** tests a connection code (initialize + tools/list) and remembers it when it works */
     connect(code: string): Promise<IpcResult<ConfigRemoteInfo>>
     forget(): Promise<IpcResult<null>>
+  }
+  claude: {
+    /** Claude apps found on this computer and whether our servers are in their config */
+    get(): Promise<IpcResult<ClaudeSetup[]>>
+    /** writes every available server (this app's, Loxone Config's) into that app's config */
+    add(client: ClaudeClient): Promise<IpcResult<ClaudeSetup[]>>
   }
   updates: {
     /** asks GitHub for the newest release; never rejects, latest is null when it failed */

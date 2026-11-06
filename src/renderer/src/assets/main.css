@@ -10,7 +10,7 @@ body,
 #app {
   height: 100%;
 }
-/* room for the floating update banner (set by UpdateBanner.vue while it is shown) */
+/* room for the floating update banner (set by AppBanner.vue while it is shown) */
 #app {
   padding-bottom: var(--banner-space, 0);
 }

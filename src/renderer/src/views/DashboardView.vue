@@ -149,6 +149,14 @@ function cellStyle(v: number | null): Record<string, string> {
         <AppControls />
       </div>
       <div class="actions">
+        <Button
+          v-tooltip.bottom="t('dashboard.askTip')"
+          :label="t('dashboard.ask')"
+          icon="pi pi-sparkles"
+          severity="secondary"
+          outlined
+          @click="router.push('/settings?tab=ai')"
+        />
         <SelectButton
           v-model="span"
           :options="spanOptions"

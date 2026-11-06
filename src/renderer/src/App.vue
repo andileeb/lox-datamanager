@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import UpdateBanner from './components/UpdateBanner.vue'
+import AppBanner from './components/AppBanner.vue'
 import { useEditorStore } from './stores/editor'
 import { useFilesStore } from './stores/files'
 
@@ -42,5 +42,5 @@ onBeforeUnmount(() => {
 
 <template>
   <router-view />
-  <UpdateBanner />
+  <AppBanner />
 </template>

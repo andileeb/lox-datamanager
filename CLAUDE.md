@@ -61,8 +61,8 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     v1, **stateless** Streamable HTTP: fresh `McpServer` + transport per POST) on
     `http://127.0.0.1:<port>/mcp`, default port 12009. Bearer-token auth (token
     generated in Settings, safeStorage-encrypted in store.ts, `plain:` prefix
-    fallback); 24 tools + 4 prompts (`fix-statistics`, `energy-report`, `automation-ideas`,
-    `what-to-buy`) share ftp/cache/stats-service
+    fallback); 24 tools + 5 prompts (`fix-statistics`, `energy-report`, `automation-ideas`,
+    `what-to-buy`, `improve-config` — the only one allowed to change the Config project, after an OK) share ftp/cache/stats-service
     with the UI. Edits are in-memory until `save_stat_file`; `mcp:activity`
     events tell the renderer to refresh (EditorView shows a reload banner —
     last-save-wins, no merging). Lifecycle: start on app ready if enabled,
@@ -76,13 +76,30 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     pasted connection code `<host>:<port>/<token>`; Settings then shows the client snippet.
     `LDM_CONFIG_MCP_PORT` fakes a Config MCP (enables sharing off Windows), `LDM_CONFIG_SHARE_PORT`
     moves 12010 (tests only). docs/loxone-config-mcp.md.
+  - `claude-clients.ts` — Settings "Add to Claude": merges our servers (`lox-datamanager` when the
+    MCP server is on, `loxone-config` when a remote code is stored) into `~/.claude.json` (Claude Code,
+    user scope); Claude Desktop gets one **extension** (.mcpb, zipped with fflate, opened with
+    `shell.openPath` → Claude's install dialog) per server. Its `server/bridge.js` is `src/bridge`
+    (second electron-vite main input, node built-ins only): stdio ↔ POST to our HTTP server, address +
+    token read per message from `userData/mcp-bridge.json` (0600, `refreshBridge()` once one of our
+    extensions is installed), so Regenerate/port changes never need a reinstall. Measured in Claude
+    Desktop 4.16: `server.type: node` + `command: node` and **no** `compatibility.runtimes.node` → it
+    runs on Claude's built-in Node (`isUsingBuiltInNodeForMcp`, default on) — users need no Node.js.
+    Installed = a `Claude Extensions/*/manifest.json` with our name (folder names are Claude's ids).
+    Old `mcp-remote` entries in claude_desktop_config.json are removed on install. Pure merge, status
+    and `extensionManifest()` in `shared/mcp-clients.ts`; `sync()` rewrites Claude Code's entries after a
+    token / port / connection-code change (never adds us on its own; Forget drops `loxone-config`).
+    An unparseable file is never overwritten (`CLIENT_CONFIG_UNREADABLE`). `LDM_CLAUDE_CONFIG_DIR`
+    redirects all Claude files and skips opening Claude Desktop — tests and screenshots must set it.
   - `updates.ts` — release-notification only, **no Electron imports** (takes the
     current version as an argument, so it unit-tests). One `fetch` of GitHub's
     `/releases/latest` per launch; every failure (offline, 403 rate-limit, no
     published release) resolves as `latest: null` — a failed check must never
     surface as an app error. See "Auto-update" below for why there's no installer.
-    Shown app-wide by `UpdateBanner.vue` (floating, reserves its height via `--banner-space`,
-    dismissed per version in localStorage); `LDM_CURRENT_VERSION` fakes the current version (tests only).
+    Shown app-wide by `AppBanner.vue` (floating, reserves its height via `--banner-space`,
+    dismissed per version in localStorage). The same banner offers "Add to Claude" once when a Claude
+    app lacks `lox-datamanager` (update wins, hidden on /settings, "Not now" = `ldm.claudeOfferDismissed`;
+    screenshots.mts sets it so docs images stay clean); `LDM_CURRENT_VERSION` fakes the current version (tests only).
 - `src/preload/index.ts` — contextBridge exposing `window.api`, typed by the
   single contract interface in `src/shared/api.ts` (preload implements it,
   renderer consumes it — extend the interface first when adding IPC).
@@ -99,7 +116,7 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
   grid + problems panel) and Months (`/months/<uuid[_n]>`, read-only stitched chart of
   all months of one control + per-month summary; clicks open the editor with `?row=`), Dashboard
   (`/dashboard`: `insights:energy` / `insights:profile` IPC → `energyOverview()` / `controlProfile()`
-  exported from mcp-tools.ts, the same functions behind `energy_overview` / `get_usage_profile`), plus Settings (Cmd/Ctrl+, or gear icon). Router guard:
+  exported from mcp-tools.ts, the same functions behind `energy_overview` / `get_usage_profile`), plus Settings (Cmd/Ctrl+, or gear icon; tabs General / AI, `?tab=ai` opens AI — the dashboard's "Ask Claude" links there). Router guard:
   everything except `/connect` and `/settings` needs a connection.
 - **i18n**: en + de catalogs in `renderer/src/locales/` (`de.ts` is typed
   `typeof en` so missing keys fail typecheck). ALL user-facing strings go

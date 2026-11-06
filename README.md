@@ -109,7 +109,7 @@ Claude (or any MCP client) to find and fix problems, or where your electricity g
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/settings-dark.png">
-  <img src="docs/images/settings-light.png" alt="Settings with the MCP server enabled" width="640">
+  <img src="docs/images/settings-light.png" alt="Settings, AI tab: add Lox DataManager to Claude in one click" width="640">
 </picture>
 
 <sub>All screenshots and the tour show generated demo data (`pnpm run screenshots`, `pnpm run showcase`).</sub>
@@ -226,12 +226,15 @@ can view **and edit** statistics — connect, list files, summarize and validate
 fill gaps, apply formulas, edit records, save, and upload (Loxone's official MCP
 server is read-only; this one can write, because it uses the app's FTP path).
 
-1. Open **Settings** (gear icon or Cmd/Ctrl+,) → **MCP server** → enable it.
-2. Pick your AI app under **Connect** (Claude Code, Claude Desktop, Cursor, VS Code) and copy
-   the snippet, e.g. for Claude Code:
+1. Open **Settings** (gear icon or Cmd/Ctrl+,) → **AI**, or **Ask Claude** on the dashboard.
+2. Click **Add** next to Claude Code or Claude Desktop. The app switches its MCP server on;
+   for Claude Code it writes the entry into Claude's settings (start a new session), Claude
+   Desktop shows its own install dialog for the Lox DataManager extension — click **Install**.
+   Other apps (Cursor, VS Code, …): **Other AI apps & advanced** has the snippet to copy, e.g.
+   for Claude Code by hand:
 
    ```sh
-   claude mcp add --transport http lox-datamanager http://127.0.0.1:12009/mcp \
+   claude mcp add --scope user --transport http lox-datamanager http://127.0.0.1:12009/mcp \
      --header "Authorization: Bearer <token>"
    ```
 
@@ -239,12 +242,12 @@ server is read-only; this one can write, because it uses the app's FTP path).
 
 3. Ask things like _"connect to my Miniserver, find gaps in last month's energy
    statistics and fill them"_ or _"what are my biggest consumers and what runs at night?"_,
-   or use the prompts `energy-report`, `automation-ideas`, `what-to-buy` — see
+   or use the prompts `energy-report`, `automation-ideas`, `what-to-buy`, `improve-config` — see
    [Ask AI about your data](docs/insights.md). Destructive steps (upload, delete) always
    go through your client's tool-approval prompt.
 
 The server listens on `127.0.0.1` only and runs while the app is open. The token can
-be regenerated anytime in Settings.
+be regenerated anytime in Settings; Claude apps added with **Add** get the new one automatically.
 
 ## License
 
