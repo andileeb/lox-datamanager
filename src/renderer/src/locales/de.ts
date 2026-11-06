@@ -236,9 +236,16 @@ const de: typeof en = {
     mcpCopy: 'Kopieren',
     mcpCopied: 'Kopiert',
     mcpRegenerate: 'Neu erzeugen',
-    mcpRunning: 'An',
-    mcpStopped: 'Aus',
-    mcpError: 'Start fehlgeschlagen: {error}',
+    mcpRunning: 'Läuft',
+    mcpNotRunning: 'Läuft nicht',
+    mcpFailed:
+      'Der KI-Zugriff konnte nicht starten ({error}). Starte Lox DataManager neu; hilft das nicht, stell unter „Andere KI-Apps & Erweitert“ einen anderen Port ein.',
+    mcpMoved:
+      'Port {from} war von einem anderen Programm belegt, der KI-Zugriff nutzt jetzt Port {port}. Oben hinzugefügte Claude-Apps wurden angepasst.',
+    shareFailed: 'Die Freigabe konnte nicht starten ({error}). Starte Lox DataManager neu.',
+    shareMoved:
+      'Port {from} war von einem anderen Programm belegt, die Freigabe nutzt jetzt einen anderen Port — der Verbindungscode hat sich geändert. Füge den neuen auf deinem anderen Computer ein.',
+    back: 'Zurück',
     mcpClient: 'App',
     mcpWhere: {
       claudeCode: 'Im Terminal ausführen:',
@@ -275,8 +282,10 @@ const de: typeof en = {
       current: 'Hinzugefügt',
       outdated: 'Alter Token',
       partial: '{done} von {total} hinzugefügt',
-      missing: 'Nicht hinzugefügt'
+      missing: 'Nicht hinzugefügt',
+      unreachable: 'Hinzugefügt — KI-Zugriff aus'
     },
+    claudeTurnOn: 'Einschalten',
     claudeAdd: 'Hinzufügen',
     claudeUpdate: 'Aktualisieren',
     claudeRestart: {

@@ -231,9 +231,16 @@ export default {
     mcpCopy: 'Copy',
     mcpCopied: 'Copied',
     mcpRegenerate: 'Regenerate',
-    mcpRunning: 'On',
-    mcpStopped: 'Off',
-    mcpError: 'Failed to start: {error}',
+    mcpRunning: 'Running',
+    mcpNotRunning: 'Not running',
+    mcpFailed:
+      'AI access couldn’t start ({error}). Restart Lox DataManager; if that doesn’t help, set another port under “Other AI apps & advanced”.',
+    mcpMoved:
+      'Port {from} was taken by another program, so AI access moved to port {port}. Claude apps added above were updated.',
+    shareFailed: 'Sharing couldn’t start ({error}). Restart Lox DataManager.',
+    shareMoved:
+      'Port {from} was taken by another program, so sharing moved to another port — the connection code changed. Paste the new one on your other computer.',
+    back: 'Back',
     mcpClient: 'App',
     mcpWhere: {
       claudeCode: 'Run in a terminal:',
@@ -270,8 +277,10 @@ export default {
       current: 'Added',
       outdated: 'Old token',
       partial: '{done} of {total} added',
-      missing: 'Not added'
+      missing: 'Not added',
+      unreachable: 'Added — AI access off'
     },
+    claudeTurnOn: 'Turn on',
     claudeAdd: 'Add',
     claudeUpdate: 'Update',
     claudeRestart: {

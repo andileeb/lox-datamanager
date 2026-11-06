@@ -66,9 +66,12 @@ Release: push a `v*` tag → `.github/workflows/release.yml` builds macOS univer
     with the UI. Edits are in-memory until `save_stat_file`; `mcp:activity`
     events tell the renderer to refresh (EditorView shows a reload banner —
     last-save-wins, no merging). Lifecycle: start on app ready if enabled,
-    `mcp:configure` IPC restarts, `EADDRINUSE` lands in `McpState.error`.
+    `mcp:configure` IPC restarts. A taken port never blocks: `listen.ts` `listenFallback()` tries the
+    next nine, then an OS-picked one; the new port is stored (`McpState.movedFrom` → Settings hint) and
+    `startMcp()` re-syncs Claude. `index.ts` holds the single-instance lock (per userData), so a second
+    copy of the app can't be what holds the port — it focuses the first and exits.
   - `config-share.ts` — Loxone Config's MCP across computers. Sharing side (Windows): token-gated
-    HTTP proxy on all interfaces, port 12010, LAN peers only (`isLanAddress`), forwards to Config's
+    HTTP proxy on all interfaces, port 12010 (taken → `listenFallback`, stored as `configShare.port`, codes follow), LAN peers only (`isLanAddress`), forwards to Config's
     own MCP with `Host: 127.0.0.1:<port>` (Config 403s any other Host; it has no auth). Config's
     port changes per start → `detectConfigPort()` = `tasklist` PID of `LoxoneConfigMcpServer.exe`
     + `netstat` listener (localized output, parsers in `shared/config-mcp.ts`), re-detected when
