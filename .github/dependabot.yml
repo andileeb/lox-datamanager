@@ -20,6 +20,9 @@ updates:
       # types follow the Node inside Electron (45 → Node 24); bump together with Electron
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
+      # TypeScript 7 (native compiler): typescript-eslint allows <6.1 and vue-tsc needs the JS API — drop once both support it
+      - dependency-name: typescript
+        versions: ['>=7']
 
   - package-ecosystem: github-actions
     directory: /
