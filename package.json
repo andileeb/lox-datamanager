@@ -1,6 +1,6 @@
 {
   "name": "lox-datamanager",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "description": "Viewer and editor for Loxone Miniserver statistics",
   "main": "./out/main/index.js",
   "author": "Andreas Leeb",

@@ -16,7 +16,7 @@ interface StoreShape {
     tokenEnc: string | null
   }
   /** this PC shares Loxone Config's MCP on the local network (config-share.ts) */
-  configShare?: { enabled: boolean; tokenEnc: string | null }
+  configShare?: { enabled: boolean; tokenEnc: string | null; port?: number }
   /** connection code of a Config MCP shared by another computer */
   configRemote?: { codeEnc: string }
 }
@@ -133,6 +133,16 @@ export function getConfigShareEnabled(): boolean {
 export function setConfigShareEnabled(enabled: boolean): void {
   const s = load()
   s.configShare = { tokenEnc: null, ...s.configShare, enabled }
+  persist(s)
+}
+
+export function getConfigSharePort(): number | undefined {
+  return load().configShare?.port
+}
+
+export function setConfigSharePort(port: number): void {
+  const s = load()
+  s.configShare = { enabled: true, tokenEnc: null, ...s.configShare, port }
   persist(s)
 }
 

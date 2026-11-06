@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { registerIpc } from './ipc'
+import { registerIpc, startMcp } from './ipc'
 import * as mcp from './mcp'
 import * as configShare from './config-share'
 import { resolveUserData } from './userdata'
@@ -13,6 +13,16 @@ import { resolveUserData } from './userdata'
 // LDM_USER_DATA: throwaway profile for scripts/screenshots.ts and E2E runs.
 app.setPath('userData', process.env['LDM_USER_DATA'] ?? resolveUserData(app.getPath('appData')))
 app.setName('Lox DataManager')
+
+// one copy per profile (the lock lives in userData): a second one would fight over the MCP port,
+// connections.json and the cache → it hands over to the first and quits
+if (!app.requestSingleInstanceLock()) app.exit()
+app.on('second-instance', () => {
+  const w = BrowserWindow.getAllWindows()[0]
+  if (!w) return
+  if (w.isMinimized()) w.restore()
+  w.focus()
+})
 
 function createWindow(): void {
   // Create the browser window.
@@ -65,7 +75,7 @@ app.whenReady().then(() => {
   })
 
   registerIpc()
-  void mcp.start()
+  void startMcp()
   void configShare.start()
   createWindow()
 

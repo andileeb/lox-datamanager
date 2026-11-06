@@ -19,12 +19,16 @@ export default {
     cachedHost: '{name} · 1 file | {name} · {n} files',
     openFolder: 'Open folder…',
     openFiles: 'Open files…',
+    removeSaved: 'Remove saved connection',
+    offlineCopy:
+      'Work offline with the downloaded file | Work offline with the {n} downloaded files',
     connect: 'Connect',
     cancel: 'Cancel connection attempt',
     ftpHint:
       '<b>Is FTP enabled on your Miniserver?</b> Since firmware 16.1 the FTP server is disabled by default. In Loxone Config, open your Miniserver\'s network settings and set FTP to "Enabled" or "Enabled – TLS only", then save to the Miniserver and try again.'
   },
   browser: {
+    retrying: 'trying again every 10 seconds…',
     filterPlaceholder: 'Filter files…',
     allMonths: 'All months',
     allStatuses: 'All statuses',
@@ -231,9 +235,16 @@ export default {
     mcpCopy: 'Copy',
     mcpCopied: 'Copied',
     mcpRegenerate: 'Regenerate',
-    mcpRunning: 'On',
-    mcpStopped: 'Off',
-    mcpError: 'Failed to start: {error}',
+    mcpRunning: 'Running',
+    mcpNotRunning: 'Not running',
+    mcpFailed:
+      'AI access couldn’t start ({error}). Restart Lox DataManager; if that doesn’t help, set another port under “Other AI apps & advanced”.',
+    mcpMoved:
+      'Port {from} was taken by another program, so AI access moved to port {port}. Claude apps added above were updated.',
+    shareFailed: 'Sharing couldn’t start ({error}). Restart Lox DataManager.',
+    shareMoved:
+      'Port {from} was taken by another program, so sharing moved to another port — the connection code changed. Paste the new one on your other computer.',
+    back: 'Back',
     mcpClient: 'App',
     mcpWhere: {
       claudeCode: 'Run in a terminal:',
@@ -270,8 +281,10 @@ export default {
       current: 'Added',
       outdated: 'Old token',
       partial: '{done} of {total} added',
-      missing: 'Not added'
+      missing: 'Not added',
+      unreachable: 'Added — AI access off'
     },
+    claudeTurnOn: 'Turn on',
     claudeAdd: 'Add',
     claudeUpdate: 'Update',
     claudeRestart: {

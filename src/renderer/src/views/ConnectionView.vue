@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
@@ -13,6 +13,7 @@ import type { ConnMeta, TlsPref } from '../../../shared/types'
 import AppControls from '../components/AppControls.vue'
 import { useConnectionStore } from '../stores/connection'
 import { errorText } from '../i18n'
+import { cleanHost } from '../../../shared/host'
 
 const router = useRouter()
 const conn = useConnectionStore()
@@ -24,7 +25,8 @@ const form = reactive({
   user: 'admin',
   password: '',
   tls: 'auto' as TlsPref,
-  save: false,
+  // on by default: next time it's one click (an existing entry is updated, not duplicated)
+  save: true,
   name: ''
 })
 
@@ -60,7 +62,12 @@ async function cancel(): Promise<void> {
   await conn.disconnect() // closes the pending client in main → connect() rejects
 }
 
+/** host of the last attempt — a failed one offers its downloaded copy */
+const attempted = ref('')
+
 async function submit(): Promise<void> {
+  form.host = cleanHost(form.host) // pasted "http://…/" → the bare address, visibly
+  attempted.value = form.host
   const ok = await withBusy(() =>
     conn.connect(
       { host: form.host, port: form.port, user: form.user, password: form.password, tls: form.tls },
@@ -70,20 +77,35 @@ async function submit(): Promise<void> {
   if (ok && !cancelled.value) router.push('/browser')
 }
 
+/** the saved entry into the form with the cursor in the password — Connect then updates it */
+async function prefill(meta: ConnMeta): Promise<void> {
+  const { host, port, user, tls, name } = meta
+  Object.assign(form, { host, port, user, tls, name, password: '', save: true })
+  await nextTick()
+  document.getElementById('conn-password')?.focus()
+}
+
 async function useSaved(meta: ConnMeta): Promise<void> {
+  attempted.value = meta.host
   const result = await withBusy(() => conn.connectSaved(meta))
   if (cancelled.value) return
   if (result === true) {
     router.push('/browser')
   } else if (result === 'needs-password') {
-    // no stored password (no OS keychain) — prefill the form instead
-    form.host = meta.host
-    form.port = meta.port
-    form.user = meta.user
-    form.tls = meta.tls
+    // no stored password (no OS keychain)
     conn.error = { code: 'NO_PASSWORD', message: 'Enter the password for this connection' }
+    await prefill(meta)
+  } else if (conn.error?.code === 'FTP_AUTH_FAILED') {
+    await prefill(meta) // password changed on the Miniserver — type the new one, it's saved
   }
 }
+
+/** Miniserver not reachable, but its files were downloaded before → offer them right in the error */
+const offlineCopy = computed(() => {
+  if (!['FTP_REFUSED', 'FTP_TIMEOUT'].includes(conn.error?.code ?? '')) return null
+  const dir = attempted.value.replace(/[^a-zA-Z0-9.-]/g, '_')
+  return conn.cachedHosts.find((h) => h.name === dir) ?? null
+})
 
 /** cache folders are named after the sanitized host (cache.ts) — show the saved name when known */
 function cachedLabel(name: string): string {
@@ -102,6 +124,17 @@ async function openLocal(kind: 'folder' | 'files', cachedHost?: string): Promise
 }
 
 onMounted(() => conn.loadSaved())
+
+// a failed attempt must be seen — small windows would leave it below the fold
+watch(
+  () => conn.error,
+  async (e) => {
+    if (!e) return
+    await nextTick()
+    // center: the Message is still animating open (≈0 px tall), 'nearest' would barely move
+    document.querySelector('.connect .p-message')?.scrollIntoView({ block: 'center' })
+  }
+)
 </script>
 
 <template>
@@ -141,9 +174,11 @@ onMounted(() => conn.loadSaved())
             @click="useSaved(meta)"
           />
           <Button
+            v-tooltip="t('connect.removeSaved')"
             icon="pi pi-trash"
             severity="danger"
             text
+            :aria-label="t('connect.removeSaved')"
             :disabled="busy"
             @click="conn.removeSaved(meta.id)"
           />
@@ -152,25 +187,45 @@ onMounted(() => conn.loadSaved())
 
       <form class="form" @submit.prevent="submit">
         <div class="row">
-          <label>{{ t('connect.host') }}</label>
-          <InputText v-model="form.host" placeholder="192.168.11.23" required autofocus />
+          <label for="conn-host">{{ t('connect.host') }}</label>
+          <InputText
+            id="conn-host"
+            v-model="form.host"
+            placeholder="192.168.11.23"
+            required
+            autofocus
+            @blur="form.host = cleanHost(form.host)"
+          />
         </div>
         <div class="row">
-          <label>{{ t('connect.port') }}</label>
-          <InputNumber v-model="form.port" :use-grouping="false" :min="1" :max="65535" />
+          <label for="conn-port">{{ t('connect.port') }}</label>
+          <InputNumber
+            v-model="form.port"
+            input-id="conn-port"
+            :use-grouping="false"
+            :min="1"
+            :max="65535"
+          />
         </div>
         <div class="row">
-          <label>{{ t('connect.user') }}</label>
-          <InputText v-model="form.user" required />
+          <label for="conn-user">{{ t('connect.user') }}</label>
+          <InputText id="conn-user" v-model="form.user" required />
         </div>
         <div class="row">
-          <label>{{ t('connect.password') }}</label>
-          <Password v-model="form.password" :feedback="false" toggle-mask required />
+          <label for="conn-password">{{ t('connect.password') }}</label>
+          <Password
+            v-model="form.password"
+            input-id="conn-password"
+            :feedback="false"
+            toggle-mask
+            required
+          />
         </div>
         <div class="row">
-          <label>{{ t('connect.encryption') }}</label>
+          <label id="conn-tls">{{ t('connect.encryption') }}</label>
           <Select
             v-model="form.tls"
+            aria-labelledby="conn-tls"
             :options="tlsOptions"
             option-label="label"
             option-value="value"
@@ -209,6 +264,23 @@ onMounted(() => conn.loadSaved())
         </div>
       </form>
 
+      <!-- right under Connect: at 800×600 anything below the offline list is off-screen -->
+      <Message v-if="conn.error" severity="error" :closable="false">
+        {{ errorText(conn.error) }}
+        <Button
+          v-if="offlineCopy"
+          class="offline-copy"
+          :label="t('connect.offlineCopy', offlineCopy.count)"
+          icon="pi pi-database"
+          size="small"
+          severity="secondary"
+          @click="openLocal('folder', offlineCopy.name)"
+        />
+      </Message>
+      <Message v-if="conn.error?.code === 'FTP_REFUSED'" severity="warn" :closable="false">
+        <!-- eslint-disable-next-line vue/no-v-html -->
+        <span v-html="t('connect.ftpHint')"></span>
+      </Message>
       <div class="saved offline">
         <h2>{{ t('connect.offline') }}</h2>
         <p class="hint">{{ t('connect.offlineHint') }}</p>
@@ -241,14 +313,6 @@ onMounted(() => conn.loadSaved())
           />
         </div>
       </div>
-
-      <Message v-if="conn.error" severity="error" :closable="false">
-        {{ errorText(conn.error) }}
-      </Message>
-      <Message v-if="conn.error?.code === 'FTP_REFUSED'" severity="warn" :closable="false">
-        <!-- eslint-disable-next-line vue/no-v-html -->
-        <span v-html="t('connect.ftpHint')"></span>
-      </Message>
     </div>
   </main>
 </template>
@@ -344,6 +408,10 @@ onMounted(() => conn.loadSaved())
 .row :deep(.p-inputnumber),
 .row :deep(.p-select) {
   width: 100%;
+}
+.offline-copy {
+  display: flex;
+  margin-top: 0.5rem;
 }
 .save-opts {
   display: flex;

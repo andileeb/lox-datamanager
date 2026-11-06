@@ -18,6 +18,7 @@ import {
 import * as store from './store'
 import { bearerMatches } from './mcp'
 import { CodedError } from './stats-service'
+import { listenFallback } from './listen'
 import {
   CONFIG_MCP_EXE,
   connectionUrl,
@@ -28,13 +29,18 @@ import {
 } from '../shared/config-mcp'
 import type { ConfigRemoteInfo } from '../shared/types'
 
-/** LDM_CONFIG_SHARE_PORT: test harness only */
-export const SHARE_PORT = Number(process.env.LDM_CONFIG_SHARE_PORT) || 12010
+/** the port in the connection codes: 12010, or the free one start() moved to (stored, so codes
+ *  stay valid across restarts). LDM_CONFIG_SHARE_PORT: test harness only */
+export function sharePort(): number {
+  return store.getConfigSharePort() || Number(process.env.LDM_CONFIG_SHARE_PORT) || 12010
+}
 
 const run = promisify(execFile)
 
 let server: Server | null = null
 let lastError: string | null = null
+/** the share port was taken by another program at the last start → codes changed */
+let movedFrom: number | null = null
 let configPort: number | null = null
 
 /** Config only exists on Windows; LDM_CONFIG_MCP_PORT points at a fake Config MCP (tests) */
@@ -132,29 +138,34 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
   )
 }
 
-export function status(): { running: boolean; error: string | null } {
-  return { running: server !== null, error: lastError }
+export function status(): { running: boolean; error: string | null; movedFrom: number | null } {
+  return { running: server !== null, error: lastError, movedFrom }
 }
 
 /** (re)start according to the stored config; resolves once listening or failed */
 export async function start(): Promise<void> {
   await stop()
   lastError = null
+  movedFrom = null
   if (!shareAvailable() || !store.getConfigShareEnabled()) return
   if (!(await store.getConfigShareToken())) await store.regenerateConfigShareToken()
-  await new Promise<void>((resolve) => {
-    const s = createServer((req, res) => void handle(req, res))
-    s.on('error', (e) => {
-      lastError = (e as NodeJS.ErrnoException).code ?? e.message
-      if (server === s) server = null
-      resolve()
-    })
-    // all interfaces: Windows asks once whether to allow it on private networks
-    s.listen(SHARE_PORT, () => {
-      server = s
-      resolve()
-    })
+  const s = createServer((req, res) => void handle(req, res))
+  const port = sharePort()
+  // all interfaces: Windows asks once whether to allow it on private networks
+  const got = await listenFallback(s, port, undefined, [store.getMcpConfig().port])
+  if (typeof got === 'string') {
+    lastError = got
+    return
+  }
+  s.on('error', (e) => {
+    lastError = (e as NodeJS.ErrnoException).code ?? e.message
+    if (server === s) server = null
   })
+  server = s
+  if (got !== port) {
+    store.setConfigSharePort(got)
+    movedFrom = port
+  }
 }
 
 export function stop(): Promise<void> {

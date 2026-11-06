@@ -129,6 +129,8 @@ export interface McpState {
   running: boolean
   url: string
   error: string | null
+  /** the stored port was taken by another program, `port` is the free one we moved to */
+  movedFrom: number | null
 }
 
 /** Loxone Config MCP shared across computers (config-share.ts), for the Settings UI */
@@ -138,6 +140,8 @@ export interface ConfigMcpState {
   shareEnabled: boolean
   running: boolean
   error: string | null
+  /** 12010 was taken by another program at start → sharing moved, the codes changed */
+  movedFrom: number | null
   /** port Config's MCP listens on right now; null = Config or its MCP isn't running */
   configPort: number | null
   /** connection codes for the other computer, one per local-network address */

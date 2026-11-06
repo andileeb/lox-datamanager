@@ -7,7 +7,8 @@ You don't need a Miniserver connection to look at or fix statistics. The
 
 Every Miniserver you have downloaded files from is listed there with its file
 count, e.g. `Demo Home (miniserver.local) · 36 files`. Click it to open the
-browser on your local copies.
+browser on your local copies. When a connection fails because the Miniserver can't be
+reached, the error offers the same: **Work offline with the … downloaded files**.
 
 - You see the files you downloaded earlier, not what is on the Miniserver right now.
 - Chart, edit, fill gaps, calculate and **Save** work as usual. Saving writes into

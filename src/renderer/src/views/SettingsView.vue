@@ -75,6 +75,12 @@ const example = computed(() => {
 })
 
 const mcp = ref<McpState | null>(null)
+/** port the server last started with — blur only restarts it when the field changed */
+let savedPort = 0
+function setMcp(s: McpState): void {
+  mcp.value = s
+  savedPort = s.port
+}
 const copied = ref<'token' | 'snippet' | 'code' | null>(null)
 
 const appVersion: string = import.meta.env.APP_VERSION
@@ -96,22 +102,29 @@ const updateStatus = computed(() => {
 
 onMounted(async () => {
   const r = await window.api.mcp.get()
-  if (r.ok) mcp.value = r.data
+  if (r.ok) setMcp(r.data)
   await loadConfigMcp()
   if (configMcp.value?.remoteCode) {
     remoteInput.value = configMcp.value.remoteCode
     void connectRemote()
   }
   await loadClaude()
-  // back from Claude Desktop's install dialog → show "Added"
-  window.addEventListener('focus', loadClaude)
+  window.addEventListener('focus', onFocus)
   await checkUpdates()
 })
-onBeforeUnmount(() => window.removeEventListener('focus', loadClaude))
+onBeforeUnmount(() => window.removeEventListener('focus', onFocus))
+
+/** back from another app: Claude Desktop's install dialog → "Added"; Loxone Config started →
+ *  sharing finds it; a failed connection code is tried again (the other PC may be up now) */
+function onFocus(): void {
+  void loadClaude()
+  if (configMcp.value?.shareEnabled) void loadConfigMcp()
+  if (remoteError.value && remoteInput.value.trim() && !connecting.value) void connectRemote()
+}
 
 async function configureMcp(enabled: boolean, port: number): Promise<void> {
   const r = await window.api.mcp.configure(enabled, port)
-  if (r.ok) mcp.value = r.data
+  if (r.ok) setMcp(r.data)
   await loadClaude()
 }
 
@@ -119,13 +132,16 @@ function onMcpToggle(): void {
   if (mcp.value) void configureMcp(mcp.value.enabled, mcp.value.port)
 }
 
-function onMcpPortBlur(): void {
-  if (mcp.value?.port) void configureMcp(mcp.value.enabled, mcp.value.port)
+// InputNumber emits blur *before* it updates v-model → take the typed value from the event
+function onMcpPortBlur(typed: string): void {
+  const port = Number(typed)
+  if (mcp.value && port >= 1024 && port <= 65535 && port !== savedPort)
+    void configureMcp(mcp.value.enabled, port)
 }
 
 async function regenerateToken(): Promise<void> {
   const r = await window.api.mcp.regenerateToken()
-  if (r.ok) mcp.value = r.data
+  if (r.ok) setMcp(r.data)
   await loadClaude()
 }
 
@@ -251,6 +267,24 @@ function claudeStatus(c: ClaudeSetup): 'current' | 'outdated' | 'partial' | 'mis
   return s.includes('current') ? 'partial' : 'missing'
 }
 
+/** added, but Claude can't reach us right now (AI access off or failed to start) */
+const claudeUnreachable = (c: ClaudeSetup): boolean =>
+  claudeStatus(c) === 'current' && !mcp.value?.running
+
+function claudeTag(c: ClaudeSetup): { severity: string; value: string } {
+  if (claudeUnreachable(c))
+    return {
+      severity: 'warn',
+      value: t(
+        mcp.value?.enabled ? 'settings.claudeStatus.current' : 'settings.claudeStatus.unreachable'
+      )
+    }
+  return {
+    severity: claudeStatus(c) === 'current' ? 'success' : 'secondary',
+    value: t(`settings.claudeStatus.${claudeStatus(c)}`, claudeDone(c))
+  }
+}
+
 const claudeDone = (c: ClaudeSetup): { done: number; total: number } => ({
   done: Object.values(c.servers).filter((x) => x === 'current').length,
   total: Object.keys(c.servers).length
@@ -287,11 +321,11 @@ const prompts = [
     <div class="panel">
       <div class="head">
         <Button
-          v-tooltip.bottom="t('editor.back')"
+          v-tooltip.bottom="t('settings.back')"
           icon="pi pi-arrow-left"
           text
           severity="secondary"
-          aria-label="Back"
+          :aria-label="t('settings.back')"
           @click="router.back()"
         />
         <h1>{{ t('settings.title') }}</h1>
@@ -377,10 +411,7 @@ const prompts = [
               <div v-for="c in claudeApps" :key="c.client" class="row">
                 <label>{{ mcpClients.find((m) => m.value === c.client)?.label }}</label>
                 <div class="mcp-status">
-                  <Tag
-                    :severity="claudeStatus(c) === 'current' ? 'success' : 'secondary'"
-                    :value="t(`settings.claudeStatus.${claudeStatus(c)}`, claudeDone(c))"
-                  />
+                  <Tag v-bind="claudeTag(c)" />
                   <Button
                     v-if="claudeStatus(c) !== 'current'"
                     :label="
@@ -393,6 +424,12 @@ const prompts = [
                     size="small"
                     @click="addToClaude(c.client)"
                   />
+                  <Button
+                    v-else-if="!mcp.enabled"
+                    :label="t('settings.claudeTurnOn')"
+                    size="small"
+                    @click="configureMcp(true, mcp.port)"
+                  />
                 </div>
               </div>
               <p v-if="!claudeApps.length" class="hint">
@@ -400,22 +437,25 @@ const prompts = [
                 <a href="https://claude.ai/download" target="_blank">claude.ai/download</a>
               </p>
               <div class="row">
-                <label>{{ t('settings.mcpEnable') }}</label>
+                <label for="mcp-enable">{{ t('settings.mcpEnable') }}</label>
                 <div class="mcp-status">
-                  <ToggleSwitch v-model="mcp.enabled" @change="onMcpToggle" />
-                  <Tag
-                    v-if="mcp.error"
-                    severity="danger"
-                    :value="t('settings.mcpError', { error: mcp.error })"
-                  />
+                  <ToggleSwitch v-model="mcp.enabled" input-id="mcp-enable" @change="onMcpToggle" />
+                  <Tag v-if="mcp.error" severity="danger" :value="t('settings.mcpNotRunning')" />
                   <Tag
                     v-else-if="mcp.running"
                     severity="success"
                     :value="t('settings.mcpRunning')"
                   />
-                  <Tag v-else severity="secondary" :value="t('settings.mcpStopped')" />
                 </div>
               </div>
+              <p v-if="mcp.error" class="hint error">
+                <i class="pi pi-exclamation-triangle"></i>
+                {{ t('settings.mcpFailed', { error: mcp.error }) }}
+              </p>
+              <p v-else-if="mcp.movedFrom" class="hint">
+                <i class="pi pi-info-circle"></i>
+                {{ t('settings.mcpMoved', { from: mcp.movedFrom, port: mcp.port }) }}
+              </p>
               <p class="hint">{{ t('settings.claudeHint') }}</p>
               <Tag v-if="claudeError" class="remote-tag" severity="danger" :value="claudeError" />
               <p v-else-if="claudeAdded" class="hint">
@@ -430,13 +470,17 @@ const prompts = [
                 <template v-if="configMcp.shareAvailable">
                   <h3>{{ t('settings.shareTitle') }}</h3>
                   <div class="row">
-                    <label>{{ t('settings.shareEnable') }}</label>
+                    <label for="share-enable">{{ t('settings.shareEnable') }}</label>
                     <div class="mcp-status">
-                      <ToggleSwitch v-model="configMcp.shareEnabled" @change="onShareToggle" />
+                      <ToggleSwitch
+                        v-model="configMcp.shareEnabled"
+                        input-id="share-enable"
+                        @change="onShareToggle"
+                      />
                       <Tag
                         v-if="configMcp.error"
                         severity="danger"
-                        :value="t('settings.mcpError', { error: configMcp.error })"
+                        :value="t('settings.mcpNotRunning')"
                       />
                       <Tag
                         v-else-if="configMcp.running && configMcp.configPort"
@@ -448,7 +492,6 @@ const prompts = [
                         severity="warn"
                         :value="t('settings.shareNoConfig')"
                       />
-                      <Tag v-else severity="secondary" :value="t('settings.mcpStopped')" />
                       <Button
                         v-tooltip.top="t('settings.shareRecheck')"
                         icon="pi pi-refresh"
@@ -487,14 +530,23 @@ const prompts = [
                       />
                     </div>
                   </div>
+                  <p v-if="configMcp.error" class="hint error">
+                    <i class="pi pi-exclamation-triangle"></i>
+                    {{ t('settings.shareFailed', { error: configMcp.error }) }}
+                  </p>
+                  <p v-else-if="configMcp.movedFrom" class="hint">
+                    <i class="pi pi-info-circle"></i>
+                    {{ t('settings.shareMoved', { from: configMcp.movedFrom }) }}
+                  </p>
                   <p class="hint">{{ t('settings.shareHint') }}</p>
                 </template>
 
                 <h3>{{ t('settings.remoteTitle') }}</h3>
                 <div class="row">
-                  <label>{{ t('settings.shareCode') }}</label>
+                  <label for="remote-code">{{ t('settings.shareCode') }}</label>
                   <div class="mcp-token">
                     <InputText
+                      id="remote-code"
                       v-model="remoteInput"
                       :placeholder="t('settings.remotePlaceholder')"
                       class="token-input"
@@ -545,17 +597,23 @@ const prompts = [
               <p class="hint">{{ t('settings.tryHint') }}</p>
 
               <!-- 4: everything else, folded away -->
-              <Panel :header="t('settings.advancedTitle')" toggleable collapsed class="advanced">
+              <!-- opened when the port needs changing — the error text points here -->
+              <Panel
+                :header="t('settings.advancedTitle')"
+                toggleable
+                :collapsed="!mcp.error"
+                class="advanced"
+              >
                 <div class="tab">
                   <div class="row">
-                    <label>{{ t('settings.mcpPort') }}</label>
+                    <label for="mcp-port">{{ t('settings.mcpPort') }}</label>
                     <InputNumber
                       v-model="mcp.port"
+                      input-id="mcp-port"
                       :min="1024"
                       :max="65535"
                       :use-grouping="false"
-                      :disabled="mcp.enabled"
-                      @blur="onMcpPortBlur"
+                      @blur="onMcpPortBlur($event.value)"
                     />
                   </div>
                   <div class="row">
@@ -649,6 +707,9 @@ const prompts = [
 .hint {
   color: var(--p-text-muted-color);
   font-size: 0.8rem;
+}
+.hint.error {
+  color: var(--p-message-error-color, var(--p-red-500));
 }
 h2 {
   margin: 1rem 0 0;

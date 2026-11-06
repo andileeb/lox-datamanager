@@ -8,11 +8,15 @@ import { createHash, timingSafeEqual } from 'crypto'
 import { BrowserWindow } from 'electron'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import * as store from './store'
+import * as configShare from './config-share'
+import { listenFallback } from './listen'
 import { buildServer } from './mcp-tools'
 import type { McpActivity } from '../shared/types'
 
 let server: Server | null = null
 let lastError: string | null = null
+/** the stored port was taken by another program at the last start → we moved off it */
+let movedFrom: number | null = null
 
 function sha256(s: string): Buffer {
   return createHash('sha256').update(s).digest()
@@ -62,31 +66,37 @@ async function handleHttp(req: IncomingMessage, res: ServerResponse): Promise<vo
   }
 }
 
-export function status(): { running: boolean; error: string | null } {
-  return { running: server !== null, error: lastError }
+export function status(): { running: boolean; error: string | null; movedFrom: number | null } {
+  return { running: server !== null, error: lastError, movedFrom }
 }
 
-/** (re)start according to the stored config; resolves once listening or failed */
-export async function start(): Promise<void> {
+/** (re)start according to the stored config; resolves once listening or failed.
+ *  Port taken → listenFallback's pick is stored instead (not a second copy of this app — index.ts
+ *  holds the single-instance lock); true = moved, the caller re-syncs Claude's entries. */
+export async function start(): Promise<boolean> {
   await stop()
   lastError = null
+  movedFrom = null
   const { enabled, port } = store.getMcpConfig()
-  if (!enabled) return
+  if (!enabled) return false
   if (!(await store.getMcpToken())) await store.regenerateMcpToken()
-  await new Promise<void>((resolve) => {
-    const s = createServer((req, res) => {
-      void handleHttp(req, res)
-    })
-    s.on('error', (e) => {
-      lastError = (e as NodeJS.ErrnoException).code ?? e.message
-      if (server === s) server = null
-      resolve()
-    })
-    s.listen(port, '127.0.0.1', () => {
-      server = s
-      resolve()
-    })
+  const s = createServer((req, res) => {
+    void handleHttp(req, res)
   })
+  const got = await listenFallback(s, port, '127.0.0.1', [configShare.sharePort()])
+  if (typeof got === 'string') {
+    lastError = got
+    return false
+  }
+  s.on('error', (e) => {
+    lastError = (e as NodeJS.ErrnoException).code ?? e.message
+    if (server === s) server = null
+  })
+  server = s
+  if (got === port) return false
+  store.setMcpConfig(true, got)
+  movedFrom = port
+  return true
 }
 
 export function stop(): Promise<void> {

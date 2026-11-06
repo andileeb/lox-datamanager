@@ -81,6 +81,9 @@ Loxone Config also runs in Windows on Parallels, on the same Mac:
 
 The PC's address can change when your router hands out a new one — copy the code again then.
 
+If another program already uses port 12010, the app shares on a free port instead and says so
+in Settings — copy the new connection code to your other computer once.
+
 ## Safety
 
 - **Local network only**: the app refuses every connection from outside your private

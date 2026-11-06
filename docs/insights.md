@@ -19,7 +19,8 @@ once at the bottom of the window: click **Add** and you're done. Otherwise:
      extension — click **Install**. Nothing else is needed (no Node.js). You find it later under
      Claude Desktop → Settings → Extensions, where you can switch it off or remove it.
 
-   When the token or a connection code changes later, both keep working by themselves.
+   When the token, the port or a connection code changes later, both keep working by themselves —
+   if another program already uses the port, the app moves to a free one and updates Claude.
    Other AI apps (Cursor, VS Code, …): open **Other AI apps & advanced** and copy the snippet —
    where to put it is shown above it. Apps that support MCP over HTTP work with the same URL
    and token.

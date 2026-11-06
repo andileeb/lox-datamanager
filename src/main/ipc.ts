@@ -67,6 +67,23 @@ function openLocal(dir: string, label: string, files: string[] | null): LocalOpe
   return { label, files }
 }
 
+// what "Add to Claude" hands over: this app's server, Loxone Config's when connected
+const claudeServers = async (): Promise<Servers> => {
+  const { port } = store.getMcpConfig()
+  // the entry is written even while the server is off — Settings switches it on with "Add"
+  const token = (await store.getMcpToken()) ?? (await store.regenerateMcpToken())
+  const remote = parseConnectionCode((await store.getConfigRemoteCode()) ?? '')
+  return {
+    'lox-datamanager': { url: `http://127.0.0.1:${port}/mcp`, token },
+    ...(remote && { 'loxone-config': { url: connectionUrl(remote), token: remote.token } })
+  }
+}
+
+/** app start: a port taken by another program moves the server → Claude's entries follow */
+export async function startMcp(): Promise<void> {
+  if (await mcp.start()) claude.sync(await claudeServers())
+}
+
 export function registerIpc(): void {
   handle('ftp:connect', (args: ConnectPayload) => {
     cache.setLocalDir(null)
@@ -202,14 +219,15 @@ export function registerIpc(): void {
 
   const mcpState = async (): Promise<McpState> => {
     const { enabled, port } = store.getMcpConfig()
-    const { running, error } = mcp.status()
+    const { running, error, movedFrom } = mcp.status()
     return {
       enabled,
       port,
       token: await store.getMcpToken(),
       running,
       url: `http://127.0.0.1:${port}/mcp`,
-      error
+      error,
+      movedFrom
     }
   }
   handle('mcp:get', () => mcpState())
@@ -228,7 +246,7 @@ export function registerIpc(): void {
   const configMcpState = async (): Promise<ConfigMcpState> => {
     const shareAvailable = configShare.shareAvailable()
     const token = shareAvailable ? await store.getConfigShareToken() : null
-    const port = configShare.SHARE_PORT
+    const port = configShare.sharePort()
     return {
       shareAvailable,
       shareEnabled: store.getConfigShareEnabled(),
@@ -262,17 +280,6 @@ export function registerIpc(): void {
     return null
   })
 
-  // what "Add to Claude" hands over: this app's server, Loxone Config's when connected
-  const claudeServers = async (): Promise<Servers> => {
-    const { port } = store.getMcpConfig()
-    // the entry is written even while the server is off — Settings switches it on with "Add"
-    const token = (await store.getMcpToken()) ?? (await store.regenerateMcpToken())
-    const remote = parseConnectionCode((await store.getConfigRemoteCode()) ?? '')
-    return {
-      'lox-datamanager': { url: `http://127.0.0.1:${port}/mcp`, token },
-      ...(remote && { 'loxone-config': { url: connectionUrl(remote), token: remote.token } })
-    }
-  }
   handle('claude:get', async () => {
     const servers = await claudeServers()
     claude.refreshBridge(servers) // e.g. Loxone Config connected after the extension was installed
