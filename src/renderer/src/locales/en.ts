@@ -259,6 +259,8 @@ export default {
     remotePlaceholder: 'Paste the code from the PC with Loxone Config',
     remoteConnect: 'Connect',
     remoteForget: 'Forget',
+    remoteForgotExtension:
+      'Claude Desktop still has the “Loxone Config (via Lox DataManager)” extension — remove it in Claude under Settings → Extensions.',
     remoteConnected: 'Connected — {name} {version}, {tools} tools',
     remoteHint:
       'Claude then works on the project open in Loxone Config on that PC; Claude apps added above get it automatically. ' +

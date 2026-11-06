@@ -213,11 +213,19 @@ async function connectRemote(): Promise<void> {
   connecting.value = false
   remote.value = r.ok ? r.data : null
   if (!r.ok) remoteError.value = errorText(r.error)
+  else forgotExtension.value = false
   await loadClaude()
 }
 
+/** Claude Desktop's extension stays installed after Forget — we don't delete Claude's files */
+const forgotExtension = ref(false)
+
 async function forgetRemote(): Promise<void> {
+  forgotExtension.value = claudeApps.value.some(
+    (c) => c.client === 'claudeDesktop' && c.servers['loxone-config'] === 'current'
+  )
   await window.api.configMcp.forget()
+  if (configMcp.value) configMcp.value.remoteCode = null
   remote.value = null
   remoteError.value = null
   remoteInput.value = ''
@@ -522,6 +530,9 @@ const prompts = [
                   :value="remoteError"
                 />
                 <p class="hint">{{ t('settings.remoteHint') }}</p>
+                <p v-if="forgotExtension" class="hint">
+                  <i class="pi pi-info-circle"></i> {{ t('settings.remoteForgotExtension') }}
+                </p>
               </template>
 
               <!-- 3: what to ask -->

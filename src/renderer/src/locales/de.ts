@@ -264,6 +264,8 @@ const de: typeof en = {
     remotePlaceholder: 'Code vom PC mit Loxone Config einfügen',
     remoteConnect: 'Verbinden',
     remoteForget: 'Vergessen',
+    remoteForgotExtension:
+      'Claude Desktop hat die Erweiterung „Loxone Config (via Lox DataManager)“ noch — entferne sie in Claude unter Einstellungen → Erweiterungen.',
     remoteConnected: 'Verbunden — {name} {version}, {tools} Tools',
     remoteHint:
       'Claude arbeitet dann am Projekt, das in Loxone Config auf diesem PC geöffnet ist; oben hinzugefügte Claude-Apps bekommen es automatisch. ' +
